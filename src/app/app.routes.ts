@@ -7,6 +7,8 @@ export const routes: Routes = [
     loadComponent: () => import('./layout/layout.component').then(m => m.LayoutComponent),
     children: [
       { path: 'create', loadComponent: () => import('./create/create.component').then(m => m.CreateComponent) },
+      { path: 'all', loadComponent: () => import('./all/all.component').then(m => m.AllComponent) },
+      { path: 'edit/:id', loadComponent: () => import('./edit/edit.component').then(m => m.EditComponent) },
     ]
   },
   { path: '**', redirectTo: 'login' }

@@ -2,9 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 
 @Component({
-  selector: 'app-create',
+  selector: 'app-all',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './create.component.html'
+  templateUrl: './all.component.html',
+  styleUrls: ['./all.component.css']
 })
-export class CreateComponent {} 
+export class AllComponent {} 
