@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Application } from '../features/create/services/application';
+import { Application } from '../create/services/application';
 
 @Component({
   selector: 'app-create',
@@ -15,6 +15,5 @@ export class CreateComponent {
 
   test() {
     this.application.test(this.articleIdea)
-    alert(`Génération de l'article pour : ${this.articleIdea}`);
   }
 } 
