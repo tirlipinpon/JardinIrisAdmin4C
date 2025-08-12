@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import { SearchStore } from '../store';
+import { SearchStore } from '../../store';
+
 
 @Injectable({
   providedIn: 'root'
@@ -7,7 +8,7 @@ import { SearchStore } from '../store';
 export class Application {
   private readonly store = inject(SearchStore);
   
-  test(url_post: string): void {
-    this.store.test(url_post);
+  getNextPostId(): void {
+    this.store.getNextPostId();
   }
 }

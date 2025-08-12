@@ -29,4 +29,11 @@ export class SupabaseService {
       return data.length > 0 ? data[0] : {id: null, description: null};
     }
   }
+
+  async getNextPostId(): Promise<number | PostgrestError> {
+    const { data, error } = await this.client.rpc('get_next_post_id');
+    if (error) return error;
+    return data as number;
+  }
+
 } 

@@ -11,7 +11,7 @@ export const routes: Routes = [
     canActivate: [canActivate],
     children: [
       { path: '', redirectTo: 'create', pathMatch: 'full' },
-      { path: 'create', loadComponent: () => import('./features/create/create.component').then(m => m.CreateComponent) },
+      { path: 'create', loadComponent: () => import('./features/create/component/create.component').then(m => m.CreateComponent) },
       { path: 'all', loadComponent: () => import('./features/all/all.component').then(m => m.AllComponent) },
       { path: 'edit/:id', loadComponent: () => import('./features/edit/edit.component').then(m => m.EditComponent) },
     ]

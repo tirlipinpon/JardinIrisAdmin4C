@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Application } from '../create/services/application';
+import { Application } from '../services/application/application';
+
 
 @Component({
   selector: 'app-create',
@@ -13,7 +14,7 @@ export class CreateComponent {
   private readonly application = inject(Application);
   articleIdea = '';
 
-  test() {
-    this.application.test(this.articleIdea)
+  getNextPostId() {
+    this.application.getNextPostId();
   }
 } 
