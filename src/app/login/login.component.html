@@ -4,8 +4,22 @@
   <input id="username" name="username" type="text" [(ngModel)]="email"/>
   <br />
   <label for="password">Mot de passe :</label>
-  <input id="password" name="password" type="password" [(ngModel)]="password"/>
+  <div style="position: relative; display: inline-block;">
+    <input 
+      id="password" 
+      name="password" 
+      [type]="showPassword ? 'text' : 'password'" 
+      [(ngModel)]="password"/>
+    <button 
+      type="button" 
+      (click)="togglePasswordVisibility()" 
+      style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer;">
+      {{ showPassword ? 'I' : 'o' }}
+    </button>
+  </div>
   <br />
   <button type="button" (click)="onLoginSuccess()">Se connecter</button>
-  <div *ngIf="error" style="color:red">{{ error }}</div>
+  @if (error) {
+    <div style="color:red">{{ error }}</div>
+  }
 </form> 

@@ -14,9 +14,13 @@ export class LoginComponent {
   email = 'tony-ster@hotmail.com';
   password = 'motdepasse123';
   error: string | null = null;
-
+  showPassword = false;
   constructor(private router: Router, private auth: AuthService) {}
+ 
 
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
+  }
   async onLoginSuccess() {
     this.error = null;
     const { data, error } = await this.auth.signIn(this.email, this.password);
