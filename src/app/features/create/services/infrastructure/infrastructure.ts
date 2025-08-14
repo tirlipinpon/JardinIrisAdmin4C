@@ -10,7 +10,8 @@ export class Infrastructure {
   private readonly supabaseService = inject(SupabaseService);
 
   getNextPostId(): Observable<number | PostgrestError> {
-    const shouldReturnError = false
+    const shouldReturnError = false;
+    const shouldReturnMock = false
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -21,9 +22,14 @@ export class Infrastructure {
         name: 'PostgrestError'
       };
       return from(Promise.resolve(mockError));
-    } else {
-      return from(this.supabaseService.getNextPostId());
     }
+    if (shouldReturnMock) { 
+      const dummyNextPostId = 199;
+      return from(Promise.resolve(dummyNextPostId));
+    }
+  
+    return from(this.supabaseService.getNextPostId());
+    
   }
 
   // Méthodes factices pour les champs de la table post

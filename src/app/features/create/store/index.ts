@@ -86,6 +86,7 @@ export const SearchStore =  signalStore(
         )
       )
     ),
+
     setTitre: rxMethod<void>(
       pipe(
         concatMap(() =>
