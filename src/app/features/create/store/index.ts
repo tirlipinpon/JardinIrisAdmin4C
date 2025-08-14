@@ -19,16 +19,38 @@ const throwOnPostgrestError = <T>(response: T | PostgrestError) =>
   throwOnError(response, (val): val is PostgrestError => val instanceof PostgrestError);
 
 export interface SearchState {
+  // Champs existants
   postId: number | PostgrestError | null;
   isLoading: boolean;
-  error: any;
+  error: string[];
+  titre: string | null;
+  description_meteo: string | null;
+  phrase_accroche: string | null;
+  article: string | null;
+  new_href: string | null;
+  citation: string | null;
+  lien_url_article: string | null;
+  image_url: string | null;
+  categorie: string | null;
 }
+
 const initialValue: SearchState = {
+  // Champs existants
   postId: null,
   isLoading: false,
-  error: null
+  error: [],
+  titre: null,
+  description_meteo: null,
+  phrase_accroche: null,
+  article: null,
+  new_href: null,
+  citation: null,
+  lien_url_article: null,
+  image_url: null,
+  categorie: null
 }
- export const SearchStore =  signalStore(
+
+export const SearchStore =  signalStore(
   { providedIn: 'root' },
   withDevtools('search'),
   withState(initialValue),
@@ -44,7 +66,7 @@ const initialValue: SearchState = {
             map((response: number | PostgrestError) => throwOnPostgrestError(response)),
             tapResponse({
               next: (response: number | PostgrestError) => patchState(store, { postId: response, isLoading: false }),
-              error: error => patchState(store, {error: error, isLoading: false})
+              error: error => patchState(store, {error: [String(error)], isLoading: false})
             })
           )
         })
