@@ -10,7 +10,20 @@ export class Infrastructure {
   private readonly supabaseService = inject(SupabaseService);
 
   getNextPostId(): Observable<number | PostgrestError> {
-    return from(this.supabaseService.getNextPostId());
+    const shouldReturnError = false
+    
+    if (shouldReturnError) {
+      const mockError: PostgrestError = {
+        message: 'Erreur de test: Impossible de récupérer le prochain ID de post',
+        details: 'Simulation d\'une erreur Postgrest pour tester la gestion d\'erreur',
+        hint: 'Vérifiez la connexion à la base de données',
+        code: 'TEST_ERROR_001',
+        name: 'PostgrestError'
+      };
+      return from(Promise.resolve(mockError));
+    } else {
+      return from(this.supabaseService.getNextPostId());
+    }
   }
 
   // Méthodes factices pour les champs de la table post
