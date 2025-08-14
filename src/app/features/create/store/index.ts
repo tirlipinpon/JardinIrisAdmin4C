@@ -5,6 +5,7 @@ import { rxMethod } from "@ngrx/signals/rxjs-interop";
 import { concatMap, finalize, map, Observable, pipe, tap } from "rxjs";
 import { Infrastructure } from "../services/infrastructure/infrastructure";
 import { PostgrestError } from "@supabase/supabase-js";
+import { LoggingService } from "../../../shared/services/logging.service";
 
 function throwOnError<T, E>(response: T | E, errorCheck: (val: any) => val is E): T {
   if (errorCheck(response)) {
@@ -71,16 +72,21 @@ export const SearchStore =  signalStore(
   withComputed((state) => ({
     isLoading: state.isLoading
   })),
-  withMethods((store, infra = inject(Infrastructure))=> ( {
+  withMethods((store, infra = inject(Infrastructure), loggingService = inject(LoggingService))=> ( {
     getNextPostId: rxMethod<void>(
       pipe(
+        tap(() => {
+          loggingService.info('STORE', '⚡ Début getNextPostId()');
+        }),
         concatMap(() =>
           (infra as Infrastructure).getNextPostId().pipe(
             withLoading(store, 'getNextPostId'),
-            map((response: number | PostgrestError) => throwOnPostgrestError(response)),
+            map((response: number | PostgrestError) => {
+              return throwOnPostgrestError(response);
+            }),
             tap({
-              next: (postId: number) => patchState(store, { postId }),
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
+              next: (postId: number) => { patchState(store, { postId }); },
+              error: (error: unknown) => { patchState(store, { error: [extractErrorMessage(error)] }); }
             })
           )
         )

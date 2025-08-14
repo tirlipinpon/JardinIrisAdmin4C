@@ -2,14 +2,17 @@ import { inject, Injectable } from '@angular/core';
 import { from, Observable } from 'rxjs';
 import { SupabaseService } from '../../../../shared/services/supabase.service';
 import { PostgrestError } from '@supabase/supabase-js';
+import { LoggingService } from '../../../../shared/services/logging.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class Infrastructure {
   private readonly supabaseService = inject(SupabaseService);
+  private readonly loggingService = inject(LoggingService);
 
   getNextPostId(): Observable<number | PostgrestError> {
+    this.loggingService.info('INFRASTRUCTURE', '🔧 Début getNextPostId()');
     const shouldReturnError = false;
     const shouldReturnMock = false
     
@@ -21,10 +24,12 @@ export class Infrastructure {
         code: 'TEST_ERROR_001',
         name: 'PostgrestError'
       };
+      this.loggingService.info('INFRASTRUCTURE', '📨 Réponse: Erreur simulée', mockError);
       return from(Promise.resolve(mockError));
     }
     if (shouldReturnMock) { 
-      const dummyNextPostId = 199;
+      const dummyNextPostId = 666;
+      this.loggingService.info('INFRASTRUCTURE', '📨 Réponse: Mock data', { postId: dummyNextPostId });
       return from(Promise.resolve(dummyNextPostId));
     }
   
