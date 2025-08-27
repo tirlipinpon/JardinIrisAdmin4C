@@ -1,9 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Application } from '../services/application/application';
-import { LoggingService } from '../../../shared/services/logging.service';
-import { VersionService } from '../../../shared/services/versions/versions.service';
+import { LoggingService } from '../../shared/services/logging.service';
+import { VersionService } from '../../shared/services/versions/versions.service';
+import { Application } from './component/application/application';
 
 
 @Component({
@@ -21,7 +21,6 @@ export class CreateComponent {
   constructor() {
     // Afficher la version au démarrage
     this.versionService.logToConsole();
-    this.loggingService.info('COMPONENT', '🚀 CreateComponent initialisé');
   }
 
   getNextPostId() {
@@ -29,11 +28,4 @@ export class CreateComponent {
     this.application.getNextPostId();
   }
 
-  // Méthode de test pour vérifier le logging
-  testLogging() {
-    this.loggingService.debug('COMPONENT', '🐛 Test debug');
-    this.loggingService.info('COMPONENT', 'ℹ️ Test info');
-    this.loggingService.warn('COMPONENT', '⚠️ Test warning');
-    this.loggingService.error('COMPONENT', '❌ Test error');
-  }
 } 
