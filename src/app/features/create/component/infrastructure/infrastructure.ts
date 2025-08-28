@@ -6,6 +6,8 @@ import { LoggingService } from '../../../../shared/services/logging.service';
 import { GetPromptsService } from '../get-prompts/get-prompts.service';
 import { OpenaiApiService } from '../../services/openai-api/openai-api.service';
 import { parseJsonSafe, extractJSONBlock } from '../../utils/cleanJsonObject';
+import { Post } from '../../types/post';
+
 
 @Injectable({
   providedIn: 'root'
@@ -42,7 +44,7 @@ export class Infrastructure {
     
   }
 
-  setPost(articleIdea: string): Observable<string | PostgrestError> {
+  setPost(articleIdea: string): Observable<Post | PostgrestError> {
     const prompt = this.getPromptsService.generateArticle(articleIdea);
     return from(this.openaiApiService.fetchData(prompt, true)).pipe(
       map(result => {

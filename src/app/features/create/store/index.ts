@@ -102,10 +102,21 @@ export const SearchStore =  signalStore(
       pipe(
         concatMap((articleIdea: string) =>
           infra.setPost(articleIdea).pipe(
-            withLoading(store, 'getPost'),
-            map((response: string | PostgrestError) => throwOnPostgrestError(response)),
+            withLoading(store, 'setPost'),
+            map((response: any | PostgrestError) => throwOnPostgrestError(response)),
             tap({
-              next: (categorie: string) => patchState(store, { categorie }),
+              next: (postData: any) => {
+                patchState(store, {
+                  titre: postData.titre || null,
+                  description_meteo: postData.description_meteo || null,
+                  phrase_accroche: postData.phrase_accroche || null,
+                  article: postData.article || null,
+                  new_href: postData.new_href || null,
+                  citation: postData.citation || null,
+                  lien_url_article: postData.lien_url_article?.lien1 || null,
+                  categorie: postData.categorie || null
+                });
+              },
               error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
             })
           )

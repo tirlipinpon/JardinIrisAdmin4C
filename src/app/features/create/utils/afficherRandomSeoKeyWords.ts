@@ -1,4 +1,4 @@
-import {SeoKeyWords} from "../types/seo-key-words";
+import { SeoKeyWords } from "../types/seo-key-words";
 
 export function afficherRandomSeoKeyWords(): string {
   const values = Object.values(SeoKeyWords);
