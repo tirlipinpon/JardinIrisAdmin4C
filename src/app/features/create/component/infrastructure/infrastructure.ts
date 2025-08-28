@@ -1,8 +1,11 @@
 import { inject, Injectable } from '@angular/core';
-import { from, Observable } from 'rxjs';
+import { from, map, Observable } from 'rxjs';
 import { SupabaseService } from '../../../../shared/services/supabase.service';
 import { PostgrestError } from '@supabase/supabase-js';
 import { LoggingService } from '../../../../shared/services/logging.service';
+import { GetPromptsService } from '../get-prompts/get-prompts.service';
+import { OpenaiApiService } from '../../services/openai-api/openai-api.service';
+import { parseJsonSafe, extractJSONBlock } from '../../utils/cleanJsonObject';
 
 @Injectable({
   providedIn: 'root'
@@ -10,6 +13,8 @@ import { LoggingService } from '../../../../shared/services/logging.service';
 export class Infrastructure {
   private readonly supabaseService = inject(SupabaseService);
   private readonly loggingService = inject(LoggingService);
+  private readonly getPromptsService = inject(GetPromptsService);
+  private readonly openaiApiService = inject(OpenaiApiService);
 
   getNextPostId(): Observable<number | PostgrestError> {
     this.loggingService.info('INFRASTRUCTURE', '🔧 Début getNextPostId()');
@@ -37,54 +42,16 @@ export class Infrastructure {
     
   }
 
-  // Méthodes factices pour les champs de la table post
-  setTitre(): Observable<string | PostgrestError> {
-    const dummyTitre = 'Comment créer un jardin bio en permaculture';
-    return from(Promise.resolve(dummyTitre));
-  }
-
-  setDescriptionMeteo(): Observable<string | PostgrestError> {
-    const meteoData = 'Météo du jour: Ensoleillé avec quelques nuages - Température: 22°C, Humidité: 65%';
-    return from(Promise.resolve(meteoData));
-  }
-
-  setPhraseAccroche(): Observable<string | PostgrestError> {
-    const dummyPhrase = "Découvrez les secrets d'un jardin bio qui respecte la nature et vous nourrit toute l'année.";
-    return from(Promise.resolve(dummyPhrase));
-  }
-
-  setArticle(): Observable<string | PostgrestError> {
-    const dummyArticle = `La permaculture est une approche holistique du jardinage qui imite les écosystèmes naturels.
-
-## Les principes de base
-
-1. **Observer et interagir** : Comprendre votre environnement
-2. **Capturer et stocker l'énergie** : Utiliser le soleil, l'eau, le vent
-3. **Obtenir une production** : Récolter les fruits de votre travail
-4. **Appliquer l'auto-régulation** : Laisser la nature s'équilibrer
-
-## Techniques pratiques
-
-- **Compostage** : Recycler les déchets organiques
-- **Paillage** : Protéger le sol et retenir l'humidité
-- **Association de plantes** : Créer des synergies naturelles
-`;
-    return from(Promise.resolve(dummyArticle));
-  }
-
-  setNewHref(): Observable<string | PostgrestError> {
-    const seoUrl = '/blog/comment-creer-jardin-bio-permaculture';
-    return from(Promise.resolve(seoUrl));
-  }
-
-  setCitation(): Observable<string | PostgrestError> {
-    const formattedCitation = '"La permaculture est l\'art de créer des écosystèmes durables" - Bill Mollison';
-    return from(Promise.resolve(formattedCitation));
-  }
-
-  setLienUrlArticle(): Observable<string | PostgrestError> {
-    const dummyUrl = 'https://www.un-jardin-bio.com/permaculture-durable';
-    return from(Promise.resolve(dummyUrl));
+  setPost(articleIdea: string): Observable<string | PostgrestError> {
+    const prompt = this.getPromptsService.generateArticle(articleIdea);
+    return from(this.openaiApiService.fetchData(prompt, true)).pipe(
+      map(result => {
+        if (result === null) {
+          throw new Error('Aucun résultat retourné par l\'API OpenAI');
+        }
+        return parseJsonSafe(extractJSONBlock(result));
+      })
+    );
   }
 
   setImageUrl(): Observable<string | PostgrestError> {
@@ -92,10 +59,6 @@ export class Infrastructure {
     return from(Promise.resolve(generatedImageUrl));
   }
 
-  setCategorie(): Observable<string | PostgrestError> {
-    const validatedCategory = 'permaculture';
-    return from(Promise.resolve(validatedCategory));
-  }
 
   setVideo(): Observable<string | PostgrestError> {
     const youtubeVideoUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';

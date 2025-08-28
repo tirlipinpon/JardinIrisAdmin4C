@@ -20,6 +20,7 @@ const throwOnPostgrestError = <T>(response: T | PostgrestError): T => {
   }
   return response as T;
 };
+
 const extractErrorMessage = (error: any): string => {
   if (error && typeof error === 'object' && 'message' in error) {
     return (error as any).message;
@@ -31,10 +32,9 @@ const withLoading = <T>(store: any, methodName: string) => (source$: Observable<
   source$.pipe(
     tap(() => updateState(store, `[${methodName}] start`, { isLoading: true })),
     finalize(() => updateState(store, `[${methodName}] end`, { isLoading: false }))
-  );
+);
 
 export interface SearchState {
-  // Champs existants
   postId: number | PostgrestError | null;
   isLoading: boolean;
   error: string[];
@@ -45,16 +45,14 @@ export interface SearchState {
   new_href: string | null;
   citation: string | null;
   lien_url_article: string | null;
-  image_url: string | null;
   categorie: string | null;
-  // Nouveaux champs
+  image_url: string | null;
   video: string | null;
   postTitreAndId: { titre: string; id: number; new_href: string }[];
   faq: { question: string; response: string }[];
 }
 
 const initialValue: SearchState = {
-  // Champs existants
   postId: null,
   isLoading: false,
   error: [],
@@ -65,9 +63,8 @@ const initialValue: SearchState = {
   new_href: null,
   citation: null,
   lien_url_article: null,
-  image_url: null,
   categorie: null,
-  // Nouveaux champs
+  image_url: null,
   video: null,
   postTitreAndId: [],
   faq: []
@@ -100,112 +97,22 @@ export const SearchStore =  signalStore(
         )
       )
     ),
+    
+    setPost: rxMethod<string>(
+      pipe(
+        concatMap((articleIdea: string) =>
+          infra.setPost(articleIdea).pipe(
+            withLoading(store, 'getPost'),
+            map((response: string | PostgrestError) => throwOnPostgrestError(response)),
+            tap({
+              next: (categorie: string) => patchState(store, { categorie }),
+              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
+            })
+          )
+        )
+      )
+    ),
 
-    setTitre: rxMethod<void>(
-      pipe(
-        concatMap(() =>
-          infra.setTitre().pipe(
-            withLoading(store, 'setTitre'),
-            map((response: string | PostgrestError) => throwOnPostgrestError(response)),
-            tap({
-              next: (titre: string) => patchState(store, { titre }),
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
-            })
-          )
-        )
-      )
-    ),
-    
-    setDescriptionMeteo: rxMethod<void>(
-      pipe(
-        concatMap(() =>
-          infra.setDescriptionMeteo().pipe(
-            withLoading(store, 'setDescriptionMeteo'),
-            map((response: string | PostgrestError) => throwOnPostgrestError(response)),
-            tap({
-              next: (descriptionMeteo: string) => patchState(store, { description_meteo: descriptionMeteo }),
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
-            })
-          )
-        )
-      )
-    ),
-    
-    setPhraseAccroche: rxMethod<void>(
-      pipe(
-        concatMap(() =>
-          infra.setPhraseAccroche().pipe(
-            withLoading(store, 'setPhraseAccroche'),
-            map((response: string | PostgrestError) => throwOnPostgrestError(response)),
-            tap({
-              next: (phraseAccroche: string) => patchState(store, { phrase_accroche: phraseAccroche }),
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
-            })
-          )
-        )
-      )
-    ),
-    
-    setArticle: rxMethod<void>(
-      pipe(
-        concatMap(() =>
-          infra.setArticle().pipe(
-            withLoading(store, 'setArticle'),
-            map((response: string | PostgrestError) => throwOnPostgrestError(response)),
-            tap({
-              next: (article: string) => patchState(store, { article }),
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
-            })
-          )
-        )
-      )
-    ),
-    
-    setNewHref: rxMethod<void>(
-      pipe(
-        concatMap(() =>
-          infra.setNewHref().pipe(
-            withLoading(store, 'setNewHref'),
-            map((response: string | PostgrestError) => throwOnPostgrestError(response)),
-            tap({
-              next: (newHref: string) => patchState(store, { new_href: newHref }),
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
-            })
-          )
-        )
-      )
-    ),
-    
-    setCitation: rxMethod<void>(
-      pipe(
-        concatMap(() =>
-          infra.setCitation().pipe(
-            withLoading(store, 'setCitation'),
-            map((response: string | PostgrestError) => throwOnPostgrestError(response)),
-            tap({
-              next: (citation: string) => patchState(store, { citation }),
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
-            })
-          )
-        )
-      )
-    ),
-    
-    setLienUrlArticle: rxMethod<void>(
-      pipe(
-        concatMap(() =>
-          infra.setLienUrlArticle().pipe(
-            withLoading(store, 'setLienUrlArticle'),
-            map((response: string | PostgrestError) => throwOnPostgrestError(response)),
-            tap({
-              next: (lienUrlArticle: string) => patchState(store, { lien_url_article: lienUrlArticle }),
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
-            })
-          )
-        )
-      )
-    ),
-    
     setImageUrl: rxMethod<void>(
       pipe(
         concatMap(() =>
@@ -214,21 +121,6 @@ export const SearchStore =  signalStore(
             map((response: string | PostgrestError) => throwOnPostgrestError(response)),
             tap({
               next: (imageUrl: string) => patchState(store, { image_url: imageUrl }),
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
-            })
-          )
-        )
-      )
-    ),
-    
-    setCategorie: rxMethod<void>(
-      pipe(
-        concatMap(() =>
-          infra.setCategorie().pipe(
-            withLoading(store, 'setCategorie'),
-            map((response: string | PostgrestError) => throwOnPostgrestError(response)),
-            tap({
-              next: (categorie: string) => patchState(store, { categorie }),
               error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
             })
           )
