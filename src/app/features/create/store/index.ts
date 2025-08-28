@@ -47,6 +47,10 @@ export interface SearchState {
   lien_url_article: string | null;
   image_url: string | null;
   categorie: string | null;
+  // Nouveaux champs
+  video: string | null;
+  postTitreAndId: { titre: string; id: number; new_href: string }[];
+  faq: { question: string; response: string }[];
 }
 
 const initialValue: SearchState = {
@@ -62,7 +66,11 @@ const initialValue: SearchState = {
   citation: null,
   lien_url_article: null,
   image_url: null,
-  categorie: null
+  categorie: null,
+  // Nouveaux champs
+  video: null,
+  postTitreAndId: [],
+  faq: []
 }
 
 export const SearchStore =  signalStore(
@@ -221,6 +229,51 @@ export const SearchStore =  signalStore(
             map((response: string | PostgrestError) => throwOnPostgrestError(response)),
             tap({
               next: (categorie: string) => patchState(store, { categorie }),
+              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
+            })
+          )
+        )
+      )
+    ),
+
+    setVideo: rxMethod<void>(
+      pipe(
+        concatMap(() =>
+          infra.setVideo().pipe(
+            withLoading(store, 'setVideo'),
+            map((response: string | PostgrestError) => throwOnPostgrestError(response)),
+            tap({
+              next: (video: string) => patchState(store, { video }),
+              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
+            })
+          )
+        )
+      )
+    ),
+
+    setPostTitreAndId: rxMethod<void>(
+      pipe(
+        concatMap(() =>
+          infra.setPostTitreAndId().pipe(
+            withLoading(store, 'setPostTitreAndId'),
+            map((response: { titre: string; id: number; new_href: string }[] | PostgrestError) => throwOnPostgrestError(response)),
+            tap({
+              next: (postTitreAndId: { titre: string; id: number; new_href: string }[]) => patchState(store, { postTitreAndId }),
+              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
+            })
+          )
+        )
+      )
+    ),
+
+    setFaq: rxMethod<void>(
+      pipe(
+        concatMap(() =>
+          infra.setFaq().pipe(
+            withLoading(store, 'setFaq'),
+            map((response: { question: string; response: string }[] | PostgrestError) => throwOnPostgrestError(response)),
+            tap({
+              next: (faq: { question: string; response: string }[]) => patchState(store, { faq }),
               error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
             })
           )

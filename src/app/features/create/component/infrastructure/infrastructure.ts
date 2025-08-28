@@ -96,4 +96,66 @@ export class Infrastructure {
     const validatedCategory = 'permaculture';
     return from(Promise.resolve(validatedCategory));
   }
+
+  setVideo(): Observable<string | PostgrestError> {
+    const youtubeVideoUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+    return from(Promise.resolve(youtubeVideoUrl));
+  }
+
+  setPostTitreAndId(): Observable<{ titre: string; id: number; new_href: string }[] | PostgrestError> {
+    const mockPostTitreAndId = [
+      {
+        titre: 'Les 10 plantes indispensables pour débuter en permaculture',
+        id: 1,
+        new_href: '/blog/10-plantes-indispensables-permaculture'
+      },
+      {
+        titre: 'Comment créer un compost efficace en 30 jours',
+        id: 2,
+        new_href: '/blog/creer-compost-efficace-30-jours'
+      },
+      {
+        titre: 'Guide complet du paillage au jardin bio',
+        id: 3,
+        new_href: '/blog/guide-complet-paillage-jardin-bio'
+      },
+      {
+        titre: 'Association de légumes : les meilleures combinaisons',
+        id: 4,
+        new_href: '/blog/association-legumes-meilleures-combinaisons'
+      },
+      {
+        titre: 'Récupération d\'eau de pluie : techniques et astuces',
+        id: 5,
+        new_href: '/blog/recuperation-eau-pluie-techniques-astuces'
+      }
+    ];
+    return from(Promise.resolve(mockPostTitreAndId));
+  }
+
+  setFaq(): Observable<{ question: string; response: string }[] | PostgrestError> {
+    const mockFaq = [
+      {
+        question: 'Qu\'est-ce que la permaculture ?',
+        response: 'La permaculture est une méthode de conception de systèmes agricoles durables qui s\'inspire du fonctionnement des écosystèmes naturels. Elle vise à créer des environnements productifs, stables et résilients.'
+      },
+      {
+        question: 'Combien de temps faut-il pour voir les premiers résultats ?',
+        response: 'Les premiers résultats peuvent être visibles dès la première saison pour certaines cultures. Cependant, un système permaculturel mature nécessite généralement 3 à 5 ans pour atteindre son plein potentiel.'
+      },
+      {
+        question: 'Peut-on pratiquer la permaculture sur un petit espace ?',
+        response: 'Absolument ! La permaculture peut être adaptée à tous les espaces, même un balcon ou une terrasse. L\'important est d\'optimiser l\'utilisation de l\'espace disponible et de créer des synergies entre les éléments.'
+      },
+      {
+        question: 'Quels sont les outils indispensables pour débuter ?',
+        response: 'Pour débuter, vous aurez besoin d\'outils de base : bêche, râteau, sécateur, arrosoir, et quelques contenants pour le compost. L\'investissement peut être progressif selon vos besoins.'
+      },
+      {
+        question: 'Comment gérer les nuisibles sans pesticides ?',
+        response: 'La permaculture privilégie la prévention et les solutions naturelles : associations de plantes répulsives, introduction d\'auxiliaires, pièges écologiques, et renforcement de la biodiversité pour maintenir l\'équilibre naturel.'
+      }
+    ];
+    return from(Promise.resolve(mockFaq));
+  }
 }

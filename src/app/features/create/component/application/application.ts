@@ -50,4 +50,16 @@ export class Application {
   setCategorie(): void {
     this.store.setCategorie();
   }
+
+  setVideo(): void {
+    this.store.setVideo();
+  }
+
+  setPostTitreAndId(): void {
+    this.store.setPostTitreAndId();
+  }
+
+  setFaq(): void {
+    this.store.setFaq();
+  }
 }
