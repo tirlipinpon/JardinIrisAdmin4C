@@ -10,9 +10,12 @@ export class Application {
   private readonly store = inject(SearchStore);
   private readonly loggingService = inject(LoggingService);
   
-  getNextPostId(): void {
-    this.loggingService.info('APPLICATION', '🔄 Début getNextPostId()');    
+  getNextPostId(): void {    
     this.store.getNextPostId();
+  }
+
+  getPostTitreAndId(): void {
+    this.store.getPostTitreAndId();
   }
 
   setPost(articleIdea: string): void {
@@ -25,10 +28,6 @@ export class Application {
 
   setVideo(): void {
     this.store.setVideo();
-  }
-
-  setPostTitreAndId(): void {
-    this.store.setPostTitreAndId();
   }
 
   setFaq(): void {

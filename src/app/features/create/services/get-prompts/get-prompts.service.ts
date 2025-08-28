@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import {afficherCategories} from "../../../../utils/afficherCategories";
-import {formatCurrentDateUs} from "../../../../utils/getFormattedDate";
-import {VideoInfo} from "../../../all/services/google-search/google-search.service";
-import {afficherRandomSeoKeyWords} from "../../../../utils/afficherRandomSeoKeyWords";
+import { afficherCategories } from '../../utils/afficherCategories';
+import { formatCurrentDateUs } from '../../utils/getFormattedDate';
+import { afficherRandomSeoKeyWords } from '../../utils/afficherRandomSeoKeyWords';
+import { VideoInfo } from '../../types/videoInfo';
+
 
 @Injectable({
   providedIn: 'root'

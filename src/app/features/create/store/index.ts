@@ -80,9 +80,6 @@ export const SearchStore =  signalStore(
   withMethods((store, infra = inject(Infrastructure), loggingService = inject(LoggingService))=> ( {
     getNextPostId: rxMethod<void>(
       pipe(
-        tap(() => {
-          loggingService.info('STORE', '⚡ Début getNextPostId()');
-        }),
         concatMap(() =>
           (infra as Infrastructure).getNextPostId().pipe(
             withLoading(store, 'getNextPostId'),
@@ -92,6 +89,21 @@ export const SearchStore =  signalStore(
             tap({
               next: (postId: number) => { patchState(store, { postId }); },
               error: (error: unknown) => { patchState(store, { error: [extractErrorMessage(error)] }); }
+            })
+          )
+        )
+      )
+    ),
+
+    getPostTitreAndId: rxMethod<void>(
+      pipe(
+        concatMap(() =>
+          infra.getPostTitreAndId().pipe(
+            withLoading(store, 'getPostTitreAndId'),
+            map((response: { titre: string; id: number; new_href: string }[] | PostgrestError) => throwOnPostgrestError(response)),
+            tap({
+              next: (postTitreAndId: { titre: string; id: number; new_href: string }[]) => patchState(store, { postTitreAndId }),
+              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
             })
           )
         )
@@ -147,21 +159,6 @@ export const SearchStore =  signalStore(
             map((response: string | PostgrestError) => throwOnPostgrestError(response)),
             tap({
               next: (video: string) => patchState(store, { video }),
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
-            })
-          )
-        )
-      )
-    ),
-
-    setPostTitreAndId: rxMethod<void>(
-      pipe(
-        concatMap(() =>
-          infra.setPostTitreAndId().pipe(
-            withLoading(store, 'setPostTitreAndId'),
-            map((response: { titre: string; id: number; new_href: string }[] | PostgrestError) => throwOnPostgrestError(response)),
-            tap({
-              next: (postTitreAndId: { titre: string; id: number; new_href: string }[]) => patchState(store, { postTitreAndId }),
               error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
             })
           )

@@ -67,7 +67,7 @@ export class Infrastructure {
     return from(Promise.resolve(youtubeVideoUrl));
   }
 
-  setPostTitreAndId(): Observable<{ titre: string; id: number; new_href: string }[] | PostgrestError> {
+  getPostTitreAndId(): Observable<{ titre: string; id: number; new_href: string }[] | PostgrestError> {
     const mockPostTitreAndId = [
       {
         titre: 'Les 10 plantes indispensables pour débuter en permaculture',

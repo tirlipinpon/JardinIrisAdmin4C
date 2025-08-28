@@ -24,9 +24,10 @@ export class CreateComponent {
   }
 
   generate() {
-    this.loggingService.info('COMPONENT', '🚀 Début appel getNextPostId()');    
+    this.loggingService.info('COMPONENT', '🚀 Début appel generate()');    
     this.application.getNextPostId();
     this.application.setPost(this.articleIdea);
+    this.application.getPostTitreAndId();
   }
 
 } 

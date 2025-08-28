@@ -1,5 +1,5 @@
-import {Comment} from "./comment";
-import {ImageChapitre} from "./imageChapitre";
+import { Comment } from "./comment";
+import { ImageChapitre } from "./imageChapitre";
 
 export interface Post {
   id?: number;

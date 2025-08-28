@@ -20,7 +20,8 @@ Rédige un article de blog horticole destiné à promouvoir tes services de jard
 - Respecte les critères EEAT (Expertise, Experience, Authoritativeness, Trustworthiness).
 - Utilise les mots-clés SEO suivants : "${afficherRandomSeoKeyWords()}". Optimise naturellement leur intégration pour l’algorithme des moteurs de recherche, sans nuire à la fluidité.
 - Structure l'article, en HTML minifié sur une seule ligne, et fournis-le dans un objet JSON strictement valide selon le format ci-dessous.
-- Chaque paragraphe comptera au minimum 200 vrais mots rédigés à la main, et chaque paragraphe contiendra titre questionnel, sous-titre accrocheur (~10 mots), corps de texte, et une citation pertinente (thème vie, nature, jardin; cite l'auteur si connu), sans doubles guillemets.
+    *Chaque paragraphe comptera au minimum 200 vrais mots rédigés à la main, et chaque paragraphe contiendra titre questionnel, sous-titre accrocheur (~10 mots), corps de texte.
+    *Chaque paragraphe comportera en entête au début le tag<span id="paragraphe-#">...</span> pour attribuer l'identifiant au chapitre paragraphe.
 - Pour le titre, rédige une question informationnelle attractive et propose également une URL SEO-friendly (utilise le mot-clé principal, pas d'accents, tirets, suppressions de mots inutiles, minuscules uniquement).
 - Rédige une prévision météo locale (Bruxelles) autour de 50 mots, factuelle et incluant température minimale et maximale, ensoleillement, horaires soleil, pluviométrie, et accompagne la description d'icônes explicites.
 - Mentionne l’URL du premier lien de source consulté dans "lien1".
@@ -32,9 +33,9 @@ Le format attendu (la sortie doit strictement correspondre à cet unique objet J
   "titre": "[Titre court, questionnel, engageant, mot-clé inclus]",
   "description_meteo": "[Prévisions IRM pour Bruxelles, 50 mots environ, infos chiffrées et icônes]",
   "phrase_accroche": "[Phrase motivationnelle transactionnelle, ~45 mots]",
-  "article": "[HTML minifié pour chaque paragraphe, 200 mots min, question/titre, sous-titre, corps, citation, etc. Jusqu’à paragraphe-${environment.globalNbChapter}]",
+  "article": "[HTML minifié pour chaque paragraphe, 200 mots min, question/titre, sous-titre, corps, etc. Jusqu’à paragraphe-${environment.globalNbChapter}]",
   "new_href": "[URL SEO-friendly, mot-clé principal, pas d’accents, suppression de mots inutiles, minuscules, claire, courte]",
-  "citation": "[Citation liée au jardinage, nature ou vie, auteur reconnu ou inspirant, pas de doubles guillemets]",
+  "citation": "[Citation liée à l'article si possible, auteur reconnu ou inspirant, pas de doubles guillemets]",
   "lien_url_article": {
     "lien1": "[Première URL utilisée en source]"
   },
