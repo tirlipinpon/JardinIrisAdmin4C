@@ -37,4 +37,22 @@ export class SupabaseService {
     return data as number;
   }
 
+  async getLastPostTitreAndId(limit: number = 10): Promise<{ titre: string; id: number; new_href: string }[] | PostgrestError> {
+    const { data, error } = await this.client
+      .from('post')
+      .select('id, titre, new_href')
+      .eq('deleted', false)
+      .eq('valid', true)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.log('Erreur lors de la récupération des posts: ' + error.message);
+      return error;
+    } else {
+      console.log("getLastPostTitreAndId = " + JSON.stringify(data, null, 2));
+      return data as { titre: string; id: number; new_href: string }[];
+    }
+  }
+
 } 

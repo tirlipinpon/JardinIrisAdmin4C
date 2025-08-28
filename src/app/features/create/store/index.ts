@@ -95,11 +95,11 @@ export const SearchStore =  signalStore(
       )
     ),
 
-    getPostTitreAndId: rxMethod<void>(
+    getLastPostTitreAndId: rxMethod<void>(
       pipe(
         concatMap(() =>
-          infra.getPostTitreAndId().pipe(
-            withLoading(store, 'getPostTitreAndId'),
+          infra.getLastPostTitreAndId().pipe(
+            withLoading(store, 'getLastPostTitreAndId'),
             map((response: { titre: string; id: number; new_href: string }[] | PostgrestError) => throwOnPostgrestError(response)),
             tap({
               next: (postTitreAndId: { titre: string; id: number; new_href: string }[]) => patchState(store, { postTitreAndId }),

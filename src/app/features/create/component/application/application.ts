@@ -14,8 +14,8 @@ export class Application {
     this.store.getNextPostId();
   }
 
-  getPostTitreAndId(): void {
-    this.store.getPostTitreAndId();
+  getLastPostTitreAndId(): void {
+    this.store.getLastPostTitreAndId();
   }
 
   setPost(articleIdea: string): void {

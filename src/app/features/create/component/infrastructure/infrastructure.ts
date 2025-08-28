@@ -3,10 +3,10 @@ import { from, map, Observable } from 'rxjs';
 import { SupabaseService } from '../../../../shared/services/supabase.service';
 import { PostgrestError } from '@supabase/supabase-js';
 import { LoggingService } from '../../../../shared/services/logging.service';
-import { GetPromptsService } from '../get-prompts/get-prompts.service';
 import { OpenaiApiService } from '../../services/openai-api/openai-api.service';
 import { parseJsonSafe, extractJSONBlock } from '../../utils/cleanJsonObject';
 import { Post } from '../../types/post';
+import { GetPromptsService } from '../../services/get-prompts/get-prompts.service';
 
 
 @Injectable({
@@ -19,7 +19,6 @@ export class Infrastructure {
   private readonly openaiApiService = inject(OpenaiApiService);
 
   getNextPostId(): Observable<number | PostgrestError> {
-    this.loggingService.info('INFRASTRUCTURE', '🔧 Début getNextPostId()');
     const shouldReturnError = false;
     const shouldReturnMock = false
     
@@ -46,7 +45,7 @@ export class Infrastructure {
 
   setPost(articleIdea: string): Observable<Post | PostgrestError> {
     const prompt = this.getPromptsService.generateArticle(articleIdea);
-    return from(this.openaiApiService.fetchData(prompt, true)).pipe(
+    return from(this.openaiApiService.fetchData(prompt, false)).pipe(
       map(result => {
         if (result === null) {
           throw new Error('Aucun résultat retourné par l\'API OpenAI');
@@ -61,41 +60,14 @@ export class Infrastructure {
     return from(Promise.resolve(generatedImageUrl));
   }
 
-
   setVideo(): Observable<string | PostgrestError> {
     const youtubeVideoUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
     return from(Promise.resolve(youtubeVideoUrl));
   }
 
-  getPostTitreAndId(): Observable<{ titre: string; id: number; new_href: string }[] | PostgrestError> {
-    const mockPostTitreAndId = [
-      {
-        titre: 'Les 10 plantes indispensables pour débuter en permaculture',
-        id: 1,
-        new_href: '/blog/10-plantes-indispensables-permaculture'
-      },
-      {
-        titre: 'Comment créer un compost efficace en 30 jours',
-        id: 2,
-        new_href: '/blog/creer-compost-efficace-30-jours'
-      },
-      {
-        titre: 'Guide complet du paillage au jardin bio',
-        id: 3,
-        new_href: '/blog/guide-complet-paillage-jardin-bio'
-      },
-      {
-        titre: 'Association de légumes : les meilleures combinaisons',
-        id: 4,
-        new_href: '/blog/association-legumes-meilleures-combinaisons'
-      },
-      {
-        titre: 'Récupération d\'eau de pluie : techniques et astuces',
-        id: 5,
-        new_href: '/blog/recuperation-eau-pluie-techniques-astuces'
-      }
-    ];
-    return from(Promise.resolve(mockPostTitreAndId));
+  getLastPostTitreAndId(): Observable<{ titre: string; id: number; new_href: string }[] | PostgrestError> {
+    this.loggingService.info('INFRASTRUCTURE', '🔧 Début getLastPostTitreAndId()');
+    return from(this.supabaseService.getLastPostTitreAndId(10));
   }
 
   setFaq(): Observable<{ question: string; response: string }[] | PostgrestError> {
