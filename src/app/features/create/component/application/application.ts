@@ -10,15 +10,10 @@ export class Application {
   private readonly store = inject(SearchStore);
   private readonly loggingService = inject(LoggingService);
   
-  getNextPostId(): void {    
+
+  generate(articleIdea: string): void {
     this.store.getNextPostId();
-  }
-
-  getLastPostTitreAndId(): void {
     this.store.getLastPostTitreAndId();
-  }
-
-  setPost(articleIdea: string): void {
     this.store.setPost(articleIdea);
   }
 

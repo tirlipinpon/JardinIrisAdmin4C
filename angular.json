@@ -27,6 +27,7 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/admin2/",
               "budgets": [
                 {
                   "type": "initial",
