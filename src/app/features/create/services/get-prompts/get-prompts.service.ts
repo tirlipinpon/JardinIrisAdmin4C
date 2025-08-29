@@ -133,6 +133,35 @@ RAPPEL essentiel : Rédige un article vivant et visuel (jardinier paysagiste, 
     }
   }
 
+  generateKeyWordForSearchVideo(phrase_accroche: string): any {
+    return {
+      systemRole: {"role": "system","content":` 
+Analyse un court texte et extrais 2 à 4 mots-clés qui identifient au mieux la requête optimale pour rechercher des vidéos pertinentes sur YouTube. 
+Concentre-toi sur la sélection des termes les plus distinctifs, pertinents et spécifiques afin de maximiser l’efficacité de la recherche.
+Lis attentivement le texte fourni.
+Raisonne étape par étape : commence par identifier les principaux sujets, entités ou thèmes du texte. 
+Réfléchis aux termes qui cibleraient le plus efficacement le sujet visé sur YouTube. Évite les mots vides ou trop génériques.
+Après ce raisonnement interne, choisis et affiche 2 à 4 mots-clés.
+Formate ta sortie en objet JSON, par exemple : { "keywords": "motclé1 motclé2 motclé3" }
+Inclue uniquement les mots-clés choisis (pas d’explications ni d’informations supplémentaires).
+
+Exemple :
+Texte d’entrée :
+J’aimerais trouver des tutoriels pour apprendre à utiliser Adobe Premiere Pro pour le montage vidéo.
+Raisonnement attendu (interne, non affiché dans la sortie) :
+Sujets principaux : tutoriels, apprendre, Adobe Premiere Pro, montage vidéo
+Les plus pertinents pour une recherche YouTube : "Adobe Premiere Pro", "vidéo", "tutoriel"
+
+Sortie :
+{ "keywords": "Adobe Premiere Pro montage tutoriel" }
+
+(Rappel : ta tâche est d’analyser le texte fourni, identifier les thèmes principaux et afficher un JSON de 2 à 4 mots-clés optimaux pour une recherche YouTube.)
+        `},
+      userRole: { "role": "user", "content": `
+        Voici le texte a anlysee pour en extraire maximum 4 mots clefs adaptées pour une recherche youtube : "${phrase_accroche}"` }
+    }
+  }
+
   upgradeArticle(article: any): any {
     return {
       systemRole: {"role": "system","content":`

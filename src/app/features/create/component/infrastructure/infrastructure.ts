@@ -1,9 +1,10 @@
 import { inject, Injectable } from '@angular/core';
-import { from, map, Observable } from 'rxjs';
+import { from, map, Observable, of, switchMap } from 'rxjs';
 import { SupabaseService } from '../../../../shared/services/supabase.service';
 import { PostgrestError } from '@supabase/supabase-js';
 import { LoggingService } from '../../../../shared/services/logging.service';
 import { OpenaiApiService } from '../../services/openai-api/openai-api.service';
+import { GoogleSearchService, VideoInfo } from '../../services/google-search/google-search.service';
 import { parseJsonSafe, extractJSONBlock } from '../../utils/cleanJsonObject';
 import { Post } from '../../types/post';
 import { GetPromptsService } from '../../services/get-prompts/get-prompts.service';
@@ -17,6 +18,7 @@ export class Infrastructure {
   private readonly loggingService = inject(LoggingService);
   private readonly getPromptsService = inject(GetPromptsService);
   private readonly openaiApiService = inject(OpenaiApiService);
+  private readonly googleSearchService = inject(GoogleSearchService);
 
   getNextPostId(): Observable<number | PostgrestError> {
     const shouldReturnError = false;
@@ -74,9 +76,34 @@ export class Infrastructure {
     })());
   }
 
-  setVideo(): Observable<string | PostgrestError> {
-    const youtubeVideoUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-    return from(Promise.resolve(youtubeVideoUrl));
+  setVideo(phrase_accroche: string, postId: number): Observable<string | PostgrestError> {
+    const prompt = this.getPromptsService.generateKeyWordForSearchVideo(phrase_accroche);
+    return from(this.openaiApiService.fetchData(prompt, true)).pipe(
+      switchMap(result => {
+        if (!result) return of('');
+        try {
+          const keywordData: { keywords: string } = JSON.parse(extractJSONBlock(result));
+          const keywords = keywordData.keywords;
+          if (!keywords) return of('');
+          return this.googleSearchService.searchFrenchVideo(keywords).pipe(
+            switchMap((videoUrls: VideoInfo[]) => {
+              if (!videoUrls.length) return of('');
+              const videoPrompt = this.getPromptsService.searchVideoFromYoutubeResult(phrase_accroche, videoUrls);
+              return from(this.openaiApiService.fetchData(videoPrompt, true)).pipe(
+                switchMap(videoResult => {
+                  const videoData: { video: string } = JSON.parse(extractJSONBlock(videoResult));
+                  const videoUrl = videoData.video && videoData.video.length ? videoData.video : null;
+                  return videoUrl ? of(videoUrl) : of('');
+                })
+              );
+            })
+          );
+        } catch (error) {
+          this.loggingService.error('INFRASTRUCTURE', 'Erreur lors du parsing du keyword', error);
+          return of('');
+        }
+      })
+    );
   }
 
   getLastPostTitreAndId(): Observable<{ titre: string; id: number; new_href: string }[] | PostgrestError> {

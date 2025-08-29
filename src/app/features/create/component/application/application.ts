@@ -17,6 +17,8 @@ export class Application {
       if (this.shouldGenerateFaq && article && article.trim() !== '') {
         this.shouldGenerateFaq = false;
         this.store.setFaq();
+        this.store.setVideo();
+        // this.store.setImageUrl();
       }
     });
   }
@@ -28,15 +30,6 @@ export class Application {
     this.store.setPost(articleIdea);
   }
 
-  setImageUrl(): void {
-    this.store.setImageUrl();
-  }
 
-  setVideo(): void {
-    this.store.setVideo();
-  }
 
-  setFaq(): void {
-    this.store.setFaq();
-  }
 }

@@ -191,16 +191,24 @@ export const SearchStore =  signalStore(
 
     setVideo: rxMethod<void>(
       pipe(
-        concatMap(() =>
-          infra.setVideo().pipe(
+        concatMap(() => {
+          const phrase_accroche = store.phrase_accroche();
+          const postId = store.postId();
+          
+          const validationError = validateStoreValues(store, [
+            { value: phrase_accroche, errorMessage: 'Le titre doit être généré avant de rechercher une vidéo' },
+            { value: postId, errorMessage: 'Le postId doit être généré avant de rechercher une vidéo', validator: (val) => typeof val === 'number' }
+          ])
+          if (validationError) { return []; }
+          return infra.setVideo(phrase_accroche!, postId as number).pipe(
             withLoading(store, 'setVideo'),
             map((response: string | PostgrestError) => throwOnPostgrestError(response)),
             tap({
               next: (video: string) => patchState(store, { video }),
               error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
             })
-          )
-        )
+          );
+        })
       )
     ),
 

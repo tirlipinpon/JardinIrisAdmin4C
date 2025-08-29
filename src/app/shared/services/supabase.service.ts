@@ -50,7 +50,7 @@ export class SupabaseService {
       console.log('Erreur lors de la récupération des posts: ' + error.message);
       return error;
     } else {
-      console.log("getLastPostTitreAndId = " + JSON.stringify(data, null, 2));
+      // console.log("getLastPostTitreAndId = " + JSON.stringify(data, null, 2));
       return data as { titre: string; id: number; new_href: string }[];
     }
   }
