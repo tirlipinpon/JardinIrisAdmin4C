@@ -55,4 +55,52 @@ export class SupabaseService {
     }
   }
 
+  async uploadBase64ToSupabase(postId: number, b64_json: string): Promise<string | null> {
+    try {
+      // 1️⃣ Convertir le base64 en Uint8Array
+      const byteCharacters = atob(b64_json);
+      const byteNumbers = new Array(byteCharacters.length)
+        .fill(0)
+        .map((_, i) => byteCharacters.charCodeAt(i));
+      const byteArray = new Uint8Array(byteNumbers);
+
+      // 2️⃣ Upload direct dans Supabase Storage
+      const { data, error } = await this.client.storage
+        .from(environment.supabaseBucket)
+        .upload(`${postId}.png`, byteArray, {
+          contentType: "image/png",
+          upsert: true,
+        });
+
+      if (error) throw error;
+
+      // 3️⃣ Récupérer l’URL publique
+      const { data: publicUrlData } = this.client.storage
+        .from(environment.supabaseBucket)
+        .getPublicUrl(`${postId}.png`);
+
+      return publicUrlData?.publicUrl || null;
+    } catch (err) {
+      console.error("Erreur uploadBase64ToSupabase:", err);
+      return null;
+    }
+  }
+
+  async updateImageUrlPostByIdForm(idPost: number, json64: string) {
+    try {
+      const {data, error} = await this.client
+        .from('post')
+        .update({image_url: json64})
+        .eq('id', idPost)
+        .select()
+
+      if (error) {
+        throw error;
+      }
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
 } 

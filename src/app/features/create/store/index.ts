@@ -28,6 +28,32 @@ const extractErrorMessage = (error: any): string => {
   return String(error);
 };
 
+interface ValidationRule {
+  value: any;
+  errorMessage: string;
+  validator?: (value: any) => boolean;
+}
+
+const validateStoreValues = (store: any, rules: ValidationRule[]): string | null => {
+  for (const rule of rules) {
+    const { value, errorMessage, validator } = rule;
+    
+    if (validator) {
+      if (!validator(value)) {
+        patchState(store, { error: [errorMessage] });
+        return errorMessage;
+      }
+    } else {
+      // Validation par défaut : vérifier que la valeur existe et n'est pas vide
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        patchState(store, { error: [errorMessage] });
+        return errorMessage;
+      }
+    }
+  }
+  return null;
+};
+
 const withLoading = <T>(store: any, methodName: string) => (source$: Observable<T>) =>
   source$.pipe(
     tap(() => updateState(store, `[${methodName}] start`, { isLoading: true })),
@@ -138,16 +164,28 @@ export const SearchStore =  signalStore(
 
     setImageUrl: rxMethod<void>(
       pipe(
-        concatMap(() =>
-          infra.setImageUrl().pipe(
+        concatMap(() => {
+          const phraseAccroche = store.phrase_accroche();
+          const postId = store.postId();
+          
+          const validationError = validateStoreValues(store, [
+            { value: phraseAccroche, errorMessage: 'La phrase d\'accroche doit être générée avant de créer l\'image' },
+            { value: postId, errorMessage: 'Le postId doit être généré avant de créer la FAQ', validator: (val) => typeof val === 'number' }
+          ]);
+          
+          if (validationError) {
+            return [];
+          }
+          
+          return infra.setImageUrl(phraseAccroche!, postId as number).pipe(
             withLoading(store, 'setImageUrl'),
             map((response: string | PostgrestError) => throwOnPostgrestError(response)),
             tap({
               next: (imageUrl: string) => patchState(store, { image_url: imageUrl }),
               error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
             })
-          )
-        )
+          );
+        })
       )
     ),
 
@@ -168,16 +206,25 @@ export const SearchStore =  signalStore(
 
     setFaq: rxMethod<void>(
       pipe(
-        concatMap(() =>
-          infra.setFaq().pipe(
+        concatMap(() => {
+          const article = store.article();
+          const validationError = validateStoreValues(store, [
+            { value: article, errorMessage: 'L\'article doit être généré avant de créer la FAQ' },
+          ]);
+          
+          if (validationError) {
+            return [];
+          }
+          
+          return infra.setFaq(article!).pipe(
             withLoading(store, 'setFaq'),
             map((response: { question: string; response: string }[] | PostgrestError) => throwOnPostgrestError(response)),
             tap({
               next: (faq: { question: string; response: string }[]) => patchState(store, { faq }),
               error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
             })
-          )
-        )
+          );
+        })
       )
     )
   }))

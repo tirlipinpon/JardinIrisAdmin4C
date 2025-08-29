@@ -55,9 +55,23 @@ export class Infrastructure {
     );
   }
 
-  setImageUrl(): Observable<string | PostgrestError> {
-    const generatedImageUrl = 'https://via.placeholder.com/800x400/4CAF50/FFFFFF?text=Jardin+Bio+Permaculture';
-    return from(Promise.resolve(generatedImageUrl));
+  setImageUrl(phraseAccroche: string, postId: number): Observable<string | PostgrestError> {
+    return from((async () => {
+      // 1️⃣ Générer l'image en base64
+      const b64_json = await this.openaiApiService.imageGeneratorUrl(this.getPromptsService.getOpenAiPromptImageGenerator(phraseAccroche));
+      // 2️⃣ Convertir le base64 en Blob
+      if (b64_json) {
+        // 3️⃣ Uploader le Blob dans Supabase Storage
+        const imageUrl = await this.supabaseService.uploadBase64ToSupabase(postId, b64_json);
+        if (!imageUrl) {
+          throw new Error('Échec de l\'upload de l\'image vers Supabase');
+        }
+        // 4️⃣ Mettre à jour le post avec l'URL publique
+        await this.supabaseService.updateImageUrlPostByIdForm(postId, imageUrl);
+        return imageUrl;
+      }
+      throw new Error('Échec de la génération de l\'image par OpenAI');
+    })());
   }
 
   setVideo(): Observable<string | PostgrestError> {
@@ -70,29 +84,17 @@ export class Infrastructure {
     return from(this.supabaseService.getLastPostTitreAndId(10));
   }
 
-  setFaq(): Observable<{ question: string; response: string }[] | PostgrestError> {
-    const mockFaq = [
-      {
-        question: 'Qu\'est-ce que la permaculture ?',
-        response: 'La permaculture est une méthode de conception de systèmes agricoles durables qui s\'inspire du fonctionnement des écosystèmes naturels. Elle vise à créer des environnements productifs, stables et résilients.'
-      },
-      {
-        question: 'Combien de temps faut-il pour voir les premiers résultats ?',
-        response: 'Les premiers résultats peuvent être visibles dès la première saison pour certaines cultures. Cependant, un système permaculturel mature nécessite généralement 3 à 5 ans pour atteindre son plein potentiel.'
-      },
-      {
-        question: 'Peut-on pratiquer la permaculture sur un petit espace ?',
-        response: 'Absolument ! La permaculture peut être adaptée à tous les espaces, même un balcon ou une terrasse. L\'important est d\'optimiser l\'utilisation de l\'espace disponible et de créer des synergies entre les éléments.'
-      },
-      {
-        question: 'Quels sont les outils indispensables pour débuter ?',
-        response: 'Pour débuter, vous aurez besoin d\'outils de base : bêche, râteau, sécateur, arrosoir, et quelques contenants pour le compost. L\'investissement peut être progressif selon vos besoins.'
-      },
-      {
-        question: 'Comment gérer les nuisibles sans pesticides ?',
-        response: 'La permaculture privilégie la prévention et les solutions naturelles : associations de plantes répulsives, introduction d\'auxiliaires, pièges écologiques, et renforcement de la biodiversité pour maintenir l\'équilibre naturel.'
-      }
-    ];
-    return from(Promise.resolve(mockFaq));
+  setFaq(article: string): Observable<{ question: string; response: string }[] | PostgrestError> {
+    const prompt = this.getPromptsService.getPromptFaq(article);
+      return from(this.openaiApiService.fetchData(prompt, true)).pipe(
+        map(result => {
+          if (result === null) {
+            throw new Error('Aucun résultat retourné par l\'API OpenAI');
+          }
+          const data: {question: string; response: string}[]  = JSON.parse(extractJSONBlock(result))
+          // TODO: Utiliser postId pour sauvegarder la FAQ dans Supabase
+          return data;
+        })
+      );
   }
 }
