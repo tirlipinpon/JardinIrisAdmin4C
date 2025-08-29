@@ -192,7 +192,7 @@ export const SearchStore =  signalStore(
     setVideo: rxMethod<void>(
       pipe(
         concatMap(() => {
-          const phrase_accroche = store.phrase_accroche();
+          const phrase_accroche = store.titre();
           const postId = store.postId();
           
           const validationError = validateStoreValues(store, [
@@ -229,6 +229,37 @@ export const SearchStore =  signalStore(
             map((response: { question: string; response: string }[] | PostgrestError) => throwOnPostgrestError(response)),
             tap({
               next: (faq: { question: string; response: string }[]) => patchState(store, { faq }),
+              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
+            })
+          );
+        })
+      )
+    ),
+
+    // Méthode pour modifier l'article sans déclencher d'effets
+    updateArticle: (newArticle: string) => {
+      patchState(store, { article: newArticle });
+    },
+
+    // Méthode pour demander à l'infrastructure de modifier l'article
+    updateArticleWithAI: rxMethod<void>(
+      pipe(
+        concatMap(() => {
+          const currentArticle = store.article();
+          
+          const validationError = validateStoreValues(store, [
+            { value: currentArticle, errorMessage: 'Un article doit exister avant de pouvoir le modifier' }
+          ]);
+          
+          if (validationError) {
+            return [];
+          }
+          
+          return infra.updateArticle(currentArticle!).pipe(
+            withLoading(store, 'updateArticleWithAI'),
+            map((response: string | PostgrestError) => throwOnPostgrestError(response)),
+            tap({
+              next: (updatedArticle: string) => patchState(store, { article: updatedArticle }),
               error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
             })
           );

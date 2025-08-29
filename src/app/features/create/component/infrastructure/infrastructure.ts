@@ -20,6 +20,27 @@ export class Infrastructure {
   private readonly openaiApiService = inject(OpenaiApiService);
   private readonly googleSearchService = inject(GoogleSearchService);
 
+  /**
+   * Méthode utilitaire pour appeler OpenAI et traiter le résultat
+   */
+  private callOpenAI<T>(prompt: any, useJsonMode: boolean, resultProcessor: (result: string) => T): Observable<T | PostgrestError> {
+    return from(this.openaiApiService.fetchData(prompt, useJsonMode)).pipe(
+      map(result => {
+        if (result === null) {
+          throw new Error('Aucun résultat retourné par l\'API OpenAI');
+        }
+        return resultProcessor(result);
+      })
+    );
+  }
+
+  /**
+   * Méthode utilitaire pour parser le JSON depuis une réponse OpenAI
+   */
+  private parseOpenAIResponse<T>(result: string): T {
+    return JSON.parse(extractJSONBlock(result));
+  }
+
   getNextPostId(): Observable<number | PostgrestError> {
     const shouldReturnError = false;
     const shouldReturnMock = false
@@ -47,29 +68,16 @@ export class Infrastructure {
 
   setPost(articleIdea: string): Observable<Post | PostgrestError> {
     const prompt = this.getPromptsService.generateArticle(articleIdea);
-    return from(this.openaiApiService.fetchData(prompt, false)).pipe(
-      map(result => {
-        if (result === null) {
-          throw new Error('Aucun résultat retourné par l\'API OpenAI');
-        }
-        return parseJsonSafe(extractJSONBlock(result));
-      })
-    );
+    return this.callOpenAI(prompt, false, result => parseJsonSafe(extractJSONBlock(result)));
   }
 
   updateArticle(currentArticle: string): Observable<string | PostgrestError> {
     const prompt = this.getPromptsService.updateArticle(currentArticle);
-    return from(this.openaiApiService.fetchData(prompt, true)).pipe(
-      map(result => {
-        if (result === null) {
-          throw new Error('Aucun résultat retourné par l\'API OpenAI');
-        }
-        // Extraire seulement le contenu de l'article modifié
-        const updatedContent = extractJSONBlock(result);
-        const parsedResult = JSON.parse(updatedContent);
-        return parsedResult.article || updatedContent;
-      })
-    );
+    return this.callOpenAI(prompt, true, result => {
+      const updatedContent = extractJSONBlock(result);
+      const parsedResult = JSON.parse(updatedContent);
+      return parsedResult.article || updatedContent;
+    });
   }
 
   setImageUrl(phraseAccroche: string, postId: number): Observable<string | PostgrestError> {
@@ -93,30 +101,29 @@ export class Infrastructure {
 
   setVideo(phrase_accroche: string, postId: number): Observable<string | PostgrestError> {
     const prompt = this.getPromptsService.generateKeyWordForSearchVideo(phrase_accroche);
-    return from(this.openaiApiService.fetchData(prompt, true)).pipe(
-      switchMap(result => {
-        if (!result) return of('');
-        try {
-          const keywordData: { keywords: string } = JSON.parse(extractJSONBlock(result));
-          const keywords = keywordData.keywords;
-          if (!keywords) return of('');
-          return this.googleSearchService.searchFrenchVideo(keywords).pipe(
-            switchMap((videoUrls: VideoInfo[]) => {
-              if (!videoUrls.length) return of('');
-              const videoPrompt = this.getPromptsService.searchVideoFromYoutubeResult(phrase_accroche, videoUrls);
-              return from(this.openaiApiService.fetchData(videoPrompt, true)).pipe(
-                switchMap(videoResult => {
-                  const videoData: { video: string } = JSON.parse(extractJSONBlock(videoResult));
-                  const videoUrl = videoData.video && videoData.video.length ? videoData.video : null;
-                  return videoUrl ? of(videoUrl) : of('');
-                })
-              );
-            })
-          );
-        } catch (error) {
-          this.loggingService.error('INFRASTRUCTURE', 'Erreur lors du parsing du keyword', error);
-          return of('');
+    return this.callOpenAI(prompt, true, result => {
+      const keywordData: { keywords: string } = this.parseOpenAIResponse(result);
+      return keywordData.keywords;
+    }).pipe(
+      switchMap(keywordsResult => {
+        // Vérifier si c'est une erreur PostgrestError
+        if (typeof keywordsResult === 'object' && 'message' in keywordsResult) {
+          return of(keywordsResult as PostgrestError);
         }
+        
+        const keywords = keywordsResult as string;
+        if (!keywords) return of('');
+        
+        return this.googleSearchService.searchFrenchVideo(keywords).pipe(
+          switchMap((videoUrls: VideoInfo[]) => {
+            if (!videoUrls.length) return of('');
+            const videoPrompt = this.getPromptsService.searchVideoFromYoutubeResult(phrase_accroche, videoUrls);
+            return this.callOpenAI(videoPrompt, true, videoResult => {
+              const videoData: { video: string } = this.parseOpenAIResponse(videoResult);
+              return videoData.video && videoData.video.length ? videoData.video : '';
+            });
+          })
+        );
       })
     );
   }
@@ -128,15 +135,10 @@ export class Infrastructure {
 
   setFaq(article: string): Observable<{ question: string; response: string }[] | PostgrestError> {
     const prompt = this.getPromptsService.getPromptFaq(article);
-      return from(this.openaiApiService.fetchData(prompt, true)).pipe(
-        map(result => {
-          if (result === null) {
-            throw new Error('Aucun résultat retourné par l\'API OpenAI');
-          }
-          const data: {question: string; response: string}[]  = JSON.parse(extractJSONBlock(result))
-          // TODO: Utiliser postId pour sauvegarder la FAQ dans Supabase
-          return data;
-        })
-      );
+    return this.callOpenAI(prompt, true, result => {
+      const data: { question: string; response: string }[] = this.parseOpenAIResponse(result);
+      // TODO: Utiliser postId pour sauvegarder la FAQ dans Supabase
+      return data;
+    });
   }
 }

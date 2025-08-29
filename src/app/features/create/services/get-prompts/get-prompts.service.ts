@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { afficherCategories } from '../../utils/afficherCategories';
-import { formatCurrentDateUs } from '../../utils/getFormattedDate';
 import { afficherRandomSeoKeyWords } from '../../utils/afficherRandomSeoKeyWords';
 import { VideoInfo } from '../../types/videoInfo';
 import { environment } from '../../../../../environments/environment';
@@ -12,62 +11,15 @@ import { environment } from '../../../../../environments/environment';
 })
 export class GetPromptsService {
 
-  selectArticle(newsApiData: any): any {
-    return {
-      systemRole: {
-        "role": "system",
-        "content": `
-        Analysez une liste d'articles pour déterminer s'il y a un article pertinent pour un blog.
-Considérez si l'article est adapté à des amateurs ou professionnels et s'il est lié aux catégories ${afficherCategories(', ')}.
-# Critères d'évaluation
-- Vérifiez si l'article est pertinent pour des lecteurs amateurs ou professionnels selon ces catégories : ${afficherCategories(', ')}.
-- Assurez-vous que le contenu est lié aux catégories spécifiées, directement ou indirectement.
-# Instructions de Sortie
-Si vous trouvez un article pertinent, retournez un objet JSON valide avec les champs suivants :
-- \`"valid"\` : boolean - indique si l'article est pertinent.
-- \`"explication"\` : objet avec raisons pourquoi chaque article est pertinent ou non pour le blog. Incluez une clé pour chaque article sous la forme \`"raison-article-1"\`, \`"raison-article-2"\`, etc.
-  - Exemple: \`"raison-article-1": "Non pertinent car il parle de... ."\`, \`"raison-article-2": "Pertinent car il parle de... ."\`
-- \`"url"\` : URL de l'article validé
-- \`"image_url"\` : URL de l'image de l'article validé
-Assurez-vous que chaque ligne du JSON est sur une ligne séparée sans aucun texte supplémentaire.
-# Format de Sortie
-Le résultat doit être un JSON strictement valide comme ceci:
-
-{
-    "valid": [true/false],
-    "explication": {
-        "raison-article-1": "[Explication pourquoi cet article est pertinent ou non pertinent]",
-        "raison-article-2": "[Explication pourquoi cet article est pertinent ou non pertinent]",
-        ...
-    },
-    "url": "[URL de l'article]",
-    "image_url": "[URL de l'image de l'article]"
-}
-
-# Notes
-- Analysez chaque article dans la liste fournie et justifiez pourquoi il est pertinent ou non.
-- Ne retournez **qu'un seul objet JSON** correspondant à l'article pertinent si trouvé.
-- Pour les articles jugés non pertinents, l'explication doit tout de même être fournie dans le champ \`explication\`.
-- Aucune structuration ou texte supplémentaire n'est nécessaire en dehors du JSON.
-        `},
-      userRole: {
-        "role": "user",
-        "content": `Voici la liste des articles à évaluer : ${JSON.stringify(newsApiData)}.
-      Tu dois retourner un objet JSON avec un seul article valide s'il y en a un, avec un tableau 'explication' contenant la raison de pertinence ou non pertinence pour chaque article analysé.
-      `
-      }
-    }
-  }
-
   generateArticle(article?: any): any {
     return {
       systemRole: {"role": "system","content":`
 
-Rédige un article de blog horticole destiné à promouvoir tes services de jardinier paysagiste humain à Bruxelles, en adoptant un style authentique, vivant, et jamais académique ni reconnaissable comme écrit par une IA. Mets systématiquement en forme l’intégralité du texte au format HTML, balisé pour faciliter la lecture et la compréhension : chaque CHAPITRE (au sein de chaque balise <span id="paragraphe-#">) doit présenter un contenu clairement segmenté et ENRICHI de balises HTML de mise en forme adaptées (balises <b>, <em>, <u>, <ul>, <ol>, <li>, <table>, etc., en plus du balisage principal prévu : <span>, <h4>, <article>…), de manière à améliorer la lisibilité et l’attrait VISUEL pour le lecteur, tout en respectant scrupuleusement la structure imposée ci-dessous. Tous les autres critères et instructions restent identiques.
+Rédige un article de blog en temps que jardinier paysagiste humain à Bruxelles, en adoptant un style authentique, vivant, et non reconnaissable comme écrit par une IA. Mets systématiquement en forme l’intégralité du texte au format HTML, balisé pour faciliter la lecture et la compréhension : chaque CHAPITRE (au sein de chaque balise <span id="paragraphe-#">) doit présenter un contenu clairement segmenté et ENRICHI de balises HTML de mise en forme adaptées (balises <b>, <em>, <u>, <ul>, <ol>, <li>, <table>, etc., en plus du balisage principal prévu : <span>, <h4>, <article>…), de manière à améliorer la lisibilité et l’attrait VISUEL pour le lecteur, tout en respectant scrupuleusement la structure imposée ci-dessous. Tous les autres critères et instructions restent identiques.
 
 - Utilise un ton professionnel mais accessible, avec des phrases à la longueur variable et des imperfections naturelles pour un effet « conversation réelle ». Bannis absolument toute conclusion scolaire.
 - Adresse-toi directement au lecteur (“je”, “on”); de conseils concrets tirés de ton expérience, et d’anecdotes ou digressions issues du terrain.
-- Intègre des détails techniques horticoles pertinents, récents, et adaptés au contexte écologique de Bruxelles.
+- Intègre des détails techniques pertinents, récents, et adaptés au contexte écologique de Bruxelles.
 - Respecte les critères EEAT (Expertise, Expérience, Autorité, Fiabilité).
 - Insère de façon naturelle les mots-clés SEO suivants : "${afficherRandomSeoKeyWords()}" pour optimiser le texte sans perturber sa fluidité.
 - Structure chaque paragraphe selon le modèle suivant :
@@ -162,139 +114,6 @@ Sortie :
     }
   }
 
-  upgradeArticle(article: any): any {
-    return {
-      systemRole: {"role": "system","content":`
-Improve a segment of a landscaper's blog entry by adding additional information that complements the existing content.
-This can include current concrete examples, practical information, numerical data, statistics, or scientific data.
-
-# Steps
-- Read the provided segment of the blog attentively to understand the context and key points discussed.
-- Identify areas where additional details or examples would enhance the information presented.
-- Research and gather relevant current examples, practical tips, numerical data, statistics, or scientific data that would complement the existing information.
-- Add the new information in a seamless manner that maintains the original style and tone of the blog post.
-
-# Output Format
-Provide the enhanced blog segment in a valid JSON format as follows: {"upgraded": "Response upgraded paragraphe..."} Ensure the content is integrated smoothly and maintains the fundamental structure and intent of the original content.
-
-# Examples
-**Original Segment:**
-"Un bon entretien de la pelouse commence par une coupe régulière. Mais saviez-vous qu'il y a des techniques pour améliorer la santé de votre gazon?"
-
-**Enhanced Segment:**
-{"upgraded": "Un bon entretien de la pelouse commence par une coupe régulière. Saviez-vous que pour optimiser la santé de votre gazon, il est recommandé de ne pas tondre plus d'un tiers de la longueur des brins lors de chaque coupe? Par exemple, durant les mois d'été, tondre la pelouse à une hauteur de 5 cm permet de conserver l'humidité et d'améliorer la photosynthèse. De plus, une étude de 2022 a démontré que l'application d'engrais azotés au printemps augmente la densité du gazon de 25% en moyenne."}
-
-# Notes
-- Ensure all added information is accurate and up-to-date.
-- Maintain consistency in writing style and use of language to blend seamlessly with the original content.
-    `},
-      userRole: { "role": "user", "content": `Voici le texte à améliorer ${article}.` }
-    }
-  }
-
-  formatInHtmlArticle(article: string): any {
-    return {
-      systemRole: {"role": "system","content":`
-     Intégrer des balises HTML aux textes afin de structurer le contenu et en améliorer la lisibilité, sans modifier le contenu texte ou les balises HTML déjà présentes.
-- Respecter les étapes suivantes pour la mise en forme.
-# Steps
-1. Entourer une phrase clés avec la balise \`<b>\` pour le mettre en évidence et attirer l'attention du lecteur.
-2. Intégrer un emoji pertinent illustrant le sujet du paragraphe à l'intérieur du titre en \`<h5>\` déjà présent sans ajouter de nouveaux \`<h5>\`.
-3. Adapter le formatage en fonction du type de contenu :
-   - Utiliser \`<ol><li></li></ol>\` pour toutes les listes.
-   - Utiliser la balise \`<u>\` pour souligner une seule phrase spécifique.
-   - Utiliser \`<em>\` pour mettre en valeur des termes importants.
-   - Encapsuler le contenu tabulaire dans des balises \`<table><tr><td></td></tr></table>\`.
-# Output Format
-Présenter le résultat sous la forme d'un JSON valide structuré comme suit :
-{
-  "upgraded": "<html_content_here>"
-}
-# Examples
-**Input**:
-Un texte avec du contenu varié, incluant des phrases clés, des titres, des listes et des informations tabulaires existantes.
-**Output**:
-{
-  "upgraded": "<h5>🎨 Présentation du Projet </h5><br><b>Phrase clés importante.</b><ul><li>Point 1</li><li>Point 2</li></ul><table><tr><td>Valeur</td></tr></table>"
-}
-*Note: Les phrases clés, listes, et contenus tabulaires dans la réponse réelle doivent correspondre à ce qui est fourni dans le texte original.*
-# Notes
-- Ne pas utiliser les balise <p></p>
-- Le JSON doit strictement contenir les balises HTML requises ou déjà présentes, sans aucun texte ou formatage non essentiel au-delà de celles spécifiées.
-- Vérifier la validité du code HTML généré en conformité avec les instructions pour chaque type de contenu.
-      `},
-      userRole: { "role": "user",
-        "content": `Transforme le contenu des textes des paragraphes de ceci : "${article}",  sans modifier le texte ou les balises html original.` }
-    }
-  }
-
-  meteoArticle(): any {
-    return {
-      systemRole: {"role": "system","content":`
- Créez une prévision météorologique  en +-50 mots pour le blog d’un jardinier, en intégrant vos perspectives de météorologue basé sur l'institut météorologique Belge (IRM).
- Une prévision météorologique factuelle pour Bruxelles, doit comprendre la température minimale et maximale et levée du soleil  sur le courent de la journée,
- la vitesse du vent et la durée d'ensoleillement et la pluviométrie ansi que le levé et le couché du soleil pour la date d'aujourd'hui.
- Ajouter icones qui illustre le texte.
-
-# Output Format
-Présente le résultat sous la forme d'un JSON valide structuré comme suit :
-{"meteo": "Votre prévision météorologique ici  +- 50 mots."}
-
-# Notes
-- Ne retournez **qu'un seul objet JSON**
-- Aucune structuration ou texte supplémentaire n'est nécessaire en dehors du JSON.
-      `},
-      userRole: { "role": "user", "content": `Donne la météo en date du ${formatCurrentDateUs()}. Pour Bruxelles` }
-    }
-  }
-
-  getPromptSelectKeyWordsSeoUrl(postTitre: string): any {
-    return {
-      systemRole: {"role": "system","content":`
-      Créer une URL SEO-friendly pour un article de blog de jardinage en utilisant un titre et des mots-clés fournis.
-
-Tu recevras un titre d'article de blog et des mots clés associés. Utilise ces directives pour créer une URL SEO-friendly:
-
-- Inclure le mot-clé principal.
-- Utiliser des tirets pour séparer les mots.
-- Éviter les caractères spéciaux tels que les accents, &, %, etc.
-- Supprimer les mots inutiles (par exemple, le, la, de, pour, etc., ).
-- Utiliser uniquement des minuscules.
-- Maintenir l'URL aussi courte que possible tout en restant claire.
-
-# Steps
-
-1. Identifier le mot-clé principal parmi les mots-clés fournis.
-2. Transformer les les mots-clés et titre de l'article de blog en un format URL.
-3. Supprimer les mots inutiles et les caractères spéciaux des mots.
-4. Séparer les mots avec des tirets et utiliser uniquement des lettres minuscules pour l'URL.
-5. Veiller à ce que l'URL soit concise tout en restant claire.
-
-# Output Format
-
-La réponse doit être fournie au format JSON:
-\`\`\`json
-{ "url": "Retourner l'URL sous forme de texte brut, sans guillemets" }
-\`\`\`
-
-# Examples
-
-**Entrée:**
-- Mots-clés: "jardinier", "paysagiste"
-- Titre de l'article: "Comment entretenir vos plantes d'intérieur facilement"
-
-**Sortie:**
-- { "url": "jardinier-paysagiste-entretien-plantes-interieur-facilement" }
-
-# Notes
-
-- Assurez-vous que l'URL est claire, concise, et respectueuse des bonnes pratiques SEO.
-- Ne pas inclure des caractères accentués ou des majuscules.
-- Le mot-clé principal doit être placé au début de l'URL.
-      `},
-      userRole: { "role": "user", "content": `Voici les mots clefs: "${afficherRandomSeoKeyWords()}" et le titre du blog : "${postTitre}". ` }
-    }
-  }
 
   addVideo(postTitle: string): any {
     return {
@@ -641,6 +460,28 @@ Sortie :
       userRole: {
         role: "user",
         content: `voici le texte dans lequel tu dois faire ce qui t es demandé : ${article}`
+      }
+    }
+  }
+
+  updateArticle(currentArticle: string): any {
+    return {
+      systemRole: {
+        role: "system",
+        content: `Tu es un expert en rédaction d'articles de blog. Tu dois modifier l'article existant selon la demande de l'utilisateur. 
+        
+        IMPORTANT : 
+        - Garde la même structure et le même style
+        - Applique uniquement les modifications demandées
+        - Retourne seulement l'article modifié au format JSON : {"article": "contenu modifié"}
+        - Ne modifie pas les autres éléments comme le titre, la FAQ, etc.
+        - Conserve la qualité et la cohérence du contenu original`
+      },
+      userRole: {
+        role: "user",
+        content: `Article actuel : ${currentArticle}
+
+Modifie l'article selon cette demande et retourne le résultat au format JSON.`
       }
     }
   }
