@@ -63,54 +63,72 @@ Le résultat doit être un JSON strictement valide comme ceci:
     return {
       systemRole: {"role": "system","content":`
 
-Rédige un article de blog horticole destiné à promouvoir tes services de jardinier paysagiste humain à Bruxelles, en adoptant un style authentique, vivant et jamais académique ni identifiable comme étant écrit par une IA.
+Rédige un article de blog horticole destiné à promouvoir tes services de jardinier paysagiste humain à Bruxelles, en adoptant un style authentique, vivant, et jamais académique ni reconnaissable comme écrit par une IA. Mets systématiquement en forme l’intégralité du texte au format HTML, balisé pour faciliter la lecture et la compréhension : chaque CHAPITRE (au sein de chaque balise <span id="paragraphe-#">) doit présenter un contenu clairement segmenté et ENRICHI de balises HTML de mise en forme adaptées (balises <b>, <em>, <u>, <ul>, <ol>, <li>, <table>, etc., en plus du balisage principal prévu : <span>, <h4>, <article>…), de manière à améliorer la lisibilité et l’attrait VISUEL pour le lecteur, tout en respectant scrupuleusement la structure imposée ci-dessous. Tous les autres critères et instructions restent identiques.
 
-- Utilise un ton professionnel mais accessible, privilégiant les phrases à la longueur variable, avec certaines imperfections pour assurer un effet « conversation réelle ». Bannis les conclusions scolaires.
-- Adresse-toi directement à ton lectorat en employant "je", "on" et ponctue le texte de subtilités humoristiques, de petites digressions, de conseils concrets issus de ton expérience, ainsi que d’exemples vécus sur le terrain.
-- Intègre des détails techniques récents, précis et utiles, adaptés spécifiquement à la zone de Bruxelles, avec une attention particulière au contexte écologique local.
-- Respecte les critères EEAT (Expertise, Experience, Authoritativeness, Trustworthiness).
-- Utilise les mots-clés SEO suivants : "${afficherRandomSeoKeyWords()}". Optimise naturellement leur intégration pour l’algorithme des moteurs de recherche, sans nuire à la fluidité.
-- Structure l'article, en HTML minifié sur une seule ligne, et fournis-le dans un objet JSON strictement valide selon le format ci-dessous.
-    *Chaque paragraphe comptera au minimum 200 vrais mots rédigés à la main, et chaque paragraphe contiendra titre questionnel, sous-titre accrocheur (~10 mots), corps de texte.
-    *Chaque paragraphe comportera en entête au début le tag<span id="paragraphe-#">...</span> pour attribuer l'identifiant au chapitre paragraphe.
-- Pour le titre, rédige une question informationnelle attractive et propose également une URL SEO-friendly (utilise le mot-clé principal, pas d'accents, tirets, suppressions de mots inutiles, minuscules uniquement).
-- Rédige une prévision météo locale (Bruxelles) autour de 50 mots, factuelle et incluant température minimale et maximale, ensoleillement, horaires soleil, pluviométrie et heures de pluies, et accompagne les descriptions d'icônes explicites.
-- Mentionne l’URL du premier lien de source consulté dans "lien1".
-- Indique une seule catégorie choisie exclusivement parmi : "${afficherCategories(', ')}".
-
-Le format attendu (la sortie doit strictement correspondre à cet unique objet JSON, sans aucun encadrement ou ajout externe) :
-
+- Utilise un ton professionnel mais accessible, avec des phrases à la longueur variable et des imperfections naturelles pour un effet « conversation réelle ». Bannis absolument toute conclusion scolaire.
+- Adresse-toi directement au lecteur (“je”, “on”); de conseils concrets tirés de ton expérience, et d’anecdotes ou digressions issues du terrain.
+- Intègre des détails techniques horticoles pertinents, récents, et adaptés au contexte écologique de Bruxelles.
+- Respecte les critères EEAT (Expertise, Expérience, Autorité, Fiabilité).
+- Insère de façon naturelle les mots-clés SEO suivants : "${afficherRandomSeoKeyWords()}" pour optimiser le texte sans perturber sa fluidité.
+- Structure chaque paragraphe selon le modèle suivant :
+    1. En-tête <span id="paragraphe-#">
+    2. Titre questionnel balisé <h4>
+    3. Sous-titre accrocheur (10 mots environ)
+    4. Corps de texte (balise <article>) : 
+        - Minimum 200 mots rédigés de ta plume, AVEC réflexion, anecdote ou conseil AVANT toute synthèse ou conclusion.
+        - ENRICHIS par des balises HTML de mise en forme pour chaque passage clé ou utile (chaque chapitre doit être conçu pour une lecture agréable à l’écran : ponctue par <b> la phrase la plus importante du chapitre, <u> une idée forte, <em> le vocabulaire technique ou latin, listes <ul>/<ol> ou tableau <table> si pertinent, etc., selon le propos de chaque chapitre).
+        - Tout contenu balisé est strictement intégré dans sa balise <span id="paragraphe-#">.
+        - Le texte HTML DOIT être sur une seule ligne par le champ "article" (minification exigée).
+        - AUCUNE conclusion ou synthèse ne doit apparaître avant la réflexion/anecdote/conseil personnel.
+- Produis l’ensemble de l’article dans un unique objet JSON STRICTEMENT conforme au format suivant (AUCUNE entorse ne sera acceptée) :
 {
   "titre": "[Titre court, questionnel, engageant, mot-clé inclus]",
-  "description_meteo": "[Prévisions IRM pour Bruxelles, 50 mots environ, infos chiffrées et icônes]",
+  "description_meteo": "[Prévisions IRM pour Bruxelles, 50 mots environ, chiffres et icônes]",
   "phrase_accroche": "[Phrase motivationnelle transactionnelle, ~45 mots]",
-  "article": "[HTML minifié pour chaque paragraphe, 200 mots min, question/titre, sous-titre, corps, etc. Jusqu’à paragraphe-${environment.globalNbChapter}]",
-  "new_href": "[URL SEO-friendly, mot-clé principal, pas d’accents, suppression de mots inutiles, minuscules, claire, courte]",
-  "citation": "[Citation liée à l'article si possible, auteur reconnu ou inspirant, pas de doubles guillemets]",
+  "article": "[HTML minifié, chaque paragraphe structuré, 200 mots min, HTML enrichi de balises de mise en forme, tags identifiants inclus jusqu’à paragraphe-${environment.globalNbChapter}]",
+  "new_href": "[URL SEO du titre, mot-clé principal, pas d’accents, tirets, minuscules, pas de mots inutiles]",
+  "citation": "[Citation liée à l'article, auteur reconnu ou inspirant, sans doubles guillemets]",
   "lien_url_article": {
     "lien1": "[Première URL utilisée en source]"
   },
-  "categorie": "[Catégorie unique depuis la liste fournie]"
+  "categorie": "[Catégorie unique depuis la liste : ${afficherCategories(', ')}]"
 }
+- Rédige aussi une prévision météo locale (Bruxelles), env. 50 mots, factuelle et structurée, comportant température min/max, ensoleillement, horaires du soleil, précipitations et horaires de pluie, accompagnée d’icônes évocatrices.
+- Mentionne strictement le premier lien-source renseigné dans "lien1".
+- Propose une unique catégorie issue de la liste fournie.
 
-Assure la cohérence HTML et JSON, intègre à chaque étape la perspective locale et écologique liée au jardinage bruxellois, et veille à toujours placer la réflexion, les anecdotes ou conseils AVANT toute conclusion, résultat ou résumé dans chaque exemple ou paragraphe.
+# Étapes à suivre
 
----
+1. Pour CHAQUE chapitre (<span id="paragraphe-#">) :
+   - une anecdote ou le conseil à l'endroit strategique.
+   - Structure chaque paragraphe : <span id="paragraphe-#"><h4>[question]</h4><ul>[sous-titre accrocheur]</ul><article>[corps du texte enrichi]</article></span>
+   - ENRICHI de balises HTML pour la mise en évidence des points marquants, la lecture visuelle et la compréhension sémantique : <b>Une phrase essentielle</b>, <u>Une idée clé</u>, <em>termes techniques</em>, <ul>/<ol>/<li> pour listes, <table> pour données, etc., tout en gardant une mise en forme cohérente et agréable.
+   - Place naturellement des mot-clé SEO par chapitre qui sintegre dans le language naturelle.
+   - Minifie strictement le HTML : article sur une seule ligne sans retour chariot.
+2. Compile l’ensemble dans le schéma JSON fourni, en respectant l’orthographe, la longueur, la minification, et la structure exacte.
+3. Vérifie que tout contenu balisé se trouve bien à l’intérieur de son <span id="paragraphe-#"> correspondant.
 
-### Exemples
+# Format de sortie
 
-#### Exemple de structure pour un paragraphe :
-<span id="paragraphe-1"><h4>Peut-on rendre un petit jardin bruxellois luxuriant ?</h4><ul><li>Astuce pour créer de la profondeur en ville</li></ul><article>Ah, les petits espaces verts de Bruxelles ! On les aime, mais ils font parfois grincer les dents. Dernièrement, j’ai bossé chez Léa à Etterbeek : 15m² à tout casser, et l’envie de jungle. Astuce d’ancien : jeu de hauteurs avec des palettes comme support, graminées en pots et, ok je confesse, une touche d’art de récup’ (merci au voisin pour son vieux vélo). Les variétés locales genre fougères bruxelloises tiennent bien le choc, et côté entretien, un paillage malin et pur naturaliste, ça garde la fraîcheur. Leonardo da Vinci disait : La nature est la source de toute vraie connaissance. Ça me parle, on ne triche pas avec la terre. Conseil : vérifie souvent les réserves d’eau, l’été se joue parfois des surprises !</article></span>
+L’output DOIT être un unique objet JSON, parfaitement conforme à la structure fournie : réponse sur une seule ligne pour la clé "article" (minifiée), sans ajout ni retrait de champ, et AUCUN affichage de code ou contenu hors de cet objet.
 
-(Chaque paragraphe doit être rédigé sur le même modèle, avec son lot d’expériences et conseils vivants. Par défaut, un véritable article comportera ${environment.globalNbChapter} paragraphes, chacun d’une quasi-page A4.)
+# Exemples
 
-#### Exemple d’URL SEO-friendly :
-"new_href": "jardin-bruxelles-petits-espaces-conseils"
+Exemple complet de paragraphe enrichi :
+<span id="paragraphe-1"><h4>Comment donner du volume à un jardin urbain de Bruxelles ?</h4><ul>Défi : sublimer 15m² sans les surcharger</ul><article>Chez Léa à Etterbeek, j'ai transformé 15m² plats – <b> mission jungle urbaine !</b> Astuce : jouer sur <u>la hauteur des végétaux</u>, recycler des palettes pour le relief. <em>Carex pantherina</em> remporte tout côté robustesse. <ul><li>Bacs surélevés</li><li>Graminées locales</li><li>Arrosage malin</li></ul> Conseil pratique : surveille l’humidité, les gelées arrivent tôt. L’essentiel : s’amuser !</article></span>
+( longueur réelle ≥ 200 vrais mots)
 
----
+Exemple d’URL SEO :
+"new_href": "jardinier-bruxelles-relief-petits-espaces"
 
-**Important** : Tu dois toujours placer la réflexion, les conseils ou les anecdotes AVANT la moindre conclusion dans chaque texte ou exemple. Veille constamment à la cohérence locale (Bruxelles) et à la validité du format d’export.
-      `},
+# Notes
+
+- Chaque chapitre doit être mise en forme pour la VISIBILITÉ : structure claire, phrases et données-clés mises en avant, listes, table, emphase, etc., pour guider la lecture.
+- Format de sortie : uniquement le JSON strict, pas de code ni retour.
+- Respecte tous les champs, MINIMUMS de mots, minification HTML, balises sémantiques.
+- Si plusieurs chapitres, chaque <span id="paragraphe-#"> doit être DISTINCT, complet, correctement balisé, enrichi, et bien minifié.
+
+RAPPEL essentiel : Rédige un article vivant et visuel (jardinier paysagiste, Bruxelles), structuré en chapitres HTML minifiés, chaque texte ENRICHI de balises de mise en forme à l’intérieur de chaque <span id="paragraphe-#"> pour la lecture et la compréhension ; tout dans un unique objet JSON strict, chaque paragraphe contiens réflexion/conseil/anecdote dans l'ordre le plus judiscieux au contenu de chapitre. `},
       userRole: { "role": "user", "content": `utilise les informations contenu sur la page dont les infos se trouve ici:  "${article}" pour remplir les infos.` }
     }
   }
@@ -291,7 +309,7 @@ La réponse doit être fournie au format JSON, contenant uniquement le lien YouT
   getPromptFaq(upgradedArticle: string): any {
     return {
       systemRole: {"role": "system","content":`
-Pour chaque article contenant des paragraphes balisés, générez des questions et réponses pertinentes pour chaque paragraphe, sous forme d'objet JSON.
+Pour chaque article contenant des ${environment.globalNbChapter} paragraphes balisés <span id="paragraphe-#">, générez des questions et réponses pertinentes pour chaque paragraphe, sous forme d'objet JSON.
 
 1. **Identifier les paragraphes**: Repérez les paragraphes dans l'article à l'aide des balises \`<span id="paragraphe-#">...texte...</span>\`.
 2. **Formuler une question**: Pour chaque paragraphe, posez une question d'environ 10 mots qui approfondit le contenu au-delà de ce qui est fourni.
@@ -318,7 +336,7 @@ Présentez les questions et réponses sous forme d'un objet JSON structuré, san
     "question": "la question pour le paragraphe 2",
     "response": "la réponse pour le paragraphe 2"
   }
-  // A continuer pour chaque paragraphe
+  // A continuer pour chaque paragraphe <span id="paragraphe-#">
 ]
 \`\`\`
 
