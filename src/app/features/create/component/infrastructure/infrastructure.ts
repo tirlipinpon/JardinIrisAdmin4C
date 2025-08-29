@@ -57,6 +57,21 @@ export class Infrastructure {
     );
   }
 
+  updateArticle(currentArticle: string): Observable<string | PostgrestError> {
+    const prompt = this.getPromptsService.updateArticle(currentArticle);
+    return from(this.openaiApiService.fetchData(prompt, true)).pipe(
+      map(result => {
+        if (result === null) {
+          throw new Error('Aucun résultat retourné par l\'API OpenAI');
+        }
+        // Extraire seulement le contenu de l'article modifié
+        const updatedContent = extractJSONBlock(result);
+        const parsedResult = JSON.parse(updatedContent);
+        return parsedResult.article || updatedContent;
+      })
+    );
+  }
+
   setImageUrl(phraseAccroche: string, postId: number): Observable<string | PostgrestError> {
     return from((async () => {
       // 1️⃣ Générer l'image en base64
