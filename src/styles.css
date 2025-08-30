@@ -1,1 +1,29 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* Styles personnalisés pour NgxEditor */
+.NgxEditor {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.NgxEditor__Content {
+  min-height: 300px;
+  padding: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.6;
+}
+
+.NgxEditor__MenuBar {
+  border-bottom: 1px solid #ddd;
+  background: #f8f9fa;
+  padding: 8px;
+}
+
+.NgxEditor__MenuItem {
+  margin: 2px;
+  border-radius: 4px;
+}
+
+.NgxEditor__MenuItem:hover {
+  background: #e9ecef;
+}

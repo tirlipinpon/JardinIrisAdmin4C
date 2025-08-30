@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { from, Observable } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../../../environment';
+
 
 export interface PexelsImage {
   id: number;
@@ -38,7 +39,7 @@ export interface PexelsResponse {
 })
 export class PexelsApiService {
 
-  private readonly apiKey = environment.pexelsApiKey || '';
+  private readonly apiKey = environment.pexelsApi || '';
   private readonly baseUrl = 'https://api.pexels.com/v1';
 
   searchImages(query: string, perPage: number = 10): Observable<PexelsImage[]> {

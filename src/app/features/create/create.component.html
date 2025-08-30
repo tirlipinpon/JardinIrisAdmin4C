@@ -1,3 +1,177 @@
-<h1>Créer un élément 2</h1>
-<input type="text" [(ngModel)]="articleIdea" placeholder="Idée d'article" />
-<button (click)="generate()">Générer l'article</button> 
+<div class="create-container">
+  <header class="create-header">
+    <h1>🌱 Générateur d'articles de jardinage</h1>
+  </header>
+
+  <div class="generation-section">
+    <div class="input-group">
+      <input 
+        type="text" 
+        [(ngModel)]="articleIdea" 
+        placeholder="💡 Entrez votre idée d'article (ex: comment planter des roses)" 
+        class="article-input" />
+      <button 
+        (click)="generate()" 
+        class="generate-btn"
+        [disabled]="!articleIdea.trim()">
+        🚀 Générer l'article
+      </button>
+    </div>
+    
+    <div class="status-info" *ngIf="store.isLoading()">
+      <div class="loading-spinner">⏳ Génération en cours...</div>
+      <small>Étape {{ store.step() }}/4 - Veuillez patienter</small>
+    </div>
+  </div>
+
+  <div class="editor-section" *ngIf="store.article()">
+    <app-article-editor 
+      [article]="store.article() || ''" 
+      (articleChange)="onArticleChange($event)">
+    </app-article-editor>
+    
+    <div class="article-stats" *ngIf="store.internalImages().length > 0">
+      <h4>📊 Statistiques de l'article</h4>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="stat-label">🖼️ Images internes:</span>
+          <span class="stat-value">{{ store.internalImages().length }}</span>
+        </div>
+        <div class="stat-item" *ngIf="store.faq().length > 0">
+          <span class="stat-label">❓ Questions FAQ:</span>
+          <span class="stat-value">{{ store.faq().length }}</span>
+        </div>
+        <div class="stat-item" *ngIf="store.video()">
+          <span class="stat-label">🎥 Vidéo:</span>
+          <span class="stat-value">✅ Trouvée</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section des formulaires éditables -->
+  <div class="section" *ngIf="store.article()">
+    <app-post-form-editor></app-post-form-editor>
+  </div>
+</div>
+
+<style>
+.create-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.create-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.create-header h1 {
+  color: #2c5530;
+  font-size: 32px;
+  margin: 0;
+}
+
+.generation-section {
+  margin-bottom: 32px;
+}
+
+.input-group {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.article-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.article-input:focus {
+  border-color: #4caf50;
+}
+
+.generate-btn {
+  padding: 12px 24px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.generate-btn:hover:not(:disabled) {
+  background: #45a049;
+  transform: translateY(-1px);
+}
+
+.generate-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.status-info {
+  text-align: center;
+  padding: 16px;
+  background: #e3f2fd;
+  border-radius: 8px;
+  border-left: 4px solid #2196f3;
+}
+
+.loading-spinner {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1976d2;
+  margin-bottom: 8px;
+}
+
+.editor-section {
+  margin-top: 32px;
+}
+
+.article-stats {
+  margin-top: 24px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.article-stats h4 {
+  margin: 0 0 16px 0;
+  color: #333;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.stat-label {
+  font-weight: 500;
+  color: #666;
+}
+
+.stat-value {
+  font-weight: 600;
+  color: #2c5530;
+}
+</style> 

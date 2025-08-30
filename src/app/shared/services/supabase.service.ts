@@ -103,4 +103,33 @@ export class SupabaseService {
     }
   }
 
+  async setNewUrlImagesChapitres(url: string, chapitreId: number, postId: number, chapitreKeyWord: string, chapitreExplanationWord: string): Promise<any> {
+    try {
+      const {data, error} = await this.client
+        .from('urlImagesChapitres')
+        .insert([
+          {
+            fk_post: postId,
+            url_Image: url,
+            chapitre_id: chapitreId,
+            chapitre_key_word: chapitreKeyWord,
+            explanation_word: chapitreExplanationWord
+          }
+        ]);
+
+      if (error) {
+        console.error('Erreur lors de l\'insertion des données:', error);
+      } else {
+        console.log('Données insérées avec succès:', JSON.stringify(data));
+      }
+
+      if (error) {
+        throw error;
+      }
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
 } 

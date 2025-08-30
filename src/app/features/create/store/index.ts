@@ -6,6 +6,8 @@ import { concatMap, finalize, map, Observable, pipe, tap } from "rxjs";
 import { Infrastructure } from "../component/infrastructure/infrastructure";
 import { PostgrestError } from "@supabase/supabase-js";
 import { LoggingService } from "../../../shared/services/logging.service";
+import { InternalImageData } from "../types/internalImageData";
+import { ValidationRule } from "../types/validationRule";
 
 function throwOnError<T, E>(response: T | E, errorCheck: (val: any) => val is E): T {
   if (errorCheck(response)) {
@@ -28,11 +30,6 @@ const extractErrorMessage = (error: any): string => {
   return String(error);
 };
 
-interface ValidationRule {
-  value: any;
-  errorMessage: string;
-  validator?: (value: any) => boolean;
-}
 
 const validateStoreValues = (store: any, rules: ValidationRule[]): string | null => {
   for (const rule of rules) {
@@ -77,6 +74,7 @@ export interface SearchState {
   video: string | null;
   postTitreAndId: { titre: string; id: number; new_href: string }[];
   faq: { question: string; response: string }[];
+  internalImages: InternalImageData[];
 }
 
 const initialValue: SearchState = {
@@ -95,7 +93,8 @@ const initialValue: SearchState = {
   image_url: null,
   video: null,
   postTitreAndId: [],
-  faq: []
+  faq: [],
+  internalImages: []
 }
 
 export const SearchStore =  signalStore(
@@ -243,17 +242,27 @@ export const SearchStore =  signalStore(
       pipe(
         concatMap(() => {
           const article = store.article();
+          const postId = store.postId();
           
-          const validationError = validateStoreValues(store, [{ value: article, errorMessage: 'L\'article doit être généré avant d\'ajouter les images internes' } ]);
+          const validationError = validateStoreValues(store, [
+            { value: article, errorMessage: 'L\'article doit être généré avant d\'ajouter les images internes' },
+            { value: postId, errorMessage: 'Le postId doit être généré avant d\'ajouter les images internes', validator: (val) => typeof val === 'number' }
+          ]);
           if (validationError) { return []; }
           
-          return infra.internalImage(article!).pipe(
+          return infra.internalImage(article!, postId as number).pipe(
             withLoading(store, 'internalImage'),
-            map((response: string | PostgrestError) => throwOnPostgrestError(response)),
+            map((response: { article: string; images: InternalImageData[] } | PostgrestError) => throwOnPostgrestError(response)),
             tap({
-              next: (upgradedArticle: string) => {
-                patchState(store, { article: upgradedArticle, step: 2 });
-                loggingService.info('STORE', '✅ Images internes ajoutées avec succès');
+              next: (result: { article: string; images: InternalImageData[] }) => {
+                patchState(store, { 
+                  article: result.article, 
+                  internalImages: result.images,
+                  step: 2 
+                });
+                loggingService.info('STORE', '✅ Images internes ajoutées avec succès', { 
+                  imagesCount: result.images.length 
+                });
               },
               error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
             })
@@ -316,7 +325,60 @@ export const SearchStore =  signalStore(
           );
         })
       )
-    )
+    ),
+
+    // Méthodes de mise à jour des champs individuels
+    updateTitre: (titre: string) => {
+      patchState(store, { titre });
+      loggingService.info('STORE', '📝 Titre mis à jour', { titre });
+    },
+
+    updateDescriptionMeteo: (description_meteo: string) => {
+      patchState(store, { description_meteo });
+      loggingService.info('STORE', '🌤️ Description météo mise à jour', { description_meteo });
+    },
+
+    updatePhraseAccroche: (phrase_accroche: string) => {
+      patchState(store, { phrase_accroche });
+      loggingService.info('STORE', '✨ Phrase d\'accroche mise à jour', { phrase_accroche });
+    },
+
+    updateNewHref: (new_href: string) => {
+      patchState(store, { new_href });
+      loggingService.info('STORE', '🔗 New href mis à jour', { new_href });
+    },
+
+    updateCitation: (citation: string) => {
+      patchState(store, { citation });
+      loggingService.info('STORE', '💬 Citation mise à jour', { citation });
+    },
+
+    updateCategorie: (categorie: string) => {
+      patchState(store, { categorie });
+      loggingService.info('STORE', '🏷️ Catégorie mise à jour', { categorie });
+    },
+
+    updateFaqItem: (index: number, faqItem: { question: string; response: string }) => {
+      const currentFaq = store.faq();
+      const updatedFaq = [...currentFaq];
+      updatedFaq[index] = faqItem;
+      patchState(store, { faq: updatedFaq });
+      loggingService.info('STORE', `❓ FAQ item ${index} mis à jour`, faqItem);
+    },
+
+    deleteFaqItem: (index: number) => {
+      const currentFaq = store.faq();
+      const updatedFaq = currentFaq.filter((_, i) => i !== index);
+      patchState(store, { faq: updatedFaq });
+      loggingService.info('STORE', `🗑️ FAQ item ${index} supprimé`);
+    },
+
+    addFaqItem: (faqItem: { question: string; response: string }) => {
+      const currentFaq = store.faq();
+      const updatedFaq = [...currentFaq, faqItem];
+      patchState(store, { faq: updatedFaq });
+      loggingService.info('STORE', '➕ Nouvel item FAQ ajouté', faqItem);
+    }
 
   }))
 );

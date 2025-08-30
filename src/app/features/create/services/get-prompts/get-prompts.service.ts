@@ -379,7 +379,7 @@ Embed a specific hyperlink into an article using an HTML tag, following the deta
 ## Détails de la Tâche
 - **Source des Liens**: Utilisez un fichier JSON contenant une liste d'articles avec des champs 'id', 'titre', et 'new_href'.
 - **Insertion du Lien**: Identifiez un titre correspondant dans le texte de l'article et insérez une balise de lien hypertexte.
-- **Règles de Placement**: Insérez un seul lien par article en privilégiant les occurrences les plus spécifiques du titre.
+- **Règles de Placement**: Insérez un seul lien par chapitre de l'article en privilégiant les occurrences les plus spécifiques du titre.
 - **Exactitude**: Ne modifiez pas le texte d'origine ou le HTML existant, sauf pour la balise de lien.
 
 # Steps
@@ -410,13 +410,13 @@ JSON
 
 # Notes
 - Assurez-vous d'une correspondance minimale entre le mot-clé et les titres du JSON.
-- Insérez un seul lien par article pour éviter des redondances.
+- Insérez un seul lien par chapitre de l'article pour éviter des redondances.
 `;
   }
 
   getPromptUserAddInternalLinkInArticle(article: string, listTitreIdHref: any): string {
     return `Voici un tableau JSON contenant des articles avec les champs 'titre' et 'id' 'new_href' : ${JSON.stringify(listTitreIdHref)}.
-    Voici l'article à traiter : ${JSON.stringify(article)}. Insérez le lien hypertexte conformément aux directives fournies, sans modifier le texte original
+    Voici l'article à traiter : ${JSON.stringify(article)}. Insérez les liens hypertexte conformément aux directives fournies, sans modifier le texte original
 `;
   }
 
