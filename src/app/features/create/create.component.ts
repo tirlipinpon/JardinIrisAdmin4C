@@ -5,7 +5,6 @@ import { LoggingService } from '../../shared/services/logging.service';
 import { VersionService } from '../../shared/services/versions/versions.service';
 import { Application } from './component/application/application';
 
-
 @Component({
   selector: 'app-create',
   standalone: true,
@@ -26,7 +25,6 @@ export class CreateComponent {
   generate() {
     this.loggingService.info('COMPONENT', '🚀 Début appel generate()');    
     this.application.generate(this.articleIdea);
-
   }
 
 } 

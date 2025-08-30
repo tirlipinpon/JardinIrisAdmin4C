@@ -464,26 +464,4 @@ Sortie :
     }
   }
 
-  updateArticle(currentArticle: string): any {
-    return {
-      systemRole: {
-        role: "system",
-        content: `Tu es un expert en rédaction d'articles de blog. Tu dois modifier l'article existant selon la demande de l'utilisateur. 
-        
-        IMPORTANT : 
-        - Garde la même structure et le même style
-        - Applique uniquement les modifications demandées
-        - Retourne seulement l'article modifié au format JSON : {"article": "contenu modifié"}
-        - Ne modifie pas les autres éléments comme le titre, la FAQ, etc.
-        - Conserve la qualité et la cohérence du contenu original`
-      },
-      userRole: {
-        role: "user",
-        content: `Article actuel : ${currentArticle}
-
-Modifie l'article selon cette demande et retourne le résultat au format JSON.`
-      }
-    }
-  }
-
 }

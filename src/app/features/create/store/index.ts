@@ -61,6 +61,7 @@ const withLoading = <T>(store: any, methodName: string) => (source$: Observable<
 );
 
 export interface SearchState {
+  step: number;
   postId: number | PostgrestError | null;
   isLoading: boolean;
   error: string[];
@@ -79,6 +80,7 @@ export interface SearchState {
 }
 
 const initialValue: SearchState = {
+  step: 0,
   postId: null,
   isLoading: false,
   error: [],
@@ -154,6 +156,7 @@ export const SearchStore =  signalStore(
                   lien_url_article: postData.lien_url_article?.lien1 || null,
                   categorie: postData.categorie || null
                 });
+                patchState(store, { step: 1 });
               },
               error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
             })
@@ -236,35 +239,84 @@ export const SearchStore =  signalStore(
       )
     ),
 
-    // Méthode pour modifier l'article sans déclencher d'effets
-    updateArticle: (newArticle: string) => {
-      patchState(store, { article: newArticle });
-    },
-
-    // Méthode pour demander à l'infrastructure de modifier l'article
-    updateArticleWithAI: rxMethod<void>(
+    internalImage: rxMethod<void>(
       pipe(
         concatMap(() => {
-          const currentArticle = store.article();
+          const article = store.article();
+          
+          const validationError = validateStoreValues(store, [{ value: article, errorMessage: 'L\'article doit être généré avant d\'ajouter les images internes' } ]);
+          if (validationError) { return []; }
+          
+          return infra.internalImage(article!).pipe(
+            withLoading(store, 'internalImage'),
+            map((response: string | PostgrestError) => throwOnPostgrestError(response)),
+            tap({
+              next: (upgradedArticle: string) => {
+                patchState(store, { article: upgradedArticle, step: 2 });
+                loggingService.info('STORE', '✅ Images internes ajoutées avec succès');
+              },
+              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
+            })
+          );
+        })
+      )
+    ),
+
+    setInternalLink: rxMethod<void>(
+      pipe(
+        concatMap(() => {
+          const article = store.article();
+          const postTitreAndId = store.postTitreAndId();
           
           const validationError = validateStoreValues(store, [
-            { value: currentArticle, errorMessage: 'Un article doit exister avant de pouvoir le modifier' }
+            { value: article, errorMessage: 'L\'article doit être généré avant d\'ajouter les liens internes' },
+            { value: postTitreAndId, errorMessage: 'La liste des titres doit être récupérée avant d\'ajouter les liens internes', validator: (val) => Array.isArray(val) && val.length > 0 }
           ]);
           
           if (validationError) {
             return [];
           }
           
-          return infra.updateArticle(currentArticle!).pipe(
-            withLoading(store, 'updateArticleWithAI'),
+          return infra.setInternalLink(article!, postTitreAndId).pipe(
+            withLoading(store, 'setInternalLink'),
             map((response: string | PostgrestError) => throwOnPostgrestError(response)),
             tap({
-              next: (updatedArticle: string) => patchState(store, { article: updatedArticle }),
+              next: (upgradedArticle: string) => {
+                patchState(store, { article: upgradedArticle, step: 3 });
+              },
+              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
+            })
+          );
+        })
+      )
+    ),
+
+    vegetal: rxMethod<void>(
+      pipe(
+        concatMap(() => {
+          const article = store.article();
+          
+          const validationError = validateStoreValues(store, [
+            { value: article, errorMessage: 'L\'article doit être généré avant d\'ajouter les informations végétales' }
+          ]);
+          
+          if (validationError) {
+            return [];
+          }
+          
+          return infra.vegetal(article!).pipe(
+            withLoading(store, 'vegetal'),
+            map((response: string | PostgrestError) => throwOnPostgrestError(response)),
+            tap({
+              next: (upgradedArticle: string) => {
+                patchState(store, { article: upgradedArticle, step: 4 });
+              },
               error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
             })
           );
         })
       )
     )
+
   }))
 );

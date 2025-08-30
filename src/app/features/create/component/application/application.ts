@@ -9,22 +9,24 @@ import { LoggingService } from '../../../../shared/services/logging.service';
 export class Application {
   private readonly store = inject(SearchStore);
   private readonly loggingService = inject(LoggingService);
-  private shouldGenerateFaq = false;
 
   constructor() {
     effect(() => {
-      const article = this.store.article();
-      if (this.shouldGenerateFaq && article && article.trim() !== '') {
-        this.shouldGenerateFaq = false;
-        this.store.setFaq();
+      const step = this.store.step();
+      if (step === 1) {
         this.store.setVideo();
+        this.store.setFaq();
+        this.store.internalImage();
         // this.store.setImageUrl();
+      } else if (step === 2) {
+        this.store.setInternalLink();
+      } else if (step === 3) {
+        this.store.vegetal();
       }
     });
   }
 
   generate(articleIdea: string): void {
-    this.shouldGenerateFaq = true;
     this.store.getNextPostId();
     this.store.getLastPostTitreAndId();
     this.store.setPost(articleIdea);
