@@ -135,7 +135,7 @@ export class Infrastructure {
 
   setPost(articleIdea: string): Observable<Post | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = true;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -229,7 +229,7 @@ export class Infrastructure {
 
   setVideo(phrase_accroche: string, postId: number): Observable<string | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = true;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -284,7 +284,7 @@ export class Infrastructure {
 
   setFaq(article: string): Observable<{ question: string; response: string }[] | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = true;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -344,7 +344,7 @@ export class Infrastructure {
 
   internalImage(article: string, postId: number): Observable<{ article: string; images: InternalImageData[] } | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = true;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {

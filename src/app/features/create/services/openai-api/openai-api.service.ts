@@ -58,52 +58,21 @@ export class OpenaiApiService {
     return completion.choices[0].message.content
   }
 
-  async imageGenerator_b64_json(promptText: any) {
-    const image =
-      await this.openai.images.generate({
-        model: "dall-e-3",
-        prompt: promptText,
-        n:1,
-        size:"1024x1024",
-        response_format: "b64_json"
-      });
-    if (!image.data || image.data.length === 0) {
-      throw new Error("Aucune image n'a été générée");
-    }
-    return image.data[0].b64_json;
-  }
 
-  async imageGeneratorUrl(promptText: any) {
+  async imageGeneratorUrl(promptText: string) {
     const image = await this.openai.images.generate({
-      model: "dall-e-3",
+      model: "gpt-image-1",
       prompt: promptText,
       n: 1,
-      size: "1024x1024",
-      response_format: "url"
+      size: "1024x1024"
     });
 
     if (!image.data || image.data.length === 0) {
       throw new Error("Aucune image n'a été générée");
     }
 
-    return image.data[0].url;
+    return image.data[0].b64_json;
   }
-
-
-  async imageGeneratorGemini(promptText: any) {
-    const image = await this.gemini.images.generate(
-      {
-        model: "imagen-3.0-generate-002",
-        prompt: promptText,
-        response_format: "b64_json",
-        n: 1,
-      }
-    );
-
-    console.log(image.data);
-  }
-
-
 
 
 }
