@@ -415,6 +415,11 @@ export const SearchStore =  signalStore(
       loggingService.info('STORE', '📝 Article mis à jour', { length: article.length });
     },
 
+    updateVideo: (video: string) => {
+      patchState(store, { video });
+      loggingService.info('STORE', '🎥 Vidéo mise à jour', { video });
+    },
+
     updateFaqItem: (index: number, faqItem: { question: string; response: string }) => {
       const currentFaq = store.faq();
       const updatedFaq = [...currentFaq];

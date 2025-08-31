@@ -24,7 +24,7 @@ export class Application {
         this.store.setVideo();
         this.store.setFaq();
         this.store.internalImage();
-        // this.store.setImageUrl();
+        this.store.setImageUrl();
       } else if (step === 2 && article && postTitreAndId.length > 0) {
         this.loggingService.info('APPLICATION', '🚀 Lancement des tâches step 2');
         this.store.setInternalLink();

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, effect } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -173,13 +173,30 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
         <mat-card-content>
           <div class="video-section">
-            <div class="video-info">
-              <p><strong>URL Vidéo:</strong> {{ store.video() }}</p>
-            </div>
+            <!-- Édition de l'URL vidéo -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>URL de la vidéo YouTube</mat-label>
+              <input 
+                matInput 
+                [(ngModel)]="videoUrl" 
+                placeholder="https://www.youtube.com/watch?v=..."
+                type="url">
+              <mat-icon matSuffix>video_library</mat-icon>
+              <button 
+                mat-icon-button 
+                matSuffix 
+                type="button"
+                (click)="saveVideoUrl()"
+                [class.disabled-button]="!isVideoUrlDirty()"
+                title="Sauvegarder l'URL vidéo">
+                <mat-icon>save</mat-icon>
+              </button>
+            </mat-form-field>
             
-            <div class="video-player" *ngIf="store.video() && extractVideoId(store.video()!)">
+            <!-- Aperçu de la vidéo -->
+            <div class="video-player" *ngIf="videoUrl && extractVideoId(videoUrl)">
               <iframe 
-                [src]="getYouTubeEmbedUrl(extractVideoId(store.video()!))" 
+                [src]="getYouTubeEmbedUrl(extractVideoId(videoUrl)!)"
                 width="100%" 
                 height="315" 
                 frameborder="0" 
@@ -187,10 +204,16 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
               </iframe>
             </div>
 
+            <!-- Message si URL invalide -->
+            <div class="video-error" *ngIf="videoUrl && !extractVideoId(videoUrl)">
+              <mat-icon>warning</mat-icon>
+              <p>URL YouTube invalide. Veuillez utiliser un format comme: https://www.youtube.com/watch?v=VIDEO_ID</p>
+            </div>
+
             <div class="video-actions">
-              <button mat-raised-button color="primary" (click)="editVideo()">
-                <mat-icon>edit</mat-icon>
-                Modifier la vidéo
+              <button mat-raised-button color="warn" (click)="removeVideo()" *ngIf="videoUrl">
+                <mat-icon>delete</mat-icon>
+                Supprimer la vidéo
               </button>
             </div>
           </div>
@@ -448,12 +471,33 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
       }
     }
 
-    @media (max-width: 480px) {
-      .preview-img {
-        max-height: 120px;
-      }
-    }
-  `]
+         @media (max-width: 480px) {
+       .preview-img {
+         max-height: 120px;
+       }
+     }
+
+     .video-error {
+       display: flex;
+       align-items: center;
+       gap: 8px;
+       padding: 12px;
+       background: #fff3cd;
+       border: 1px solid #ffeaa7;
+       border-radius: 8px;
+       color: #856404;
+       margin: 16px 0;
+     }
+
+     .video-error mat-icon {
+       color: #f39c12;
+     }
+
+     .video-error p {
+       margin: 0;
+       font-size: 14px;
+     }
+   `]
 })
 export class PostFormEditorComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
@@ -461,11 +505,41 @@ export class PostFormEditorComponent implements OnInit, OnDestroy {
   private readonly loggingService = inject(LoggingService);
   private readonly sanitizer = inject(DomSanitizer);
 
-  postForm!: FormGroup;
-  categories = Object.values(CathegoriesBlog).map(value => ({
-    value,
-    label: value.charAt(0).toUpperCase() + value.slice(1)
-  }));
+   postForm!: FormGroup;
+   categories = Object.values(CathegoriesBlog).map(value => ({
+     value,
+     label: value.charAt(0).toUpperCase() + value.slice(1)
+   }));
+   
+   videoUrl = '';
+   originalVideoUrl = '';
+
+  constructor() {
+    // Effet pour synchroniser automatiquement depuis le store
+    effect(() => {
+      // Synchroniser tous les champs du formulaire
+      const currentPost = {
+        titre: this.store.titre() || '',
+        description_meteo: this.store.description_meteo() || '',
+        phrase_accroche: this.store.phrase_accroche() || '',
+        new_href: this.store.new_href() || '',
+        citation: this.store.citation() || '',
+        categorie: this.store.categorie() || ''
+      };
+      
+      if (this.postForm) {
+        this.postForm.patchValue(currentPost, { emitEvent: false });
+      }
+      
+      // Synchroniser l'URL vidéo
+      const storeVideo = this.store.video() || '';
+      if (storeVideo !== this.videoUrl) {
+        this.videoUrl = storeVideo;
+        this.originalVideoUrl = this.videoUrl;
+        this.loggingService.info('POST_FORM_EDITOR', '🔄 Synchronisation vidéo depuis le store', { videoUrl: this.videoUrl });
+      }
+    });
+  }
 
   ngOnInit() {
     this.initializeForm();
@@ -499,6 +573,10 @@ export class PostFormEditorComponent implements OnInit, OnDestroy {
     };
 
     this.postForm.patchValue(currentPost);
+    
+    // Load video URL
+    this.videoUrl = this.store.video() || '';
+    this.originalVideoUrl = this.videoUrl;
     
     // Mark form as pristine after initial load
     this.postForm.markAsPristine();
@@ -572,10 +650,27 @@ export class PostFormEditorComponent implements OnInit, OnDestroy {
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 
-  editVideo() {
-    this.loggingService.info('POST_FORM_EDITOR', '🎥 Modification de la vidéo demandée');
-    // TODO: Implement video editing logic
-  }
+     isVideoUrlDirty(): boolean {
+     return this.videoUrl !== this.originalVideoUrl;
+   }
+
+   saveVideoUrl() {
+     if (!this.isVideoUrlDirty()) return;
+     
+     this.loggingService.info('POST_FORM_EDITOR', '🎥 Sauvegarde URL vidéo', { videoUrl: this.videoUrl });
+     
+     // Mettre à jour le store avec la nouvelle URL
+     this.store.updateVideo(this.videoUrl);
+     this.originalVideoUrl = this.videoUrl;
+   }
+
+   removeVideo() {
+     this.loggingService.info('POST_FORM_EDITOR', '🗑️ Suppression de la vidéo');
+     
+     this.videoUrl = '';
+     this.originalVideoUrl = '';
+     this.store.updateVideo('');
+   }
 
   saveFaqItem(index: number) {
     const faqItems = this.store.faq();
