@@ -55,15 +55,38 @@
           <mat-icon matSuffix>edit</mat-icon>
         </mat-form-field>
         
-        <button 
-          mat-raised-button 
-          color="primary" 
-          (click)="generate()" 
-          class="generate-button"
-          [disabled]="!articleIdea.trim() || store.isLoading()">
-          <mat-icon>rocket_launch</mat-icon>
-          Générer l'article
-        </button>
+        <div class="button-group">
+          <button 
+            mat-raised-button 
+            color="primary" 
+            (click)="generate()" 
+            class="generate-button"
+            [disabled]="!articleIdea.trim() || store.isLoading()">
+            <mat-icon>rocket_launch</mat-icon>
+            Générer l'article
+          </button>
+          
+          <!-- Boutons de test d'erreur (temporaires) -->
+          <button 
+            mat-stroked-button 
+            color="warn" 
+            (click)="testErrorHandling()" 
+            class="test-error-button"
+            [disabled]="store.isLoading()">
+            <mat-icon>bug_report</mat-icon>
+            Test Erreur
+          </button>
+          
+          <button 
+            mat-stroked-button 
+            color="accent" 
+            (click)="testSupabaseStorageError()" 
+            class="test-storage-button"
+            [disabled]="store.isLoading()">
+            <mat-icon>storage</mat-icon>
+            Test Storage
+          </button>
+        </div>
       </div>
     </mat-card-content>
     
@@ -289,6 +312,52 @@
 }
 
 .generate-button mat-icon {
+  margin-right: 8px;
+}
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.test-error-button {
+  height: 56px;
+  border-radius: 28px !important;
+  font-size: 14px;
+  font-weight: 600;
+  border: 2px solid #f44336 !important;
+  color: #f44336 !important;
+  transition: all 0.3s ease;
+}
+
+.test-error-button:hover:not(:disabled) {
+  background: #f44336 !important;
+  color: white !important;
+  transform: translateY(-2px);
+}
+
+.test-error-button mat-icon {
+  margin-right: 8px;
+}
+
+.test-storage-button {
+  height: 56px;
+  border-radius: 28px !important;
+  font-size: 14px;
+  font-weight: 600;
+  border: 2px solid #ff9800 !important;
+  color: #ff9800 !important;
+  transition: all 0.3s ease;
+}
+
+.test-storage-button:hover:not(:disabled) {
+  background: #ff9800 !important;
+  color: white !important;
+  transform: translateY(-2px);
+}
+
+.test-storage-button mat-icon {
   margin-right: 8px;
 }
 

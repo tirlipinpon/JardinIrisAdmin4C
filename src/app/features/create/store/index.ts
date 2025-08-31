@@ -130,6 +130,12 @@ export const SearchStore =  signalStore(
       loggingService.error('STORE', '❌ Erreur ajoutée', { errorMessage, totalErrors: currentErrors.length + 1 });
     };
     
+    // Configurer le callback pour les warnings de l'Infrastructure
+    infra.setWarningCallback((message: string) => {
+      loggingService.warn('STORE', '⚠️ Warning depuis Infrastructure', { message });
+      addError(`⚠️ ${message}`);
+    });
+    
     const validateWithErrorHandling = (rules: ValidationRule[]): string | null => {
       return validateStoreValues(store, rules, clearErrors, addError);
     };
@@ -153,6 +159,15 @@ export const SearchStore =  signalStore(
     };
     
     return ({
+    // Méthodes publiques pour la gestion des erreurs
+    addError: (errorMessage: string) => {
+      const currentErrors = store.error();
+      patchState(store, { error: [...currentErrors, errorMessage] });
+      loggingService.error('STORE', '❌ Erreur ajoutée', { errorMessage, totalErrors: currentErrors.length + 1 });
+    },
+    
+    clearErrors: () => patchState(store, { error: [] }),
+    
     getNextPostId: rxMethod<void>(
       pipe(
         concatMap(() =>
@@ -163,7 +178,7 @@ export const SearchStore =  signalStore(
             }),
             tap({
               next: (postId: number) => { patchState(store, { postId }); },
-              error: (error: unknown) => { store['addError'](extractErrorMessage(error)); }
+              error: (error: unknown) => { addError(extractErrorMessage(error)); }
             })
           )
         )
@@ -178,7 +193,7 @@ export const SearchStore =  signalStore(
             map((response: { titre: string; id: number; new_href: string }[] | PostgrestError) => throwOnPostgrestError(response)),
             tap({
               next: (postTitreAndId: { titre: string; id: number; new_href: string }[]) => patchState(store, { postTitreAndId }),
-              error: (error: unknown) => store['addError'](extractErrorMessage(error))
+              error: (error: unknown) => addError(extractErrorMessage(error))
             })
           )
         )
@@ -205,7 +220,7 @@ export const SearchStore =  signalStore(
                 });
                 patchState(store, { step: 1 });
               },
-              error: (error: unknown) => store['addError'](extractErrorMessage(error))
+              error: (error: unknown) => addError(extractErrorMessage(error))
             })
           )
         )
@@ -232,7 +247,7 @@ export const SearchStore =  signalStore(
             map((response: string | PostgrestError) => throwOnPostgrestError(response)),
             tap({
               next: (imageUrl: string) => patchState(store, { image_url: imageUrl }),
-              error: (error: unknown) => store['addError'](extractErrorMessage(error))
+              error: (error: unknown) => addError(extractErrorMessage(error))
             })
           );
         })
@@ -257,7 +272,7 @@ export const SearchStore =  signalStore(
             map((response: string | PostgrestError) => throwOnPostgrestError(response)),
             tap({
               next: (video: string) => patchState(store, { video }),
-              error: (error: unknown) => store['addError'](extractErrorMessage(error))
+              error: (error: unknown) => addError(extractErrorMessage(error))
             })
           );
         }))
@@ -281,7 +296,7 @@ export const SearchStore =  signalStore(
             map((response: { question: string; response: string }[] | PostgrestError) => throwOnPostgrestError(response)),
             tap({
               next: (faq: { question: string; response: string }[]) => patchState(store, { faq }),
-              error: (error: unknown) => store['addError'](extractErrorMessage(error))
+              error: (error: unknown) => addError(extractErrorMessage(error))
             })
           );
         })
@@ -316,7 +331,7 @@ export const SearchStore =  signalStore(
                   imagesCount: result.images.length 
                 });
               },
-              error: (error: unknown) => store['addError'](extractErrorMessage(error))
+              error: (error: unknown) => addError(extractErrorMessage(error))
             })
           );
         }))
@@ -345,7 +360,7 @@ export const SearchStore =  signalStore(
               next: (upgradedArticle: string) => {
                 patchState(store, { article: upgradedArticle, step: 3 });
               },
-              error: (error: unknown) => store['addError'](extractErrorMessage(error))
+              error: (error: unknown) => addError(extractErrorMessage(error))
             })
           );
         })
@@ -372,7 +387,7 @@ export const SearchStore =  signalStore(
               next: (upgradedArticle: string) => {
                 patchState(store, { article: upgradedArticle, step: 4 });
               },
-              error: (error: unknown) => store['addError'](extractErrorMessage(error))
+              error: (error: unknown) => addError(extractErrorMessage(error))
             })
           );
         })
@@ -447,14 +462,55 @@ export const SearchStore =  signalStore(
       loggingService.info('STORE', '🖼️ Images internes mises à jour', { count: images.length });
     },
 
-    clearErrors: () => {
-      clearErrors();
-      loggingService.info('STORE', '🧹 Erreurs effacées');
-    },
-
-    addError: (errorMessage: string) => {
-      addError(errorMessage);
-    },
+    // Méthode de test pour vérifier la remontée d'erreurs
+    testErrorHandling: rxMethod<void>(
+      pipe(
+        concatMap(() => 
+          infra.testError().pipe(
+            withLoading(store, 'testError'),
+            map((response: string | PostgrestError) => throwOnPostgrestError(response)),
+            tap({
+              next: (result: string) => {
+                loggingService.info('STORE', '✅ Test réussi (ne devrait pas arriver)', { result });
+              },
+              error: (error: unknown) => {
+                loggingService.error('STORE', '🚨 Test d\'erreur - erreur capturée correctement', error);
+                addError(extractErrorMessage(error));
+              }
+            })
+          )
+        )
+      )
+    ),
+    
+    // Méthode de test pour vérifier la remontée d'erreurs Supabase
+    testSupabaseStorageError: rxMethod<void>(
+      pipe(
+        concatMap(() => 
+          infra.testSupabaseStorageError().pipe(
+            withLoading(store, 'testSupabaseStorageError'),
+            map((response: string | PostgrestError) => {
+              // Pour ce test, on s'attend toujours à une string (image de fallback)
+              if (typeof response === 'string') {
+                return response;
+              }
+              // Si c'est une PostgrestError, la convertir en string
+              return 'https://via.placeholder.com/800x400/f44336/white?text=Erreur+Test';
+            }),
+            tap({
+              next: (imageUrl: string) => {
+                loggingService.info('STORE', '✅ Test Supabase Storage - Image de fallback reçue', { imageUrl });
+                patchState(store, { image_url: imageUrl });
+              },
+              error: (error: unknown) => {
+                loggingService.error('STORE', '🚨 Test Supabase Storage - erreur inattendue', error);
+                addError(extractErrorMessage(error));
+              }
+            })
+          )
+        )
+      )
+    ),
 
     saveAllToSupabase: () => {
       const postId = store.postId();
@@ -494,7 +550,7 @@ export const SearchStore =  signalStore(
             ? infra.saveFaqItems(postId, faq).pipe(
                 tap({
                   next: () => loggingService.info('STORE', '✅ FAQ sauvegardée avec succès'),
-                  error: (error) => store['addError'](`Erreur sauvegarde FAQ: ${error}`)
+                  error: (error) => addError(`Erreur sauvegarde FAQ: ${error}`)
                 })
               )
             : of(true);
@@ -504,7 +560,7 @@ export const SearchStore =  signalStore(
             ? infra.saveInternalImages(postId, internalImages).pipe(
                 tap({
                   next: () => loggingService.info('STORE', '✅ Images internes sauvegardées avec succès'),
-                  error: (error) => store['addError'](`Erreur sauvegarde images: ${error}`)
+                  error: (error) => addError(`Erreur sauvegarde images: ${error}`)
                 })
               )
             : of(true);
@@ -519,7 +575,7 @@ export const SearchStore =  signalStore(
           loggingService.info('STORE', '🎉 Sauvegarde complète terminée avec succès');
         }),
         catchError((error) => {
-          store['addError'](`Erreur sauvegarde: ${error}`);
+          addError(`Erreur sauvegarde: ${error}`);
           return of(null);
         })
       ).subscribe();

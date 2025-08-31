@@ -61,7 +61,7 @@ export class CreateComponent {
 
   clearErrors() {
     this.loggingService.info('COMPONENT', '🧹 Nettoyage des erreurs');
-    this.store['clearErrors']();
+    this.store.clearErrors();
   }
 
   trackByIndex(index: number, item: string): number {
@@ -91,5 +91,15 @@ export class CreateComponent {
       this.loggingService.info('COMPONENT', '💾 Déclenchement sauvegarde manuelle');
       this.store.saveAllToSupabase();
     }
+  }
+
+  testErrorHandling() {
+    this.loggingService.info('COMPONENT', '🧪 Déclenchement test d\'erreur');
+    this.store.testErrorHandling();
+  }
+  
+  testSupabaseStorageError() {
+    this.loggingService.info('COMPONENT', '🗜️ Déclenchement test erreur Supabase Storage');
+    this.store.testSupabaseStorageError();
   }
 } 

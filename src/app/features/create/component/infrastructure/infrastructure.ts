@@ -27,6 +27,42 @@ export class Infrastructure {
   private readonly addScientificNameService = inject(AddScientificNameService);
 
   /**
+   * Méthode de test pour vérifier que les erreurs remontent bien dans le store
+   * À utiliser temporairement pour débugger
+   */
+  testError(): Observable<string | PostgrestError> {
+    this.loggingService.info('INFRASTRUCTURE', '🧪 Test d\'erreur déclenché');
+    
+    return this.wrapWithErrorHandling(
+      () => from(Promise.reject(new Error('Erreur de test pour vérifier la remontée dans le store'))),
+      'testError',
+      'Test de la gestion d\'erreur'
+    );
+  }
+  
+  /**
+   * Méthode de test pour simuler une erreur Supabase Storage
+   */
+  testSupabaseStorageError(): Observable<string | PostgrestError> {
+    this.loggingService.info('INFRASTRUCTURE', '🧪 Test d\'erreur Supabase Storage');
+    
+    return from((async () => {
+      // Simuler l'erreur Supabase Storage
+      const supabaseError = {
+        statusCode: '403',
+        error: 'Unauthorized', 
+        message: 'new row violates row-level security policy'
+      };
+      
+      const warningMessage = `Erreur Supabase Storage (test): ${supabaseError.message} - Image par défaut utilisée`;
+      this.signalWarning(warningMessage);
+      
+      // Retourner l'image de fallback comme dans le vrai code
+      return 'https://via.placeholder.com/800x400/4caf50/white?text=Test+Erreur+Storage';
+    })());
+  }
+
+  /**
    * Méthode générique pour gérer les erreurs et les transformer en PostgrestError
    * pour un traitement uniforme dans le store
    */
@@ -48,6 +84,21 @@ export class Infrastructure {
     };
     
     return postgrestError;
+  }
+
+  /**
+   * Interface pour signaler des warnings au store
+   */
+  private warningCallback?: (message: string) => void;
+  
+  setWarningCallback(callback: (message: string) => void) {
+    this.warningCallback = callback;
+  }
+  
+  private signalWarning(message: string) {
+    if (this.warningCallback) {
+      this.warningCallback(message);
+    }
   }
 
   /**
@@ -213,16 +264,29 @@ export class Infrastructure {
         const b64_json = await this.openaiApiService.imageGeneratorUrl(this.getPromptsService.getOpenAiPromptImageGenerator(phraseAccroche));
         // 2️⃣ Convertir le base64 en Blob
         if (b64_json) {
+          try {
           // 3️⃣ Uploader le Blob dans Supabase Storage
           const imageUrl = await this.supabaseService.uploadBase64ToSupabase(postId, b64_json);
-          if (!imageUrl) {
-            throw new Error('Échec de l\'upload de l\'image vers Supabase');
-          }
+            if (imageUrl) {
           // 4️⃣ Mettre à jour le post avec l'URL publique
           await this.supabaseService.updateImageUrlPostByIdForm(postId, imageUrl);
+              this.loggingService.info('INFRASTRUCTURE', '🖼️ Upload d\'image réussi', { postId, imageUrl });
           return imageUrl;
+            } else {
+              const warningMessage = `Upload d'image échoué pour le post ${postId} - Image par défaut utilisée`;
+              this.loggingService.warn('INFRASTRUCTURE', '⚠️ Upload d\'image échoué - URL par défaut utilisée', { postId });
+              this.signalWarning(warningMessage);
+              return 'https://via.placeholder.com/800x400/4caf50/white?text=Image+Jardin+Iris';
+            }
+          } catch (uploadError) {
+            const errorMessage = `Erreur Supabase Storage: ${uploadError instanceof Error ? uploadError.message : String(uploadError)} - Image par défaut utilisée`;
+            this.loggingService.error('INFRASTRUCTURE', '🚫 Erreur upload Supabase Storage', { postId, error: uploadError });
+            this.signalWarning(errorMessage);
+            return 'https://via.placeholder.com/800x400/4caf50/white?text=Image+Non+Disponible';
+          }
         }
-        throw new Error('Échec de la génération de l\'image par OpenAI');
+        this.loggingService.warn('INFRASTRUCTURE', '⚠️ Pas d\'image générée par l\'IA', { postId });
+        return 'https://via.placeholder.com/800x400/666/white?text=Aucune+Image+Generee';
       })()),
       'setImageUrl',
       `Génération et upload d'image pour le post ${postId} avec la phrase: ${phraseAccroche}`
@@ -725,5 +789,5 @@ export class Infrastructure {
       `Sauvegarde de ${images.length} images internes pour le post ${postId}`
     );
   }
-
+  
 }
