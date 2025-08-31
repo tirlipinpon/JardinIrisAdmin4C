@@ -1,6 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDividerModule } from '@angular/material/divider';
 import { LoggingService } from '../../shared/services/logging.service';
 import { VersionService } from '../../shared/services/versions/versions.service';
 import { Application } from './component/application/application';
@@ -11,7 +19,20 @@ import { PostFormEditorComponent } from './components/post-form-editor/post-form
 @Component({
   selector: 'app-create',
   standalone: true,
-  imports: [CommonModule, FormsModule, ArticleEditorComponent, PostFormEditorComponent],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatProgressBarModule,
+    MatChipsModule,
+    MatDividerModule,
+    ArticleEditorComponent, 
+    PostFormEditorComponent
+  ],
   templateUrl: './create.component.html'
 })
 export class CreateComponent {

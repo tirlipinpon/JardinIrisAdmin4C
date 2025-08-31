@@ -1,25 +1,76 @@
-<h1>Login</h1>
-<form>
-  <label for="username">Nom d'utilisateur :</label>
-  <input id="username" name="username" type="text" [(ngModel)]="email"/>
-  <br />
-  <label for="password">Mot de passe :</label>
-  <div style="position: relative; display: inline-block;">
-    <input 
-      id="password" 
-      name="password" 
-      [type]="showPassword ? 'text' : 'password'" 
-      [(ngModel)]="password"/>
-    <button 
-      type="button" 
-      (click)="togglePasswordVisibility()" 
-      style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer;">
-      {{ showPassword ? 'I' : 'o' }}
-    </button>
+<div class="login-container">
+  <div class="login-background">
+    <div class="garden-pattern"></div>
   </div>
-  <br />
-  <button type="button" (click)="onLoginSuccess()">Se connecter</button>
-  @if (error) {
-    <div style="color:red">{{ error }}</div>
-  }
-</form> 
+  
+  <mat-card class="login-card">
+    <mat-card-header class="login-header">
+      <div class="brand-section">
+        <div class="logo">
+          🌱
+        </div>
+        <div class="brand-text">
+          <h1>Jardin Iris Admin</h1>
+          <p>Votre espace de création d'articles</p>
+        </div>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content class="login-content">
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+        
+        <!-- Champ Email -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Adresse email</mat-label>
+          <input 
+            matInput 
+            formControlName="email" 
+            type="email" 
+            placeholder="votre@email.com">
+          <mat-icon matSuffix>email</mat-icon>
+          <mat-error *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+            {{ getErrorMessage('email') }}
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Champ Mot de passe -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Mot de passe</mat-label>
+          <input 
+            matInput 
+            formControlName="password" 
+            [type]="showPassword ? 'text' : 'password'" 
+            placeholder="Votre mot de passe">
+          <button 
+            mat-icon-button 
+            matSuffix 
+            type="button"
+            (click)="togglePasswordVisibility()"
+            [attr.aria-label]="'Afficher le mot de passe'"
+            [attr.aria-pressed]="showPassword">
+            <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+            {{ getErrorMessage('password') }}
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Bouton de connexion -->
+        <button 
+          mat-raised-button 
+          color="primary" 
+          type="submit" 
+          class="login-button"
+          [disabled]="isLoading">
+          <mat-spinner *ngIf="isLoading" diameter="20" class="login-spinner"></mat-spinner>
+          <span *ngIf="!isLoading">🚀 Se connecter</span>
+        </button>
+
+      </form>
+    </mat-card-content>
+
+    <mat-card-footer class="login-footer">
+      <p>🌿 Cultivez vos idées, récoltez du contenu de qualité</p>
+    </mat-card-footer>
+  </mat-card>
+</div> 
