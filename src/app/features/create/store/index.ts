@@ -378,6 +378,11 @@ export const SearchStore =  signalStore(
       const updatedFaq = [...currentFaq, faqItem];
       patchState(store, { faq: updatedFaq });
       loggingService.info('STORE', '➕ Nouvel item FAQ ajouté', faqItem);
+    },
+
+    clearErrors: () => {
+      patchState(store, { error: [] });
+      loggingService.info('STORE', '🧹 Erreurs effacées');
     }
 
   }))

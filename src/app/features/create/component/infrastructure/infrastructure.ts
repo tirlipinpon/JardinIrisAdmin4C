@@ -24,6 +24,46 @@ export class Infrastructure {
   private readonly googleSearchService = inject(GoogleSearchService);
   private readonly pexelsApiService = inject(PexelsApiService);
 
+  /**
+   * Méthode générique pour gérer les erreurs et les transformer en PostgrestError
+   * pour un traitement uniforme dans le store
+   */
+  private handleError(error: any, context: string, methodName: string): PostgrestError {
+    this.loggingService.error('INFRASTRUCTURE', `Erreur dans ${methodName} - ${context}`, error);
+    
+    // Si c'est déjà une PostgrestError, la retourner telle quelle
+    if (error && typeof error === 'object' && 'message' in error && 'code' in error && 'name' in error) {
+      return error as PostgrestError;
+    }
+    
+    // Créer une PostgrestError standardisée
+    const postgrestError: PostgrestError = {
+      message: error?.message || `Erreur dans ${methodName}: ${String(error)}`,
+      details: `Contexte: ${context}. Erreur originale: ${error?.stack || String(error)}`,
+      hint: `Vérifiez les logs pour plus de détails sur l'erreur dans ${methodName}`,
+      code: error?.code || `INFRA_ERROR_${methodName.toUpperCase()}`,
+      name: 'PostgrestError'
+    };
+    
+    return postgrestError;
+  }
+
+  /**
+   * Wrapper générique pour les opérations asynchrones avec gestion d'erreur
+   */
+  private wrapWithErrorHandling<T>(
+    operation: () => Observable<T>, 
+    methodName: string, 
+    context: string = ''
+  ): Observable<T | PostgrestError> {
+    return operation().pipe(
+      catchError(error => {
+        const postgrestError = this.handleError(error, context, methodName);
+        return of(postgrestError);
+      })
+    );
+  }
+
   getNextPostId(): Observable<number | PostgrestError> {
     const shouldReturnError = false;
     const shouldReturnMock = false
@@ -45,8 +85,11 @@ export class Infrastructure {
       return from(Promise.resolve(dummyNextPostId));
     }
   
-    return from(this.supabaseService.getNextPostId());
-    
+    return this.wrapWithErrorHandling(
+      () => from(this.supabaseService.getNextPostId()),
+      'getNextPostId',
+      'Récupération du prochain ID de post depuis Supabase'
+    );
   }
 
   getLastPostTitreAndId(): Observable<{ titre: string; id: number; new_href: string }[] | PostgrestError> {
@@ -83,7 +126,11 @@ export class Infrastructure {
     }
     
     this.loggingService.info('INFRASTRUCTURE', '🔧 Début getLastPostTitreAndId()');
-    return from(this.supabaseService.getLastPostTitreAndId(10));
+    return this.wrapWithErrorHandling(
+      () => from(this.supabaseService.getLastPostTitreAndId(10)),
+      'getLastPostTitreAndId',
+      'Récupération des derniers posts depuis Supabase'
+    );
   }
 
   setPost(articleIdea: string): Observable<Post | PostgrestError> {
@@ -122,13 +169,17 @@ export class Infrastructure {
     }
     
     const prompt = this.getPromptsService.generateArticle(articleIdea);
-    return from(this.openaiApiService.fetchData(prompt, false)).pipe(
-      map(result => {
-        if (result === null) {
-          throw new Error('Aucun résultat retourné par l\'API OpenAI');
-        }
-        return parseJsonSafe(extractJSONBlock(result));
-      })
+    return this.wrapWithErrorHandling(
+      () => from(this.openaiApiService.fetchData(prompt, false)).pipe(
+        map(result => {
+          if (result === null) {
+            throw new Error('Aucun résultat retourné par l\'API OpenAI');
+          }
+          return parseJsonSafe(extractJSONBlock(result));
+        })
+      ),
+      'setPost',
+      `Génération d'article avec OpenAI pour l'idée: ${articleIdea}`
     );
   }
 
@@ -154,22 +205,26 @@ export class Infrastructure {
       return from(Promise.resolve(dummyImageUrl));
     }
     
-    return from((async () => {
-      // 1️⃣ Générer l'image en base64
-      const b64_json = await this.openaiApiService.imageGeneratorUrl(this.getPromptsService.getOpenAiPromptImageGenerator(phraseAccroche));
-      // 2️⃣ Convertir le base64 en Blob
-      if (b64_json) {
-        // 3️⃣ Uploader le Blob dans Supabase Storage
-        const imageUrl = await this.supabaseService.uploadBase64ToSupabase(postId, b64_json);
-        if (!imageUrl) {
-          throw new Error('Échec de l\'upload de l\'image vers Supabase');
+    return this.wrapWithErrorHandling(
+      () => from((async () => {
+        // 1️⃣ Générer l'image en base64
+        const b64_json = await this.openaiApiService.imageGeneratorUrl(this.getPromptsService.getOpenAiPromptImageGenerator(phraseAccroche));
+        // 2️⃣ Convertir le base64 en Blob
+        if (b64_json) {
+          // 3️⃣ Uploader le Blob dans Supabase Storage
+          const imageUrl = await this.supabaseService.uploadBase64ToSupabase(postId, b64_json);
+          if (!imageUrl) {
+            throw new Error('Échec de l\'upload de l\'image vers Supabase');
+          }
+          // 4️⃣ Mettre à jour le post avec l'URL publique
+          await this.supabaseService.updateImageUrlPostByIdForm(postId, imageUrl);
+          return imageUrl;
         }
-        // 4️⃣ Mettre à jour le post avec l'URL publique
-        await this.supabaseService.updateImageUrlPostByIdForm(postId, imageUrl);
-        return imageUrl;
-      }
-      throw new Error('Échec de la génération de l\'image par OpenAI');
-    })());
+        throw new Error('Échec de la génération de l\'image par OpenAI');
+      })()),
+      'setImageUrl',
+      `Génération et upload d'image pour le post ${postId} avec la phrase: ${phraseAccroche}`
+    );
   }
 
   setVideo(phrase_accroche: string, postId: number): Observable<string | PostgrestError> {
@@ -195,31 +250,35 @@ export class Infrastructure {
     }
     
     const prompt = this.getPromptsService.generateKeyWordForSearchVideo(phrase_accroche);
-    return from(this.openaiApiService.fetchData(prompt, true)).pipe(
-      switchMap(result => {
-        if (!result) return of('');
-        try {
-          const keywordData: { keywords: string } = JSON.parse(extractJSONBlock(result));
-          const keywords = keywordData.keywords;
-          if (!keywords) return of('');
-          return this.googleSearchService.searchFrenchVideo(keywords).pipe(
-            switchMap((videoUrls: VideoInfo[]) => {
-              if (!videoUrls.length) return of('');
-              const videoPrompt = this.getPromptsService.searchVideoFromYoutubeResult(phrase_accroche, videoUrls);
-              return from(this.openaiApiService.fetchData(videoPrompt, true)).pipe(
-                switchMap(videoResult => {
-                  const videoData: { video: string } = JSON.parse(extractJSONBlock(videoResult));
-                  const videoUrl = videoData.video && videoData.video.length ? videoData.video : null;
-                  return videoUrl ? of(videoUrl) : of('');
-                })
-              );
-            })
-          );
-        } catch (error) {
-          this.loggingService.error('INFRASTRUCTURE', 'Erreur lors du parsing du keyword', error);
-          return of('');
-        }
-      })
+    return this.wrapWithErrorHandling(
+      () => from(this.openaiApiService.fetchData(prompt, true)).pipe(
+        switchMap(result => {
+          if (!result) return of('');
+          try {
+            const keywordData: { keywords: string } = JSON.parse(extractJSONBlock(result));
+            const keywords = keywordData.keywords;
+            if (!keywords) return of('');
+            return this.googleSearchService.searchFrenchVideo(keywords).pipe(
+              switchMap((videoUrls: VideoInfo[]) => {
+                if (!videoUrls.length) return of('');
+                const videoPrompt = this.getPromptsService.searchVideoFromYoutubeResult(phrase_accroche, videoUrls);
+                return from(this.openaiApiService.fetchData(videoPrompt, true)).pipe(
+                  switchMap(videoResult => {
+                    const videoData: { video: string } = JSON.parse(extractJSONBlock(videoResult));
+                    const videoUrl = videoData.video && videoData.video.length ? videoData.video : null;
+                    return videoUrl ? of(videoUrl) : of('');
+                  })
+                );
+              })
+            );
+          } catch (error) {
+            this.loggingService.error('INFRASTRUCTURE', 'Erreur lors du parsing du keyword', error);
+            return of('');
+          }
+        })
+      ),
+      'setVideo',
+      `Recherche de vidéo YouTube pour la phrase: ${phrase_accroche}`
     );
   }
 
@@ -267,7 +326,8 @@ export class Infrastructure {
     }
     
     const prompt = this.getPromptsService.getPromptFaq(article);
-      return from(this.openaiApiService.fetchData(prompt, true)).pipe(
+    return this.wrapWithErrorHandling(
+      () => from(this.openaiApiService.fetchData(prompt, true)).pipe(
         map(result => {
           if (result === null) {
             throw new Error('Aucun résultat retourné par l\'API OpenAI');
@@ -276,7 +336,10 @@ export class Infrastructure {
           // TODO: Utiliser postId pour sauvegarder la FAQ dans Supabase
           return data;
         })
-      );
+      ),
+      'setFaq',
+      `Génération de FAQ pour un article de ${article.length} caractères`
+    );
   }
 
   internalImage(article: string, postId: number): Observable<{ article: string; images: InternalImageData[] } | PostgrestError> {
@@ -334,7 +397,8 @@ export class Infrastructure {
     const usedKeywords: string[] = [];
     let upgradedArticle = article;
     
-    return from(chapterIds).pipe(
+    return this.wrapWithErrorHandling(
+      () => from(chapterIds).pipe(
       concatMap((chapitreId: number) => {
         this.loggingService.info('INFRASTRUCTURE', `🔧 Traitement du chapitre ${chapitreId}/${environment.globalNbChapter}`);
         
@@ -479,14 +543,10 @@ export class Infrastructure {
           article: upgradedArticle,
           images: validResults
         };
-      }),
-      catchError(error => {
-        this.loggingService.error('INFRASTRUCTURE', 'Erreur générale dans internalImage', error);
-        return of({
-          article: upgradedArticle,
-          images: []
-        });
       })
+    ),
+    'internalImage',
+    `Ajout d'images internes pour ${environment.globalNbChapter} chapitres dans l'article du post ${postId}`
     );
   }
 
@@ -521,21 +581,28 @@ export class Infrastructure {
     this.loggingService.info('INFRASTRUCTURE', '🔧 Début setInternalLink()', { articleLength: article.length, postsCount: postTitreAndId.length });
     
     const prompt = this.getPromptsService.addInternalLinkInArticle(article, postTitreAndId);
-    return from(this.openaiApiService.fetchData(prompt, true)).pipe(
-      map(result => {
-        if (result === null) {
-          throw new Error('Aucun résultat retourné par l\'API OpenAI pour les liens internes');
-        }
-        
-        try {
-          const data: { upgraded: string; idToRemove?: string } = JSON.parse(extractJSONBlock(result));
-          this.loggingService.info('INFRASTRUCTURE', '📨 Réponse setInternalLink', { hasUpgraded: !!data.upgraded, idToRemove: data.idToRemove });
-          return data.upgraded;
-        } catch (error) {
-          this.loggingService.error('INFRASTRUCTURE', 'Erreur lors du parsing du résultat setInternalLink', error);
-          throw new Error('Erreur lors du parsing du résultat des liens internes');
-        }
-      })
+    return this.wrapWithErrorHandling(
+      () => from(this.openaiApiService.fetchData(prompt, true)).pipe(
+        map(result => {
+          if (result === null) {
+            throw new Error('Aucun résultat retourné par l\'API OpenAI pour les liens internes');
+          }
+          const raw = extractJSONBlock(result);
+          try {
+          
+            const data: { upgraded: string; idToRemove?: string } = JSON.parse(raw);
+            this.loggingService.info('INFRASTRUCTURE', '📨 Réponse setInternalLink', { hasUpgraded: !!data.upgraded, idToRemove: data.idToRemove });
+            return data.upgraded;
+          } catch (error) {
+            this.loggingService.error('INFRASTRUCTURE', 'Erreur lors du parsing du résultat setInternalLink', error);
+            console.error('JSON.parse failed:', error);
+            console.error('--- snippet (start) ---\n', raw.slice(0, 1000));
+            throw new Error('Erreur lors du parsing du résultat des liens internes');
+          }
+        })
+      ),
+      'setInternalLink',
+      `Ajout de liens internes dans un article de ${article.length} caractères avec ${postTitreAndId.length} posts disponibles`
     );
   }
 
@@ -592,7 +659,8 @@ export class Infrastructure {
       return idMatch ? parseInt(idMatch[1]) : 0;
     });
 
-    return from(paragraphIds).pipe(
+    return this.wrapWithErrorHandling(
+      () => from(paragraphIds).pipe(
       concatMap((paragrapheId: number) => {
         // Extraire le contenu du paragraphe spécifique
         const paragraphRegex = new RegExp(`<span id="paragraphe-${paragrapheId}">(.*?)</span>`, 's');
@@ -639,6 +707,9 @@ export class Infrastructure {
           finalLength: finalArticle.length 
         });
       })
+    ),
+    'vegetal',
+    `Ajout de noms botaniques dans un article de ${article.length} caractères`
     );
   }
 

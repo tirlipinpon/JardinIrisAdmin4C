@@ -3,6 +3,22 @@
     <h1>🌱 Générateur d'articles de jardinage</h1>
   </header>
 
+  <!-- Section d'affichage des erreurs -->
+  <div class="error-section" *ngIf="store.error().length > 0">
+    <div class="error-container">
+      <div class="error-header">
+        <span class="error-icon">⚠️</span>
+        <span class="error-title">Erreur{{ store.error().length > 1 ? 's' : '' }} détectée{{ store.error().length > 1 ? 's' : '' }}</span>
+        <button class="error-close" (click)="clearErrors()">✕</button>
+      </div>
+      <div class="error-list">
+        <div class="error-item" *ngFor="let error of store.error(); trackBy: trackByIndex">
+          <span class="error-message">{{ error }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="generation-section">
     <div class="input-group">
       <input 
@@ -71,6 +87,74 @@
   color: #2c5530;
   font-size: 32px;
   margin: 0;
+}
+
+.error-section {
+  margin-bottom: 24px;
+}
+
+.error-container {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #ef4444;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.error-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #fee2e2;
+  border-bottom: 1px solid #fecaca;
+}
+
+.error-icon {
+  font-size: 18px;
+  margin-right: 8px;
+}
+
+.error-title {
+  font-weight: 600;
+  color: #dc2626;
+  flex: 1;
+}
+
+.error-close {
+  background: none;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.error-close:hover {
+  background: #fecaca;
+}
+
+.error-list {
+  padding: 0;
+  margin: 0;
+}
+
+.error-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #fecaca;
+}
+
+.error-item:last-child {
+  border-bottom: none;
+}
+
+.error-message {
+  color: #991b1b;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .generation-section {

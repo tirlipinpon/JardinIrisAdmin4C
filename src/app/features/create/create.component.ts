@@ -36,4 +36,13 @@ export class CreateComponent {
     this.loggingService.info('COMPONENT', '📝 Article modifié dans l\'éditeur');
     // TODO: Mettre à jour l'article dans le store si nécessaire
   }
+
+  clearErrors() {
+    this.loggingService.info('COMPONENT', '🧹 Nettoyage des erreurs');
+    this.store.clearErrors();
+  }
+
+  trackByIndex(index: number, item: string): number {
+    return index;
+  }
 } 

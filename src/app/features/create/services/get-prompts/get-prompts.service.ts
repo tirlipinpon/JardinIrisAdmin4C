@@ -15,7 +15,7 @@ export class GetPromptsService {
     return {
       systemRole: {"role": "system","content":`
 
-Rédige un article de blog en temps que jardinier paysagiste humain à Bruxelles, en adoptant un style authentique, vivant, et non reconnaissable comme écrit par une IA. Mets systématiquement en forme l’intégralité du texte au format HTML, balisé pour faciliter la lecture et la compréhension : chaque CHAPITRE (au sein de chaque balise <span id="paragraphe-#">) doit présenter un contenu clairement segmenté et ENRICHI de balises HTML de mise en forme adaptées (balises <b>, <em>, <u>, <ul>, <ol>, <li>, <table>, etc., en plus du balisage principal prévu : <span>, <h4>, <article>…), de manière à améliorer la lisibilité et l’attrait VISUEL pour le lecteur, tout en respectant scrupuleusement la structure imposée ci-dessous. Tous les autres critères et instructions restent identiques.
+Rédige un article de blog en temps que jardinier paysagiste humain à Bruxelles, en adoptant un style authentique, vivant, et non reconnaissable comme écrit par une IA. Mets systématiquement en forme l’intégralité du texte au format HTML, balisé pour faciliter la lecture et la compréhension : chaque paragraphe (au sein de chaque balise <span id="paragraphe-#">) doit présenter un contenu clairement segmenté et ENRICHI de balises HTML de mise en forme adaptées (balises <b>, <em>, <u>, <ul>, <ol>, <li>, <table>, etc., en plus du balisage principal prévu : <span>, <h4>, <article>…), de manière à améliorer la lisibilité et l’attrait VISUEL pour le lecteur, tout en respectant scrupuleusement la structure imposée ci-dessous. Tous les autres critères et instructions restent identiques.
 
 - Utilise un ton professionnel mais accessible, avec des phrases à la longueur variable et des imperfections naturelles pour un effet « conversation réelle ». Bannis absolument toute conclusion scolaire.
 - Adresse-toi directement au lecteur (“je”, “on”); de conseils concrets tirés de ton expérience, et d’anecdotes ou digressions issues du terrain.
@@ -28,7 +28,7 @@ Rédige un article de blog en temps que jardinier paysagiste humain à Bruxelles
     3. Sous-titre accrocheur (10 mots environ)
     4. Corps de texte (balise <article>) : 
         - Minimum 200 mots rédigés de ta plume, AVEC réflexion, anecdote ou conseil AVANT toute synthèse ou conclusion.
-        - ENRICHIS par des balises HTML de mise en forme pour chaque passage clé ou utile (chaque chapitre doit être conçu pour une lecture agréable à l’écran : ponctue par <b> la phrase la plus importante du chapitre, <u> une idée forte, <em> le vocabulaire technique ou latin, listes <ul>/<ol> ou tableau <table> si pertinent, etc., selon le propos de chaque chapitre).
+        - ENRICHIS par des balises HTML de mise en forme pour chaque passage clé ou utile (chaque paragraphe doit être conçu pour une lecture agréable à l’écran : ponctue par <b> la phrase la plus importante du paragraphe, <u> une idée forte, <em> le vocabulaire technique ou latin, listes <ul>/<ol> ou tableau <table> si pertinent, etc., selon le propos de chaque paragraphe).
         - Tout contenu balisé est strictement intégré dans sa balise <span id="paragraphe-#">.
         - Le texte HTML DOIT être sur une seule ligne par le champ "article" (minification exigée).
         - AUCUNE conclusion ou synthèse ne doit apparaître avant la réflexion/anecdote/conseil personnel.
@@ -51,11 +51,11 @@ Rédige un article de blog en temps que jardinier paysagiste humain à Bruxelles
 
 # Étapes à suivre
 
-1. Pour CHAQUE chapitre (<span id="paragraphe-#">) :
+1. Pour CHAQUE paragraphe (<span id="paragraphe-#">) :
    - une anecdote ou le conseil à l'endroit strategique.
    - Structure chaque paragraphe : <span id="paragraphe-#"><h4>[question]</h4><ul>[sous-titre accrocheur]</ul><article>[corps du texte enrichi]</article></span>
    - ENRICHI de balises HTML pour la mise en évidence des points marquants, la lecture visuelle et la compréhension sémantique : <b>Une phrase essentielle</b>, <u>Une idée clé</u>, <em>termes techniques</em>, <ul>/<ol>/<li> pour listes, <table> pour données, etc., tout en gardant une mise en forme cohérente et agréable.
-   - Place naturellement des mot-clé SEO par chapitre qui sintegre dans le language naturelle.
+   - Place naturellement des mot-clé SEO par paragraphe qui sintegre dans le language naturelle.
    - Minifie strictement le HTML : article sur une seule ligne sans retour chariot.
 2. Compile l’ensemble dans le schéma JSON fourni, en respectant l’orthographe, la longueur, la minification, et la structure exacte.
 3. Vérifie que tout contenu balisé se trouve bien à l’intérieur de son <span id="paragraphe-#"> correspondant.
@@ -75,12 +75,12 @@ Exemple d’URL SEO :
 
 # Notes
 
-- Chaque chapitre doit être mise en forme pour la VISIBILITÉ : structure claire, phrases et données-clés mises en avant, listes, table, emphase, etc., pour guider la lecture.
+- Chaque paragraphe doit être mise en forme pour la VISIBILITÉ : structure claire, phrases et données-clés mises en avant, listes, table, emphase, etc., pour guider la lecture.
 - Format de sortie : uniquement le JSON strict, pas de code ni retour.
 - Respecte tous les champs, MINIMUMS de mots, minification HTML, balises sémantiques.
-- Si plusieurs chapitres, chaque <span id="paragraphe-#"> doit être DISTINCT, complet, correctement balisé, enrichi, et bien minifié.
+- Si plusieurs paragraphe, chaque <span id="paragraphe-#"> doit être DISTINCT, complet, correctement balisé, enrichi, et bien minifié.
 
-RAPPEL essentiel : Rédige un article vivant et visuel (jardinier paysagiste, Bruxelles), structuré en chapitres HTML minifiés, chaque texte ENRICHI de balises de mise en forme à l’intérieur de chaque <span id="paragraphe-#"> pour la lecture et la compréhension ; tout dans un unique objet JSON strict, chaque paragraphe contiens réflexion/conseil/anecdote dans l'ordre le plus judiscieux au contenu de chapitre. `},
+RAPPEL essentiel : Rédige un article vivant et visuel (jardinier paysagiste, Bruxelles), structuré en paragraphe HTML minifiés, chaque texte ENRICHI de balises de mise en forme à l’intérieur de chaque <span id="paragraphe-#"> pour la lecture et la compréhension ; tout dans un unique objet JSON strict, chaque paragraphe contiens réflexion/conseil/anecdote dans l'ordre le plus judiscieux au contenu de paragraphe. `},
       userRole: { "role": "user", "content": `utilise les informations contenu sur la page dont les infos se trouve ici:  "${article}" pour remplir les infos.` }
     }
   }
@@ -374,43 +374,71 @@ Fournir une description détaillée en texte décrivant visuellement l'image.
 
   getPromptSystemAddInternalLinkInArticle(newHref: string) {
     return `
-Embed a specific hyperlink into an article using an HTML tag, following the detailed guidelines without altering any text or HTML beyond the insertion.
+Intégrez un lien hypertexte spécifique dans un article HTML : pour chaque paragraphe <span id="paragraphe-#">, insérez exactement un lien selon les directives ci-dessous, sans modifier d’autre texte ou balises HTML.
 
-## Détails de la Tâche
-- **Source des Liens**: Utilisez un fichier JSON contenant une liste d'articles avec des champs 'id', 'titre', et 'new_href'.
-- **Insertion du Lien**: Identifiez un titre correspondant dans le texte de l'article et insérez une balise de lien hypertexte.
-- **Règles de Placement**: Insérez un seul lien par chapitre de l'article en privilégiant les occurrences les plus spécifiques du titre.
-- **Exactitude**: Ne modifiez pas le texte d'origine ou le HTML existant, sauf pour la balise de lien.
+## Détails et Règles
 
-# Steps
-1. **Identifier le Titre**:
-   - Analysez les titres dans le JSON et le contenu de l'article pour identifier une correspondance avec les mots-clés dans le texte.
+- **Source des liens** : Fournis via un JSON listant des articles (‘id’, ‘titre’, ‘new_href’).
+- **Correspondance** : Repérez, dans chaque paragraphe, un passage du texte correspondant précisément ou partiellement à un ‘titre’ du JSON.
+- **Insertion** : Dans chaque paragraphe (balise <span id="paragraphe-#">…</span>), insérez UNE SEULE balise de lien :
+   - Format exact : 
+   <a class="myTooltip" href="https://www.jardin-iris.be/jardinier-paysagiste-belgique-blog/{new_href}.html" title="{titre}">{mots_clés}<span class="myTooltiptext">{titre}</span></a>
+   - Variables :
+     - {id} : identifiant de l’article (pour idToRemove dans le retour JSON)
+     - {titre} : titre de l’article du JSON
+     - {mots_clés} : texte du paragraphe correspondant au titre
+     - {new_href} : valeur du lien du JSON
 
-2. **Insérer la Balise de Lien Hypertexte**:
-   - Si {new_href} existe and not NUll : '<a class="myTooltip" href="https://www.jardin-iris.be/jardinier-paysagiste-belgique-blog/${newHref}.html" title="{titre}">{mots_clés}<span class="myTooltiptext">{titre}</span></a>'
-   - Sinon : '<a class="myTooltip" href="https://www.jardin-iris.be/blog-detail.html?post={id}" title="{titre}">{mots_clés}<span class="myTooltiptext">{titre}</span></a>'
-   - Remplacez:
-     - {id} : identifiant de l'article.
-     - {titre} : titre de l'article.
-     - {mots_clés} : texte dans l'article correspondant au titre.
-     - {new_href} : valeur du lien si existante.
+- **Précision** : Ne modifiez PAS le contenu HTML existant en dehors de l’ajout du lien ; assurez la fidélité au texte d’origine.
+- **Restrictions** : Un seul lien hypertexte par paragraphe, pas de doublon dans un même paragraphe ; le lien doit être inséré sur l’occurrence la plus pertinente (expression la plus spécifique et fidèle au titre) du texte.
 
-3. **Assurez-vous de la Précision**:
-   - Confirmez l'insertion correcte sans altération du texte original.
+## Raisonnement et Conclusion :  
+1. **Raisonnement** (doit précéder toute conclusion) :
+    - Pour chaque paragraphe, listez les titres potentiellement présents (même partiellement).
+    - Sélectionnez le passage correspondant au titre le plus spécifique, s’il en existe un dans le paragraphe.
+    - Insérez la balise de lien selon le format sans modifier d’autres parties.
+2. **Conclusion** :
+    - Fournissez le HTML final modifié et l’identifiant de l’article (idToRemove) en JSON.
 
-# Output Format
-Présentez le résultat dans ce format:
+## Format de Sortie Attendu
+La réponse doit être structurée en JSON comme suit :
+{
+  "upgraded": "<le_html_complet_modifié_avec_1_lien_par_paragraphe>",
+  "idToRemove": "id"
+}
 
-JSON
-    {
-      "upgraded": "<html_content_here>",
-      "idToRemove": "id"
-    }
+## Exemples
 
+### Exemple 1 - Input :
+- HTML d’article (extrait) :
+  <span id="paragraphe-1">Le jardin zen embellit votre espace...</span>
+  <span id="paragraphe-2">Pour un entretien de jardin optimal, suivez les conseils d'experts.</span>
+- JSON :
+  [
+    { "id": "101", "titre": "jardin zen", "new_href": "jardin-zen" },
+    { "id": "102", "titre": "entretien de jardin", "new_href": "entretien-jardin" }
+  ]
 
-# Notes
-- Assurez-vous d'une correspondance minimale entre le mot-clé et les titres du JSON.
-- Insérez un seul lien par chapitre de l'article pour éviter des redondances.
+### Exemple 1 - Output (écourté pour illustrer ; la vraie sortie doit contenir le HTML complet) :
+\`\`\`json
+{
+  "upgraded": "<span id=\"paragraphe-1\">Le <a class=\"myTooltip\" href=\"https://www.jardin-iris.be/jardinier-paysagiste-belgique-blog/jardin-zen.html\" title=\"jardin zen\">jardin zen<span class=\"myTooltiptext\">jardin zen</span></a> embellit votre espace...</span><span id=\"paragraphe-2\">Pour un <a class=\"myTooltip\" href=\"https://www.jardin-iris.be/jardinier-paysagiste-belgique-blog/entretien-jardin.html\" title=\"entretien de jardin\">entretien de jardin<span class=\"myTooltiptext\">entretien de jardin</span></a> optimal, suivez les conseils d'experts.</span>",
+  "idToRemove": "101"
+}\`\`\`
+
+(Note : Dans la vraie sortie, chaque paragraphe span doit contenir au maximum un lien et le HTML complet. )
+
+### Consignes Spéciales & Cas Limites
+- Si plusieurs titres correspondent dans un même paragraphe : ne l’intégrer qu’au passage le plus spécifique (correspondance la plus exacte ou la moins ambiguë).
+- Toujours fournir un seul lien par paragraphe.
+- Ne générez jamais de balises de lien où il n’y a pas de correspondance textuelle suffisante.
+- Ne pas envelopper le JSON en bloc de code.
+- Renvoyez le HTML modifié dans « upgraded » et l’id de l’article dans « idToRemove ».
+
+---
+
+**Rappel :**
+Pour chaque paragraphe balisé (<span id="paragraphe-#">…), insérez exactement un lien au passage le plus spécifique, sans modifier d’autres éléments, en retour structuré JSON comme indiqué. Commencez toujours par le raisonnement, puis concluez avec le résultat.
 `;
   }
 
