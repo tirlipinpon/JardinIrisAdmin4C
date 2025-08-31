@@ -40,29 +40,54 @@
     </div>
   </div>
 
+  <!-- Statistiques de l'article -->
+  <div class="article-stats" *ngIf="store.article()">
+    <div class="stats-header">
+      <h4>📊 Statistiques de l'article</h4>
+      <button 
+        class="save-btn" 
+        (click)="saveAllData()"
+        [disabled]="store.isLoading() || !canSave()">
+        💾 Sauvegarder tout
+      </button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <span class="stat-label">📝 Caractères:</span>
+        <span class="stat-value">{{ getArticleStats().characters }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">📄 Mots:</span>
+        <span class="stat-value">{{ getArticleStats().words }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">📑 Paragraphes:</span>
+        <span class="stat-value">{{ getArticleStats().paragraphs }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">🖼️ Images internes:</span>
+        <span class="stat-value">{{ store.internalImages().length }}</span>
+      </div>
+      <div class="stat-item" *ngIf="store.faq().length > 0">
+        <span class="stat-label">❓ Questions FAQ:</span>
+        <span class="stat-value">{{ store.faq().length }}</span>
+      </div>
+      <div class="stat-item" *ngIf="store.video()">
+        <span class="stat-label">🎥 Vidéo:</span>
+        <span class="stat-value">✅ Trouvée</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">🌿 Noms botaniques:</span>
+        <span class="stat-value">{{ getBotanicalNamesCount() }}</span>
+      </div>
+    </div>
+  </div>
+
   <div class="editor-section" *ngIf="store.article()">
     <app-article-editor 
       [article]="store.article() || ''" 
       (articleChange)="onArticleChange($event)">
     </app-article-editor>
-    
-    <div class="article-stats" *ngIf="store.internalImages().length > 0">
-      <h4>📊 Statistiques de l'article</h4>
-      <div class="stats-grid">
-        <div class="stat-item">
-          <span class="stat-label">🖼️ Images internes:</span>
-          <span class="stat-value">{{ store.internalImages().length }}</span>
-        </div>
-        <div class="stat-item" *ngIf="store.faq().length > 0">
-          <span class="stat-label">❓ Questions FAQ:</span>
-          <span class="stat-value">{{ store.faq().length }}</span>
-        </div>
-        <div class="stat-item" *ngIf="store.video()">
-          <span class="stat-label">🎥 Vidéo:</span>
-          <span class="stat-value">✅ Trouvée</span>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- Section des formulaires éditables -->
@@ -224,16 +249,49 @@
 }
 
 .article-stats {
-  margin-top: 24px;
+  margin: 24px 0;
   padding: 20px;
   background: #f8f9fa;
   border-radius: 8px;
   border: 1px solid #e9ecef;
 }
 
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
 .article-stats h4 {
-  margin: 0 0 16px 0;
+  margin: 0;
   color: #333;
+}
+
+.save-btn {
+  padding: 8px 16px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.save-btn:hover:not(:disabled) {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.save-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .stats-grid {

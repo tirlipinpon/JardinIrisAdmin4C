@@ -33,8 +33,9 @@ export class CreateComponent {
   }
 
   onArticleChange(newArticle: string) {
-    this.loggingService.info('COMPONENT', '📝 Article modifié dans l\'éditeur');
-    // TODO: Mettre à jour l'article dans le store si nécessaire
+    this.loggingService.info('COMPONENT', '📝 Article modifié dans l\'éditeur', { length: newArticle.length });
+    // Mettre à jour l'article dans le store
+    this.store.updateArticle(newArticle);
   }
 
   clearErrors() {
@@ -44,5 +45,30 @@ export class CreateComponent {
 
   trackByIndex(index: number, item: string): number {
     return index;
+  }
+
+  getArticleStats() {
+    const article = this.store.article() || '';
+    const characters = article.length;
+    const words = article.split(/\s+/).filter(word => word.length > 0).length;
+    const paragraphs = (article.match(/<span id=['"]paragraphe-\d+['"]/g) || []).length;
+    
+    return { characters, words, paragraphs };
+  }
+
+  getBotanicalNamesCount(): number {
+    const article = this.store.article() || '';
+    return (article.match(/<span class=['"]inat-vegetal['"]/g) || []).length;
+  }
+
+  canSave(): boolean {
+    return !!(this.store.postId() && this.store.article() && typeof this.store.postId() === 'number');
+  }
+
+  saveAllData() {
+    if (this.canSave()) {
+      this.loggingService.info('COMPONENT', '💾 Déclenchement sauvegarde manuelle');
+      this.store.saveAllToSupabase();
+    }
   }
 } 

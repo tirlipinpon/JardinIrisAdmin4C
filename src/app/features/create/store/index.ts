@@ -410,6 +410,11 @@ export const SearchStore =  signalStore(
       loggingService.info('STORE', '🏷️ Catégorie mise à jour', { categorie });
     },
 
+    updateArticle: (article: string) => {
+      patchState(store, { article });
+      loggingService.info('STORE', '📝 Article mis à jour', { length: article.length });
+    },
+
     updateFaqItem: (index: number, faqItem: { question: string; response: string }) => {
       const currentFaq = store.faq();
       const updatedFaq = [...currentFaq];
@@ -430,6 +435,11 @@ export const SearchStore =  signalStore(
       const updatedFaq = [...currentFaq, faqItem];
       patchState(store, { faq: updatedFaq });
       loggingService.info('STORE', '➕ Nouvel item FAQ ajouté', faqItem);
+    },
+
+    updateInternalImages: (images: InternalImageData[]) => {
+      patchState(store, { internalImages: images });
+      loggingService.info('STORE', '🖼️ Images internes mises à jour', { count: images.length });
     },
 
     clearErrors: () => {

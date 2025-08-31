@@ -261,6 +261,61 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
         </mat-card-content>
       </mat-card>
 
+      <!-- Images internes -->
+      <mat-card class="form-card" *ngIf="store.internalImages().length > 0">
+        <mat-card-header>
+          <mat-card-title>🖼️ Images internes</mat-card-title>
+          <mat-card-subtitle>Gérez les images associées aux chapitres</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <mat-accordion multi>
+            <mat-expansion-panel *ngFor="let image of store.internalImages(); let i = index" class="image-panel">
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <mat-icon>image</mat-icon>
+                  Chapitre {{ image.chapitre_id }} - {{ image.chapitre_key_word }}
+                </mat-panel-title>
+                <mat-panel-description>
+                  {{ image.explanation_word }}
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <div class="image-form">
+                <div class="image-preview" *ngIf="image.url_Image">
+                  <img [src]="image.url_Image" [alt]="image.chapitre_key_word" class="preview-img">
+                </div>
+                
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Mot-clé du chapitre</mat-label>
+                  <input matInput [(ngModel)]="image.chapitre_key_word" (ngModelChange)="updateInternalImage(i, 'chapitre_key_word', $event)">
+                  <mat-icon matSuffix>label</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>URL de l'image</mat-label>
+                  <input matInput [(ngModel)]="image.url_Image" (ngModelChange)="updateInternalImage(i, 'url_Image', $event)">
+                  <mat-icon matSuffix>link</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Explication</mat-label>
+                  <textarea matInput [(ngModel)]="image.explanation_word" (ngModelChange)="updateInternalImage(i, 'explanation_word', $event)" rows="2"></textarea>
+                  <mat-icon matSuffix>description</mat-icon>
+                </mat-form-field>
+
+                <div class="image-actions">
+                  <button mat-raised-button color="warn" (click)="removeInternalImage(i)">
+                    <mat-icon>delete</mat-icon>
+                    Supprimer l'image
+                  </button>
+                </div>
+              </div>
+            </mat-expansion-panel>
+          </mat-accordion>
+        </mat-card-content>
+      </mat-card>
+
     </div>
   `,
   styles: [`
@@ -350,6 +405,53 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
       color: #ccc !important;
       cursor: not-allowed;
       pointer-events: none;
+    }
+
+    .image-panel {
+      margin-bottom: 8px;
+    }
+
+    .image-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 16px 0;
+    }
+
+    .image-preview {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .preview-img {
+      max-width: 100%;
+      max-height: 200px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: block;
+      margin: 0 auto;
+    }
+
+    .image-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    /* Responsive design pour les images */
+    @media (max-width: 768px) {
+      .preview-img {
+        max-height: 150px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .preview-img {
+        max-height: 120px;
+      }
     }
   `]
 })
@@ -497,5 +599,25 @@ export class PostFormEditorComponent implements OnInit, OnDestroy {
     
     // Call store method to add new FAQ item
     this.store.addFaqItem({ question: 'Nouvelle question', response: 'Nouvelle réponse' });
+  }
+
+  updateInternalImage(index: number, field: string, value: string) {
+    this.loggingService.info('POST_FORM_EDITOR', `🖼️ Mise à jour image interne ${index}`, { field, value });
+    
+    const currentImages = this.store.internalImages();
+    const updatedImages = [...currentImages];
+    (updatedImages[index] as any)[field] = value;
+    
+    // Mettre à jour le store avec la nouvelle liste
+    this.store.updateInternalImages(updatedImages);
+  }
+
+  removeInternalImage(index: number) {
+    this.loggingService.info('POST_FORM_EDITOR', `🗑️ Suppression image interne ${index}`);
+    
+    const currentImages = this.store.internalImages();
+    const updatedImages = currentImages.filter((_, i) => i !== index);
+    
+    this.store.updateInternalImages(updatedImages);
   }
 }

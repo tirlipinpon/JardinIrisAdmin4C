@@ -32,8 +32,8 @@ export class Application {
         this.loggingService.info('APPLICATION', '🚀 Lancement des tâches step 3');
         this.store.vegetal();
       } else if (step === 4 && article) {
-        this.loggingService.info('APPLICATION', '🚀 Lancement des tâches step 4 - Sauvegarde finale');
-        this.store.saveAllToSupabase();
+        this.loggingService.info('APPLICATION', '✅ Step 4 terminé - Article prêt pour sauvegarde manuelle');
+        // Plus de sauvegarde automatique - l'utilisateur doit cliquer sur le bouton
       }
     });
   }
