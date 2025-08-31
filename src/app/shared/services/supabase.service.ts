@@ -132,4 +132,57 @@ export class SupabaseService {
     }
   }
 
+  async updatePostComplete(post: any): Promise<any> {
+    try {
+      const { data, error } = await this.client
+        .from('post')
+        .insert({
+          id: post.id,
+          titre: post.titre,
+          description_meteo: post.description_meteo,
+          phrase_accroche: post.phrase_accroche,
+          article: post.article,
+          citation: post.citation,
+          lien_url_article: post.lien_url_article,
+          categorie: post.categorie,
+          new_href: post.new_href,
+          created_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Erreur lors de l\'insertion du post:', error);
+        throw error;
+      }
+      
+      console.log('Post inséré avec succès:', data);
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async saveFaqForPost(postId: number, faqItems: { question: string; response: string }[]): Promise<any> {
+    try {
+      const faqData = faqItems.map(item => ({
+        fk_post_id: postId,
+        question: item.question,
+        response: item.response
+      }));
+
+      const { data, error } = await this.client
+        .from('faq')
+        .insert(faqData);
+
+      if (error) {
+        console.error('Erreur lors de l\'insertion de la FAQ:', error);
+        throw error;
+      }
+      
+      console.log('FAQ sauvegardée avec succès:', data);
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
 } 

@@ -31,6 +31,9 @@ export class Application {
       } else if (step === 3 && article) {
         this.loggingService.info('APPLICATION', '🚀 Lancement des tâches step 3');
         this.store.vegetal();
+      } else if (step === 4 && article) {
+        this.loggingService.info('APPLICATION', '🚀 Lancement des tâches step 4 - Sauvegarde finale');
+        this.store.saveAllToSupabase();
       }
     });
   }

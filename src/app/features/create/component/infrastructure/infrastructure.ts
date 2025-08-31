@@ -137,7 +137,7 @@ export class Infrastructure {
 
   setPost(articleIdea: string): Observable<Post | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = true;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -187,7 +187,7 @@ export class Infrastructure {
 
   setImageUrl(phraseAccroche: string, postId: number): Observable<string | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = true;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -231,7 +231,7 @@ export class Infrastructure {
 
   setVideo(phrase_accroche: string, postId: number): Observable<string | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = true;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -286,7 +286,7 @@ export class Infrastructure {
 
   setFaq(article: string): Observable<{ question: string; response: string }[] | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = true;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -346,7 +346,7 @@ export class Infrastructure {
 
   internalImage(article: string, postId: number): Observable<{ article: string; images: InternalImageData[] } | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = true;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -530,7 +530,7 @@ export class Infrastructure {
 
   setInternalLink(article: string, postTitreAndId: { titre: string; id: number; new_href: string }[]): Observable<string | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = true;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -671,5 +671,59 @@ export class Infrastructure {
     );
   }
 
-  
+  savePostComplete(post: Post): Observable<boolean | PostgrestError> {
+    this.loggingService.info('INFRASTRUCTURE', '💾 Sauvegarde post complet', { postId: post.id });
+    
+    return this.wrapWithErrorHandling(
+      () => from(this.supabaseService.updatePostComplete(post)).pipe(
+        map(() => {
+          this.loggingService.info('INFRASTRUCTURE', '✅ Post sauvegardé dans Supabase');
+          return true;
+        })
+      ),
+      'savePostComplete',
+      `Sauvegarde du post ${post.id} dans Supabase`
+    );
+  }
+
+  saveFaqItems(postId: number, faqItems: { question: string; response: string }[]): Observable<boolean | PostgrestError> {
+    this.loggingService.info('INFRASTRUCTURE', '💾 Sauvegarde FAQ', { postId, count: faqItems.length });
+    
+    return this.wrapWithErrorHandling(
+      () => from(this.supabaseService.saveFaqForPost(postId, faqItems)).pipe(
+        map(() => {
+          this.loggingService.info('INFRASTRUCTURE', '✅ FAQ sauvegardée dans Supabase');
+          return true;
+        })
+      ),
+      'saveFaqItems',
+      `Sauvegarde de ${faqItems.length} items FAQ pour le post ${postId}`
+    );
+  }
+
+  saveInternalImages(postId: number, images: InternalImageData[]): Observable<boolean | PostgrestError> {
+    this.loggingService.info('INFRASTRUCTURE', '💾 Sauvegarde images internes', { postId, count: images.length });
+    
+    return this.wrapWithErrorHandling(
+      () => from(Promise.all(
+        images.map(image => 
+          this.supabaseService.setNewUrlImagesChapitres(
+            image.url_Image,
+            image.chapitre_id,
+            postId,
+            image.chapitre_key_word,
+            image.explanation_word
+          )
+        )
+      )).pipe(
+        map(() => {
+          this.loggingService.info('INFRASTRUCTURE', '✅ Images internes sauvegardées dans Supabase');
+          return true;
+        })
+      ),
+      'saveInternalImages',
+      `Sauvegarde de ${images.length} images internes pour le post ${postId}`
+    );
+  }
+
 }

@@ -1,8 +1,7 @@
 export interface InternalImageData {
-  chapitreId: number;
-  keyword: string;
-  imageUrl: string;
-  alt: string;
-  photographer: string;
-  photographerUrl: string;
+  chapitre_id: number;
+  chapitre_key_word: string;
+  url_Image: string;
+  explanation_word: string;
+  fk_post?: number; // Optionnel car sera ajouté lors de la sauvegarde
 }

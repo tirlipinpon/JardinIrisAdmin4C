@@ -2,7 +2,7 @@ import { signalStore, withState, withComputed, withMethods, patchState } from "@
 import { updateState, withDevtools } from "@angular-architects/ngrx-toolkit";
 import { inject } from "@angular/core";
 import { rxMethod } from "@ngrx/signals/rxjs-interop";
-import { concatMap, finalize, map, Observable, of, pipe, tap } from "rxjs";
+import { concatMap, finalize, map, Observable, of, pipe, tap, switchMap, toArray, catchError, from } from "rxjs";
 import { Infrastructure } from "../component/infrastructure/infrastructure";
 import { PostgrestError } from "@supabase/supabase-js";
 import { LoggingService } from "../../../shared/services/logging.service";
@@ -439,7 +439,77 @@ export const SearchStore =  signalStore(
 
     addError: (errorMessage: string) => {
       addError(errorMessage);
+    },
+
+    saveAllToSupabase: () => {
+      const postId = store.postId();
+      const article = store.article();
+      const faq = store.faq();
+      const internalImages = store.internalImages();
+      
+      if (typeof postId !== 'number' || !article) {
+        loggingService.error('STORE', 'Impossible de sauvegarder - données manquantes', { postId, hasArticle: !!article });
+        return;
+      }
+      
+      loggingService.info('STORE', '💾 Début sauvegarde complète', {
+        postId,
+        faqCount: faq.length,
+        imagesCount: internalImages.length
+      });
+      
+      // 1️⃣ Sauvegarder le post complet
+      infra.savePostComplete({
+        id: postId,
+        titre: store.titre() || '',
+        description_meteo: store.description_meteo() || '',
+        phrase_accroche: store.phrase_accroche() || '',
+        article: article,
+        citation: store.citation() || '',
+        lien_url_article: { lien1: store.lien_url_article() || '' },
+        categorie: store.categorie() || '',
+        new_href: store.new_href() || ''
+      }).pipe(
+        withLoading(store, 'savePostComplete'),
+        switchMap((postResult) => {
+          loggingService.info('STORE', '✅ Post sauvegardé avec succès');
+          
+          // 2️⃣ Sauvegarder la FAQ (après le post)
+          const faqSave$ = faq.length > 0 
+            ? infra.saveFaqItems(postId, faq).pipe(
+                tap({
+                  next: () => loggingService.info('STORE', '✅ FAQ sauvegardée avec succès'),
+                  error: (error) => store['addError'](`Erreur sauvegarde FAQ: ${error}`)
+                })
+              )
+            : of(true);
+            
+          // 3️⃣ Sauvegarder les images internes (après le post)
+          const imagesSave$ = internalImages.length > 0
+            ? infra.saveInternalImages(postId, internalImages).pipe(
+                tap({
+                  next: () => loggingService.info('STORE', '✅ Images internes sauvegardées avec succès'),
+                  error: (error) => store['addError'](`Erreur sauvegarde images: ${error}`)
+                })
+              )
+            : of(true);
+            
+          // Exécuter FAQ et images en parallèle après le post
+          return from([faqSave$, imagesSave$]).pipe(
+            concatMap(save$ => save$),
+            toArray()
+          );
+        }),
+        tap(() => {
+          loggingService.info('STORE', '🎉 Sauvegarde complète terminée avec succès');
+        }),
+        catchError((error) => {
+          store['addError'](`Erreur sauvegarde: ${error}`);
+          return of(null);
+        })
+      ).subscribe();
     }
 
-  });})
+  });
+  })
 );

@@ -21,21 +21,26 @@ export class OpenaiApiService {
     dangerouslyAllowBrowser: true,
     apiKey: environment.geminiApi
   });
-  async fetchData(prompt: any, deepseek?: boolean) {
+  async fetchData(prompt: any, deepseek?: boolean, debugName?: string) {
     const client = deepseek ? this.deepseek : this.openai;
-    const completion = await client.chat.completions.create({
-      messages: [
-        prompt.systemRole,
-        prompt.userRole
-      ],
-      model: deepseek ? "deepseek-chat" : "gpt-5-mini-2025-08-07"
-    });
+    const completion = await client.chat.completions.create(
+      {
+        messages: [
+          prompt.systemRole,
+          prompt.userRole
+        ],
+        model: deepseek ? "deepseek-chat" : "gpt-5-mini-2025-08-07",
+      },
+      {
+        headers: { "X-Request-ID": debugName }
+      }
+    );
 
     // console.log('completion.choices[0]= '+ JSON.stringify(completion.choices[0]));
     return completion.choices[0].message.content
   }
 
-  async fetchDataImage(prompt: any, regularUrls: string[]) {
+  async fetchDataImage(prompt: any, regularUrls: string[], debugName?: string) {
     const completion = await this.openai.chat.completions.create({
       model: "gpt-4.1-mini",
       messages: [
@@ -59,20 +64,22 @@ export class OpenaiApiService {
   }
 
 
-  async imageGeneratorUrl(promptText: string) {
+  async imageGeneratorUrl(promptText: string, debugName?: string) {
     const image = await this.openai.images.generate({
       model: "gpt-image-1",
       prompt: promptText,
       n: 1,
       size: "1024x1024"
+    }, {
+      headers: debugName ? { "X-Request-ID": debugName } : {}
     });
-
+   
     if (!image.data || image.data.length === 0) {
       throw new Error("Aucune image n'a été générée");
     }
-
+   
     return image.data[0].b64_json;
-  }
+   }
 
 
 }
