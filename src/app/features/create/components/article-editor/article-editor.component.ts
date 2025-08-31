@@ -41,7 +41,6 @@ import { Editor, NgxEditorModule, Toolbar } from 'ngx-editor';
           <ngx-editor 
             [editor]="editor" 
             [formControl]="articleFormControl"
-            [disabled]="false"
             placeholder="Votre article apparaîtra ici...">
           </ngx-editor>
         </div>
@@ -266,6 +265,11 @@ export class ArticleEditorComponent implements OnInit, OnDestroy {
     const initialContent = this.article() || '';
     this.articleContent = initialContent;
     this.articleFormControl.setValue(initialContent);
+    
+    // L'éditeur est activé par défaut
+    // Si vous voulez le désactiver conditionnellement, utilisez :
+    // this.articleFormControl.disable();
+    // Pour le réactiver : this.articleFormControl.enable();
     
     // Synchroniser les changements du FormControl avec articleContent
     this.articleFormControl.valueChanges.subscribe(value => {

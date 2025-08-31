@@ -39,7 +39,7 @@ export class CreateComponent {
 
   clearErrors() {
     this.loggingService.info('COMPONENT', '🧹 Nettoyage des erreurs');
-    this.store.clearErrors();
+    this.store['clearErrors']();
   }
 
   trackByIndex(index: number, item: string): number {

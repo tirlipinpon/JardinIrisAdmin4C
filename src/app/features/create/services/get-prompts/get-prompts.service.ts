@@ -379,23 +379,23 @@ Intégrez un lien hypertexte spécifique dans un article HTML : pour chaque pa
 ## Détails et Règles
 
 - **Source des liens** : Fournis via un JSON listant des articles (‘id’, ‘titre’, ‘new_href’).
-- **Correspondance** : Repérez, dans chaque paragraphe, un passage du texte correspondant précisément ou partiellement à un ‘titre’ du JSON.
+- **Correspondance** : Repérez, dans chaque paragraphe, un passage du texte correspondant partiellement à un ‘titre’ du JSON.
 - **Insertion** : Dans chaque paragraphe (balise <span id="paragraphe-#">…</span>), insérez UNE SEULE balise de lien :
    - Format exact : 
    <a class="myTooltip" href="https://www.jardin-iris.be/jardinier-paysagiste-belgique-blog/{new_href}.html" title="{titre}">{mots_clés}<span class="myTooltiptext">{titre}</span></a>
    - Variables :
      - {id} : identifiant de l’article (pour idToRemove dans le retour JSON)
      - {titre} : titre de l’article du JSON
-     - {mots_clés} : texte du paragraphe correspondant au titre
+     - {mots_clés} : texte du paragraphe correspondant partiellement au titre
      - {new_href} : valeur du lien du JSON
 
 - **Précision** : Ne modifiez PAS le contenu HTML existant en dehors de l’ajout du lien ; assurez la fidélité au texte d’origine.
-- **Restrictions** : Un seul lien hypertexte par paragraphe, pas de doublon dans un même paragraphe ; le lien doit être inséré sur l’occurrence la plus pertinente (expression la plus spécifique et fidèle au titre) du texte.
+- **Restrictions** : Un seul lien hypertexte par paragraphe, pas de doublon dans un même paragraphe ; le lien doit être inséré sur l’occurrence la plus pertinente (expression la plus spécifique au titre) du texte.
 
 ## Raisonnement et Conclusion :  
 1. **Raisonnement** (doit précéder toute conclusion) :
     - Pour chaque paragraphe, listez les titres potentiellement présents (même partiellement).
-    - Sélectionnez le passage correspondant au titre le plus spécifique, s’il en existe un dans le paragraphe.
+    - Sélectionnez le passage correspondant potentiellement au titre le plus spécifique.
     - Insérez la balise de lien selon le format sans modifier d’autres parties.
 2. **Conclusion** :
     - Fournissez le HTML final modifié et l’identifiant de l’article (idToRemove) en JSON.
@@ -411,27 +411,26 @@ La réponse doit être structurée en JSON comme suit :
 
 ### Exemple 1 - Input :
 - HTML d’article (extrait) :
-  <span id="paragraphe-1">Le jardin zen embellit votre espace...</span>
+  <span id="paragraphe-1">Le jardin zen japonais embellit votre espace...</span>
   <span id="paragraphe-2">Pour un entretien de jardin optimal, suivez les conseils d'experts.</span>
 - JSON :
   [
-    { "id": "101", "titre": "jardin zen", "new_href": "jardin-zen" },
+    { "id": "101", "titre": "jardin embellit le monde", "new_href": "jardin-embellit" },
     { "id": "102", "titre": "entretien de jardin", "new_href": "entretien-jardin" }
   ]
 
 ### Exemple 1 - Output (écourté pour illustrer ; la vraie sortie doit contenir le HTML complet) :
 \`\`\`json
 {
-  "upgraded": "<span id=\"paragraphe-1\">Le <a class=\"myTooltip\" href=\"https://www.jardin-iris.be/jardinier-paysagiste-belgique-blog/jardin-zen.html\" title=\"jardin zen\">jardin zen<span class=\"myTooltiptext\">jardin zen</span></a> embellit votre espace...</span><span id=\"paragraphe-2\">Pour un <a class=\"myTooltip\" href=\"https://www.jardin-iris.be/jardinier-paysagiste-belgique-blog/entretien-jardin.html\" title=\"entretien de jardin\">entretien de jardin<span class=\"myTooltiptext\">entretien de jardin</span></a> optimal, suivez les conseils d'experts.</span>",
+  "upgraded": "<span id=\"paragraphe-1\">Le <a class=\"myTooltip\" href=\"https://www.jardin-iris.be/jardinier-paysagiste-belgique-blog/jardin-embellit.html\" title=\"jardin-embellit\">jardin zen japonais embelli<span class=\"myTooltiptext\">jardin zen</span></a> votre espace...</span><span id=\"paragraphe-2\">Pour un <a class=\"myTooltip\" href=\"https://www.jardin-iris.be/jardinier-paysagiste-belgique-blog/entretien-jardin.html\" title=\"entretien de jardin\">entretien de jardin<span class=\"myTooltiptext\">entretien de jardin</span></a> optimal, suivez les conseils d'experts.</span>",
   "idToRemove": "101"
 }\`\`\`
 
 (Note : Dans la vraie sortie, chaque paragraphe span doit contenir au maximum un lien et le HTML complet. )
 
 ### Consignes Spéciales & Cas Limites
-- Si plusieurs titres correspondent dans un même paragraphe : ne l’intégrer qu’au passage le plus spécifique (correspondance la plus exacte ou la moins ambiguë).
+- Si plusieurs titres correspondent dans un même paragraphe : ne l’intégrer qu’au passage le plus spécifique.
 - Toujours fournir un seul lien par paragraphe.
-- Ne générez jamais de balises de lien où il n’y a pas de correspondance textuelle suffisante.
 - Ne pas envelopper le JSON en bloc de code.
 - Renvoyez le HTML modifié dans « upgraded » et l’id de l’article dans « idToRemove ».
 

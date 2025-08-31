@@ -13,14 +13,23 @@ export class Application {
   constructor() {
     effect(() => {
       const step = this.store.step();
-      if (step === 1) {
+      const postId = this.store.postId();
+      const article = this.store.article();
+      const postTitreAndId = this.store.postTitreAndId();
+      
+      this.loggingService.info('APPLICATION', `🔄 Effect déclenché - Step: ${step}, PostId: ${typeof postId}, Article: ${!!article}, PostTitres: ${postTitreAndId.length}`);
+      
+      if (step === 1 && typeof postId === 'number' && article) {
+        this.loggingService.info('APPLICATION', '🚀 Lancement des tâches step 1');
         this.store.setVideo();
         this.store.setFaq();
         this.store.internalImage();
         // this.store.setImageUrl();
-      } else if (step === 2) {
+      } else if (step === 2 && article && postTitreAndId.length > 0) {
+        this.loggingService.info('APPLICATION', '🚀 Lancement des tâches step 2');
         this.store.setInternalLink();
-      } else if (step === 3) {
+      } else if (step === 3 && article) {
+        this.loggingService.info('APPLICATION', '🚀 Lancement des tâches step 3');
         this.store.vegetal();
       }
     });

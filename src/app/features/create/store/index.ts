@@ -2,7 +2,7 @@ import { signalStore, withState, withComputed, withMethods, patchState } from "@
 import { updateState, withDevtools } from "@angular-architects/ngrx-toolkit";
 import { inject } from "@angular/core";
 import { rxMethod } from "@ngrx/signals/rxjs-interop";
-import { concatMap, finalize, map, Observable, pipe, tap } from "rxjs";
+import { concatMap, finalize, map, Observable, of, pipe, tap } from "rxjs";
 import { Infrastructure } from "../component/infrastructure/infrastructure";
 import { PostgrestError } from "@supabase/supabase-js";
 import { LoggingService } from "../../../shared/services/logging.service";
@@ -31,24 +31,40 @@ const extractErrorMessage = (error: any): string => {
 };
 
 
-const validateStoreValues = (store: any, rules: ValidationRule[]): string | null => {
+const validateStoreValues = (
+  store: any, 
+  rules: ValidationRule[], 
+  clearErrors: () => void, 
+  addError: (message: string) => void
+): string | null => {
+  let hasError = false;
+  let firstErrorMessage: string | null = null;
+  
   for (const rule of rules) {
     const { value, errorMessage, validator } = rule;
     
     if (validator) {
       if (!validator(value)) {
-        patchState(store, { error: [errorMessage] });
-        return errorMessage;
+        if (!hasError) {
+          clearErrors(); // Effacer seulement au premier échec
+          hasError = true;
+          firstErrorMessage = errorMessage;
+        }
+        addError(errorMessage);
       }
     } else {
       // Validation par défaut : vérifier que la valeur existe et n'est pas vide
       if (!value || (typeof value === 'string' && value.trim() === '')) {
-        patchState(store, { error: [errorMessage] });
-        return errorMessage;
+        if (!hasError) {
+          clearErrors(); // Effacer seulement au premier échec
+          hasError = true;
+          firstErrorMessage = errorMessage;
+        }
+        addError(errorMessage);
       }
     }
   }
-  return null;
+  return firstErrorMessage;
 };
 
 const withLoading = <T>(store: any, methodName: string) => (source$: Observable<T>) =>
@@ -104,7 +120,39 @@ export const SearchStore =  signalStore(
   withComputed((state) => ({
     isLoading: state.isLoading
   })),
-  withMethods((store, infra = inject(Infrastructure), loggingService = inject(LoggingService))=> ( {
+  withMethods((store, infra = inject(Infrastructure), loggingService = inject(LoggingService))=> {
+    
+    // Méthodes helper pour la validation
+    const clearErrors = () => patchState(store, { error: [] });
+    const addError = (errorMessage: string) => {
+      const currentErrors = store.error();
+      patchState(store, { error: [...currentErrors, errorMessage] });
+      loggingService.error('STORE', '❌ Erreur ajoutée', { errorMessage, totalErrors: currentErrors.length + 1 });
+    };
+    
+    const validateWithErrorHandling = (rules: ValidationRule[]): string | null => {
+      return validateStoreValues(store, rules, clearErrors, addError);
+    };
+    
+    // Guards pour éviter les appels multiples simultanés
+    const runningMethods = new Set<string>();
+    
+    const withMethodGuard = <T>(methodName: string, operation: () => Observable<T>): Observable<T> => {
+      if (runningMethods.has(methodName)) {
+        loggingService.warn('STORE', `🔒 Méthode ${methodName} déjà en cours, appel ignoré`);
+        return of() as Observable<T>;
+      }
+      
+      runningMethods.add(methodName);
+      return operation().pipe(
+        finalize(() => {
+          runningMethods.delete(methodName);
+          loggingService.info('STORE', `🔓 Méthode ${methodName} terminée`);
+        })
+      );
+    };
+    
+    return ({
     getNextPostId: rxMethod<void>(
       pipe(
         concatMap(() =>
@@ -115,7 +163,7 @@ export const SearchStore =  signalStore(
             }),
             tap({
               next: (postId: number) => { patchState(store, { postId }); },
-              error: (error: unknown) => { patchState(store, { error: [extractErrorMessage(error)] }); }
+              error: (error: unknown) => { store['addError'](extractErrorMessage(error)); }
             })
           )
         )
@@ -130,7 +178,7 @@ export const SearchStore =  signalStore(
             map((response: { titre: string; id: number; new_href: string }[] | PostgrestError) => throwOnPostgrestError(response)),
             tap({
               next: (postTitreAndId: { titre: string; id: number; new_href: string }[]) => patchState(store, { postTitreAndId }),
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
+              error: (error: unknown) => store['addError'](extractErrorMessage(error))
             })
           )
         )
@@ -157,7 +205,7 @@ export const SearchStore =  signalStore(
                 });
                 patchState(store, { step: 1 });
               },
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
+              error: (error: unknown) => store['addError'](extractErrorMessage(error))
             })
           )
         )
@@ -170,7 +218,7 @@ export const SearchStore =  signalStore(
           const phraseAccroche = store.phrase_accroche();
           const postId = store.postId();
           
-          const validationError = validateStoreValues(store, [
+          const validationError = validateWithErrorHandling([
             { value: phraseAccroche, errorMessage: 'La phrase d\'accroche doit être générée avant de créer l\'image' },
             { value: postId, errorMessage: 'Le postId doit être généré avant de créer la FAQ', validator: (val) => typeof val === 'number' }
           ]);
@@ -184,7 +232,7 @@ export const SearchStore =  signalStore(
             map((response: string | PostgrestError) => throwOnPostgrestError(response)),
             tap({
               next: (imageUrl: string) => patchState(store, { image_url: imageUrl }),
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
+              error: (error: unknown) => store['addError'](extractErrorMessage(error))
             })
           );
         })
@@ -193,24 +241,26 @@ export const SearchStore =  signalStore(
 
     setVideo: rxMethod<void>(
       pipe(
-        concatMap(() => {
+        concatMap(() => withMethodGuard('setVideo', () => {
           const phrase_accroche = store.titre();
           const postId = store.postId();
           
-          const validationError = validateStoreValues(store, [
+          const validationError = validateWithErrorHandling([
             { value: phrase_accroche, errorMessage: 'Le titre doit être généré avant de rechercher une vidéo' },
             { value: postId, errorMessage: 'Le postId doit être généré avant de rechercher une vidéo', validator: (val) => typeof val === 'number' }
           ])
-          if (validationError) { return []; }
+          if (validationError) { 
+            return of(''); 
+          }
           return infra.setVideo(phrase_accroche!, postId as number).pipe(
             withLoading(store, 'setVideo'),
             map((response: string | PostgrestError) => throwOnPostgrestError(response)),
             tap({
               next: (video: string) => patchState(store, { video }),
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
+              error: (error: unknown) => store['addError'](extractErrorMessage(error))
             })
           );
-        })
+        }))
       )
     ),
 
@@ -218,7 +268,7 @@ export const SearchStore =  signalStore(
       pipe(
         concatMap(() => {
           const article = store.article();
-          const validationError = validateStoreValues(store, [
+          const validationError = validateWithErrorHandling([
             { value: article, errorMessage: 'L\'article doit être généré avant de créer la FAQ' },
           ]);
           
@@ -231,7 +281,7 @@ export const SearchStore =  signalStore(
             map((response: { question: string; response: string }[] | PostgrestError) => throwOnPostgrestError(response)),
             tap({
               next: (faq: { question: string; response: string }[]) => patchState(store, { faq }),
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
+              error: (error: unknown) => store['addError'](extractErrorMessage(error))
             })
           );
         })
@@ -240,15 +290,17 @@ export const SearchStore =  signalStore(
 
     internalImage: rxMethod<void>(
       pipe(
-        concatMap(() => {
+        concatMap(() => withMethodGuard('internalImage', () => {
           const article = store.article();
           const postId = store.postId();
           
-          const validationError = validateStoreValues(store, [
+          const validationError = validateWithErrorHandling([
             { value: article, errorMessage: 'L\'article doit être généré avant d\'ajouter les images internes' },
             { value: postId, errorMessage: 'Le postId doit être généré avant d\'ajouter les images internes', validator: (val) => typeof val === 'number' }
           ]);
-          if (validationError) { return []; }
+          if (validationError) { 
+            return of({ article: '', images: [] }); 
+          }
           
           return infra.internalImage(article!, postId as number).pipe(
             withLoading(store, 'internalImage'),
@@ -264,10 +316,10 @@ export const SearchStore =  signalStore(
                   imagesCount: result.images.length 
                 });
               },
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
+              error: (error: unknown) => store['addError'](extractErrorMessage(error))
             })
           );
-        })
+        }))
       )
     ),
 
@@ -277,7 +329,7 @@ export const SearchStore =  signalStore(
           const article = store.article();
           const postTitreAndId = store.postTitreAndId();
           
-          const validationError = validateStoreValues(store, [
+          const validationError = validateWithErrorHandling([
             { value: article, errorMessage: 'L\'article doit être généré avant d\'ajouter les liens internes' },
             { value: postTitreAndId, errorMessage: 'La liste des titres doit être récupérée avant d\'ajouter les liens internes', validator: (val) => Array.isArray(val) && val.length > 0 }
           ]);
@@ -293,7 +345,7 @@ export const SearchStore =  signalStore(
               next: (upgradedArticle: string) => {
                 patchState(store, { article: upgradedArticle, step: 3 });
               },
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
+              error: (error: unknown) => store['addError'](extractErrorMessage(error))
             })
           );
         })
@@ -305,7 +357,7 @@ export const SearchStore =  signalStore(
         concatMap(() => {
           const article = store.article();
           
-          const validationError = validateStoreValues(store, [
+          const validationError = validateWithErrorHandling([
             { value: article, errorMessage: 'L\'article doit être généré avant d\'ajouter les informations végétales' }
           ]);
           
@@ -320,7 +372,7 @@ export const SearchStore =  signalStore(
               next: (upgradedArticle: string) => {
                 patchState(store, { article: upgradedArticle, step: 4 });
               },
-              error: (error: unknown) => patchState(store, { error: [extractErrorMessage(error)] })
+              error: (error: unknown) => store['addError'](extractErrorMessage(error))
             })
           );
         })
@@ -381,9 +433,13 @@ export const SearchStore =  signalStore(
     },
 
     clearErrors: () => {
-      patchState(store, { error: [] });
+      clearErrors();
       loggingService.info('STORE', '🧹 Erreurs effacées');
+    },
+
+    addError: (errorMessage: string) => {
+      addError(errorMessage);
     }
 
-  }))
+  });})
 );
