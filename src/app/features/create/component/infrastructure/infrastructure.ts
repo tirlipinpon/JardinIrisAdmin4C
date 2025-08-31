@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { from, map, Observable, of, switchMap, concatMap, tap, toArray, catchError } from 'rxjs';
+import { from, map, Observable, of, switchMap, concatMap, toArray, catchError } from 'rxjs';
 import { SupabaseService } from '../../../../shared/services/supabase.service';
 import { PostgrestError } from '@supabase/supabase-js';
 import { LoggingService } from '../../../../shared/services/logging.service';
@@ -11,6 +11,7 @@ import { Post } from '../../types/post';
 import { GetPromptsService } from '../../services/get-prompts/get-prompts.service';
 import { environment } from '../../../../../environments/environment';
 import { InternalImageData } from '../../types/internalImageData';
+import { AddScientificNameService } from '../../services/add-scientific-name/add-scientific-name.service';
 
 
 @Injectable({
@@ -23,6 +24,7 @@ export class Infrastructure {
   private readonly openaiApiService = inject(OpenaiApiService);
   private readonly googleSearchService = inject(GoogleSearchService);
   private readonly pexelsApiService = inject(PexelsApiService);
+  private readonly addScientificNameService = inject(AddScientificNameService);
 
   /**
    * Méthode générique pour gérer les erreurs et les transformer en PostgrestError
@@ -135,7 +137,7 @@ export class Infrastructure {
 
   setPost(articleIdea: string): Observable<Post | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = false;
+    const shouldReturnMock = true;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -152,11 +154,11 @@ export class Infrastructure {
     if (shouldReturnMock) {
       const dummyPost: Post = {
         titre: "Comment cultiver des tomates cerises en pot sur son balcon",
-        description_meteo: "Aujourd'hui, le ciel est partiellement nuageux avec des températures de 22°C, parfait pour jardiner en extérieur sans risque de coup de soleil.",
+        description_meteo: "Aujourd'hui, le ciel est partiellement nuageux avec des températures de 22°C, parfait pour jardiner en extérieur sans risque de coup de soleil et des accacias fleurissent.",
         phrase_accroche: "Transformez votre balcon en mini-potager productif ! Découvrez tous les secrets pour réussir la culture des tomates cerises en pot et savourer vos propres légumes bio.",
         article: `<span id='paragraphe-1'><h4>Choisir la bonne variété de tomates cerises pour la culture en pot</h4><article>Pour réussir la culture de tomates cerises sur votre balcon, le choix de la variété est crucial. Je recommande particulièrement les variétés 'Sweet 100', 'Cherry Belle' ou 'Tumbling Tom' qui s'adaptent parfaitement à la culture en contenants. Ces variétés compactes produisent abondamment et résistent bien aux conditions parfois difficiles d'un balcon urbain. <em>La variété 'Sweet 100' peut produire jusqu'à 100 petites tomates par grappe</em>, tandis que 'Tumbling Tom' est idéale pour les jardinières suspendues grâce à son port retombant naturel.</article></span>
 <span id='paragraphe-2'><h4>Préparer le substrat et choisir les contenants adaptés</h4><article>Un bon drainage est essentiel pour éviter le pourrissement des racines. Utilisez un mélange composé de 50% de terreau universel, 30% de compost bien décomposé et 20% de perlite ou de vermiculite pour améliorer le drainage. <b>Le contenant doit faire au minimum 40 cm de profondeur et 30 cm de diamètre</b> pour permettre un bon développement racinaire. N'oubliez pas de percer plusieurs trous de drainage au fond du pot et d'ajouter une couche de graviers ou de billes d'argile de 3-4 cm.</article></span>
-<span id='paragraphe-3'><h4>Techniques d'arrosage et de fertilisation pour maximiser la production</h4><article>L'arrosage des tomates cerises en pot demande une attention particulière car le substrat sèche plus vite qu'en pleine terre. Arrosez régulièrement mais sans excès, en maintenant le sol légèrement humide sans jamais le détremper. <u>Un paillis organique autour du pied permet de conserver l'humidité et de réduire la fréquence d'arrosage</u>. Côté fertilisation, apportez un engrais riche en potassium toutes les deux semaines dès l'apparition des premières fleurs pour favoriser la fructification.</article></span>
+<span id='paragraphe-3'><h4>Techniques d'arrosage et de fertilisation pour maximiser la production</h4><article>L'arrosage des roses en pot demande une attention particulière car le substrat sèche plus vite qu'en pleine terre. Arrosez régulièrement mais sans excès, en maintenant le sol légèrement humide sans jamais le détremper. <u>Un paillis organique autour du pied permet de conserver l'humidité et de réduire la fréquence d'arrosage</u>. Côté fertilisation, apportez un engrais riche en potassium toutes les deux semaines dès l'apparition des premières fleurs pour favoriser la fructification.</article></span>
 <span id='paragraphe-4'><h4>Taille et entretien pour optimiser la récolte</h4><article>La taille des tomates cerises en pot est simplifiée mais reste importante. Supprimez régulièrement les gourmands (pousses qui se développent à l'aisselle des feuilles) pour concentrer l'énergie de la plante sur la production de fruits. <em>Pincez également les feuilles du bas qui touchent le sol pour éviter les maladies cryptogamiques</em>. Un tuteurage solide est indispensable : utilisez un tuteur de 1,50 m minimum ou installez un treillis contre le mur de votre balcon.</article></span>
 <span id='paragraphe-5'><h4>Prévenir et traiter les maladies courantes en culture urbaine</h4><article>Les tomates en pot sur balcon sont particulièrement sensibles au mildiou et à l'oïdium à cause de l'humidité stagnante. Prévenez ces problèmes en espaçant suffisamment vos plants et en évitant d'arroser le feuillage. <b>Une pulvérisation préventive de purin d'ortie dilué à 10% une fois par semaine renforce les défenses naturelles</b>. Si des taches apparaissent sur les feuilles, retirez-les immédiatement et traitez avec une solution de bicarbonate de soude (1 cuillère à soupe par litre d'eau).</article></span>`,
         citation: "Le jardinage, c'est l'art de cultiver la patience autant que les plantes. - Proverbe jardinier",
@@ -170,7 +172,7 @@ export class Infrastructure {
     
     const prompt = this.getPromptsService.generateArticle(articleIdea);
     return this.wrapWithErrorHandling(
-      () => from(this.openaiApiService.fetchData(prompt, false)).pipe(
+      () => from(this.openaiApiService.fetchData(prompt, true, 'setPost')).pipe(
         map(result => {
           if (result === null) {
             throw new Error('Aucun résultat retourné par l\'API OpenAI');
@@ -185,7 +187,7 @@ export class Infrastructure {
 
   setImageUrl(phraseAccroche: string, postId: number): Observable<string | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = false;
+    const shouldReturnMock = true;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -229,7 +231,7 @@ export class Infrastructure {
 
   setVideo(phrase_accroche: string, postId: number): Observable<string | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = false;
+    const shouldReturnMock = true;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -251,7 +253,7 @@ export class Infrastructure {
     
     const prompt = this.getPromptsService.generateKeyWordForSearchVideo(phrase_accroche);
     return this.wrapWithErrorHandling(
-      () => from(this.openaiApiService.fetchData(prompt, true)).pipe(
+      () => from(this.openaiApiService.fetchData(prompt, true, 'setVideo keyword')).pipe(
         switchMap(result => {
           if (!result) return of('');
           try {
@@ -262,7 +264,7 @@ export class Infrastructure {
               switchMap((videoUrls: VideoInfo[]) => {
                 if (!videoUrls.length) return of('');
                 const videoPrompt = this.getPromptsService.searchVideoFromYoutubeResult(phrase_accroche, videoUrls);
-                return from(this.openaiApiService.fetchData(videoPrompt, true)).pipe(
+                return from(this.openaiApiService.fetchData(videoPrompt, true, 'setVideo french video')).pipe(
                   switchMap(videoResult => {
                     const videoData: { video: string } = JSON.parse(extractJSONBlock(videoResult));
                     const videoUrl = videoData.video && videoData.video.length ? videoData.video : null;
@@ -284,7 +286,7 @@ export class Infrastructure {
 
   setFaq(article: string): Observable<{ question: string; response: string }[] | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = false;
+    const shouldReturnMock = true;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -327,7 +329,7 @@ export class Infrastructure {
     
     const prompt = this.getPromptsService.getPromptFaq(article);
     return this.wrapWithErrorHandling(
-      () => from(this.openaiApiService.fetchData(prompt, true)).pipe(
+      () => from(this.openaiApiService.fetchData(prompt, true, 'setFaq')).pipe(
         map(result => {
           if (result === null) {
             throw new Error('Aucun résultat retourné par l\'API OpenAI');
@@ -344,7 +346,7 @@ export class Infrastructure {
 
   internalImage(article: string, postId: number): Observable<{ article: string; images: InternalImageData[] } | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = false;
+    const shouldReturnMock = true;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -362,20 +364,16 @@ export class Infrastructure {
       // Mock data avec images simulées
       const mockImages: InternalImageData[] = [
         {
-          chapitreId: 1,
-          keyword: 'garden',
-          imageUrl: 'https://images.pexels.com/photos/1000445/pexels-photo-1000445.jpeg',
-          alt: 'Mock garden image',
-          photographer: 'Mock Photographer',
-          photographerUrl: '#'
+          chapitre_id: 1,
+          chapitre_key_word: 'garden',
+          url_Image: 'https://images.pexels.com/photos/1000445/pexels-photo-1000445.jpeg',
+          explanation_word: 'Image de jardin pour illustrer le premier chapitre'
         },
         {
-          chapitreId: 2,
-          keyword: 'plants',
-          imageUrl: 'https://images.pexels.com/photos/1000446/pexels-photo-1000446.jpeg',
-          alt: 'Mock plants image',
-          photographer: 'Mock Photographer 2',
-          photographerUrl: '#'
+          chapitre_id: 2,
+          chapitre_key_word: 'plants',
+          url_Image: 'https://images.pexels.com/photos/1000446/pexels-photo-1000446.jpeg',
+          explanation_word: 'Image de plantes pour illustrer le deuxième chapitre'
         }
       ];
       
@@ -395,7 +393,6 @@ export class Infrastructure {
     // Créer un tableau des IDs de chapitres à traiter
     const chapterIds = Array.from({ length: environment.globalNbChapter }, (_, i) => i + 1);
     const usedKeywords: string[] = [];
-    let upgradedArticle = article;
     
     return this.wrapWithErrorHandling(
       () => from(chapterIds).pipe(
@@ -404,7 +401,7 @@ export class Infrastructure {
         
         // 1️⃣ Extraire le contenu <h4> du paragraphe
         const paragraphRegex = new RegExp(`<span id=['"]paragraphe-${chapitreId}['"][^>]*>(.*?)</span>`, 's');
-        const paragraphMatch = upgradedArticle.match(paragraphRegex);
+        const paragraphMatch = article.match(paragraphRegex);
         
         if (!paragraphMatch) {
           this.loggingService.warn('INFRASTRUCTURE', `Paragraphe ${chapitreId} non trouvé`, {
@@ -429,7 +426,7 @@ export class Infrastructure {
         // 2️⃣ Envoyer le contenu <h4> à l'IA pour extraire un mot-clé
         const keywordPrompt = this.getPromptsService.getPromptGenericSelectKeyWordsFromChapitresInArticle(h4Content, usedKeywords);
         
-        return from(this.openaiApiService.fetchData(keywordPrompt, true)).pipe(
+        return from(this.openaiApiService.fetchData(keywordPrompt, true, 'internalImage ='+ usedKeywords)).pipe(
           switchMap(keywordResult => {
             if (!keywordResult) {
               this.loggingService.warn('INFRASTRUCTURE', `Aucun mot-clé généré pour le chapitre ${chapitreId}`);
@@ -463,7 +460,7 @@ export class Infrastructure {
                   const imageUrls = images.map(img => img.src.medium);
                   const visionPrompt = this.getPromptsService.getPromptGenericSelectBestImageForChapitresInArticleWithVision(paragraphContent, imageUrls);
                   
-                  return from(this.openaiApiService.fetchDataImage(visionPrompt, imageUrls)).pipe(
+                  return from(this.openaiApiService.fetchDataImage(visionPrompt, imageUrls, 'internalImage ='+ usedKeywords)).pipe(
                     switchMap(visionResult => {
                       if (!visionResult) {
                         this.loggingService.warn('INFRASTRUCTURE', `Aucune sélection d'image par l'IA Vision pour le chapitre ${chapitreId}`);
@@ -488,34 +485,15 @@ export class Infrastructure {
                         
                         this.loggingService.info('INFRASTRUCTURE', `✅ Image sélectionnée pour chapitre ${chapitreId}: ${selectedImage.alt || keyword}`);
                         
-                        // 5️⃣ Créer les données d'image et insérer dans l'article
+                        // 5️⃣ Créer les données d'image (sans insertion dans l'article)
                         const imageData: InternalImageData = {
-                          chapitreId,
-                          keyword,
-                          imageUrl: selectedImage.src.large,
-                          alt: selectedImage.alt || keyword,
-                          photographer: selectedImage.photographer,
-                          photographerUrl: selectedImage.photographer_url
+                          chapitre_id: chapitreId,
+                          chapitre_key_word: keyword,
+                          url_Image: selectedImage.src.large,
+                          explanation_word: explanation
                         };
                         
-                        // 6️⃣ Insérer l'image dans le paragraphe après le titre <h4>
-                        const imageHtml = `<div class="internal-image">
-                          <img src="${selectedImage.src.large}" alt="${selectedImage.alt || keyword}" loading="lazy" style="max-width: 100%; height: auto; border-radius: 8px; margin: 16px 0;" />
-                        </div>`;
-                        
-                        // Insérer l'image après le titre <h4>
-                        const updatedParagraphContent = paragraphContent.replace(
-                          /(<h4[^>]*>.*?<\/h4>)/,
-                          `$1${imageHtml}`
-                        );
-                        
-                        // Mettre à jour l'article complet avec le nouveau contenu du paragraphe
-                        upgradedArticle = upgradedArticle.replace(
-                          paragraphRegex,
-                          `<span id='paragraphe-${chapitreId}'>${updatedParagraphContent}</span>`
-                        );
-                        
-                        this.loggingService.info('INFRASTRUCTURE', `📦 Image insérée dans l'article pour chapitre ${chapitreId}`, imageData);
+                        this.loggingService.info('INFRASTRUCTURE', `📦 Données d'image préparées pour chapitre ${chapitreId}`, imageData);
                         return of(imageData);
                       } catch (error) {
                         this.loggingService.error('INFRASTRUCTURE', `Erreur parsing sélection image chapitre ${chapitreId}`, error);
@@ -538,9 +516,9 @@ export class Infrastructure {
         const validResults = results.filter(result => result !== null) as InternalImageData[];
         this.loggingService.info('INFRASTRUCTURE', `📨 InternalImage terminé: ${validResults.length}/${environment.globalNbChapter} chapitres traités avec succès`);
         
-        // Retourner l'article modifié et les données des images
+        // Retourner l'article original (non modifié) et les données des images
         return {
-          article: upgradedArticle,
+          article: article,
           images: validResults
         };
       })
@@ -552,7 +530,7 @@ export class Infrastructure {
 
   setInternalLink(article: string, postTitreAndId: { titre: string; id: number; new_href: string }[]): Observable<string | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = false;
+    const shouldReturnMock = true;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -582,7 +560,7 @@ export class Infrastructure {
     
     const prompt = this.getPromptsService.addInternalLinkInArticle(article, postTitreAndId);
     return this.wrapWithErrorHandling(
-      () => from(this.openaiApiService.fetchData(prompt, true)).pipe(
+      () => from(this.openaiApiService.fetchData(prompt, true, 'setInternalLink')).pipe(
         map(result => {
           if (result === null) {
             throw new Error('Aucun résultat retourné par l\'API OpenAI pour les liens internes');
@@ -623,93 +601,73 @@ export class Infrastructure {
     }
     
     if (shouldReturnMock) {
+      let counter = 1;
       const upgradedArticle = article
-        .replace(/tomates cerises/gi, 'tomates cerises (<em>Solanum lycopersicum</em> var. cerasiforme)')
-        .replace(/basilic/gi, 'basilic (<em>Ocimum basilicum</em>)')
-        .replace(/persil/gi, 'persil (<em>Petroselinum crispum</em>)')
-        .replace(/thym/gi, 'thym (<em>Thymus vulgaris</em>)')
-        .replace(/romarin/gi, 'romarin (<em>Rosmarinus officinalis</em>)')
-        .replace(/lavande/gi, 'lavande (<em>Lavandula angustifolia</em>)')
-        .replace(/roses/gi, 'roses (<em>Rosa</em> spp.)')
-        .replace(/géraniums/gi, 'géraniums (<em>Pelargonium</em> spp.)')
-        .replace(/pétunias/gi, 'pétunias (<em>Petunia</em> spp.)')
-        .replace(/sauge/gi, 'sauge (<em>Salvia officinalis</em>)');
+        .replace(/tomates cerises/gi, `<span class="inat-vegetal" data-taxon-name="Solanum lycopersicum" data-paragraphe-id="mock-${counter++}">tomates cerises<div class="inat-vegetal-tooltip"><img src="https://inaturalist-open-data.s3.amazonaws.com/photos/560287697/large.jpg" alt="Solanum lycopersicum"/></div></span>`)
+        .replace(/basilic/gi, `<span class="inat-vegetal" data-taxon-name="Ocimum basilicum" data-paragraphe-id="mock-${counter++}">basilic<div class="inat-vegetal-tooltip"><img src="https://inaturalist-open-data.s3.amazonaws.com/photos/559299228/large.jpg" alt="Ocimum basilicum"/></div></span>`)
+        .replace(/persil/gi, `<span class="inat-vegetal" data-taxon-name="Petroselinum crispum" data-paragraphe-id="mock-${counter++}">persil<div class="inat-vegetal-tooltip"><img src="https://inaturalist-open-data.s3.amazonaws.com/photos/559297839/large.jpg" alt="Petroselinum crispum"/></div></span>`)
+        .replace(/thym/gi, `<span class="inat-vegetal" data-taxon-name="Thymus vulgaris" data-paragraphe-id="mock-${counter++}">thym<div class="inat-vegetal-tooltip"><img src="https://static.inaturalist.org/photos/560305263/large.jpg" alt="Thymus vulgaris"/></div></span>`)
+        .replace(/romarin/gi, `<span class="inat-vegetal" data-taxon-name="Rosmarinus officinalis" data-paragraphe-id="mock-${counter++}">romarin<div class="inat-vegetal-tooltip"><img src="https://inaturalist-open-data.s3.amazonaws.com/photos/560303647/large.jpg" alt="Rosmarinus officinalis"/></div></span>`)
+        .replace(/lavande/gi, `<span class="inat-vegetal" data-taxon-name="Lavandula angustifolia" data-paragraphe-id="mock-${counter++}">lavande<div class="inat-vegetal-tooltip"><img src="https://inaturalist-open-data.s3.amazonaws.com/photos/559299228/large.jpg" alt="Lavandula angustifolia"/></div></span>`)
+        .replace(/roses/gi, `<span class="inat-vegetal" data-taxon-name="Rosa" data-paragraphe-id="mock-${counter++}">roses<div class="inat-vegetal-tooltip"><img src="https://static.inaturalist.org/photos/560305263/large.jpg" alt="Rosa"/></div></span>`)
+        .replace(/géraniums/gi, `<span class="inat-vegetal" data-taxon-name="Pelargonium" data-paragraphe-id="mock-${counter++}">géraniums<div class="inat-vegetal-tooltip"><img src="https://inaturalist-open-data.s3.amazonaws.com/photos/560287697/large.jpg" alt="Pelargonium"/></div></span>`)
+        .replace(/pétunias/gi, `<span class="inat-vegetal" data-taxon-name="Petunia" data-paragraphe-id="mock-${counter++}">pétunias<div class="inat-vegetal-tooltip"><img src="https://inaturalist-open-data.s3.amazonaws.com/photos/559297839/large.jpg" alt="Petunia"/></div></span>`)
+        .replace(/sauge/gi, `<span class="inat-vegetal" data-taxon-name="Salvia officinalis" data-paragraphe-id="mock-${counter++}">sauge<div class="inat-vegetal-tooltip"><img src="https://inaturalist-open-data.s3.amazonaws.com/photos/560303647/large.jpg" alt="Salvia officinalis"/></div></span>`);
       
+      const inatSpansCount = (upgradedArticle.match(/<span class="inat-vegetal"/g) || []).length;
       this.loggingService.info('INFRASTRUCTURE', '📨 Réponse: Mock data pour vegetal', { 
         originalLength: article.length, 
         upgradedLength: upgradedArticle.length,
-        botanicalNamesAdded: (upgradedArticle.match(/<em>[^<]+<\/em>/g) || []).length
+        inatSpansAdded: inatSpansCount
       });
       return from(Promise.resolve(upgradedArticle));
     }
     
     this.loggingService.info('INFRASTRUCTURE', '🔧 Début vegetal()', { articleLength: article.length });
     
-    // Extraire les paragraphes de l'article pour traiter chacun séparément
-    const paragraphMatches = article.match(/<span id="paragraphe-(\d+)">/g);
-    if (!paragraphMatches) {
-      this.loggingService.warn('INFRASTRUCTURE', 'Aucun paragraphe trouvé dans l\'article');
-      return of(article);
-    }
-
-    // Traiter chaque paragraphe séquentiellement
-    let upgradedArticle = article;
-    const paragraphIds = paragraphMatches.map(match => {
-      const idMatch = match.match(/paragraphe-(\d+)/);
-      return idMatch ? parseInt(idMatch[1]) : 0;
-    });
+    // 1️⃣ D'abord, utiliser l'IA pour injecter les noms scientifiques dans l'article complet
+    const prompt = this.getPromptsService.getPromptAddVegetalInArticle(article, 0); // 0 = traitement global
 
     return this.wrapWithErrorHandling(
-      () => from(paragraphIds).pipe(
-      concatMap((paragrapheId: number) => {
-        // Extraire le contenu du paragraphe spécifique
-        const paragraphRegex = new RegExp(`<span id="paragraphe-${paragrapheId}">(.*?)</span>`, 's');
-        const paragraphMatch = upgradedArticle.match(paragraphRegex);
-        
-        if (!paragraphMatch) {
-          this.loggingService.warn('INFRASTRUCTURE', `Paragraphe ${paragrapheId} non trouvé`);
-          return of(upgradedArticle);
-        }
-
-        const paragraphContent = paragraphMatch[1];
-        const prompt = this.getPromptsService.getPromptAddVegetalInArticle(paragraphContent, paragrapheId);
-        
-        return from(this.openaiApiService.fetchData(prompt, true)).pipe(
-          map(result => {
+      () => from(this.openaiApiService.fetchData(prompt, false, 'vegetal global')).pipe(
+        switchMap(result => {
             if (result === null) {
-              this.loggingService.warn('INFRASTRUCTURE', `Aucun résultat pour le paragraphe ${paragrapheId}`);
-              return upgradedArticle;
+            this.loggingService.warn('INFRASTRUCTURE', 'Aucun résultat de l\'IA pour l\'enrichissement botanique');
+            // 2️⃣ En cas d'échec de l'IA, utiliser le service iNaturalist comme fallback
+            return this.addScientificNameService.processAddUrlFromScientificNameInHtml(article);
             }
             
             try {
               const data: { upgraded: string } = JSON.parse(extractJSONBlock(result));
               if (data.upgraded) {
-                // Remplacer le contenu du paragraphe dans l'article complet
-                upgradedArticle = upgradedArticle.replace(
-                  paragraphRegex,
-                  `<span id="paragraphe-${paragrapheId}">${data.upgraded}</span>`
-                );
-                this.loggingService.info('INFRASTRUCTURE', `Paragraphe ${paragrapheId} traité avec succès`);
-              }
-              return upgradedArticle;
-            } catch (error) {
-              this.loggingService.error('INFRASTRUCTURE', `Erreur parsing paragraphe ${paragrapheId}`, error);
-              return upgradedArticle;
+              this.loggingService.info('INFRASTRUCTURE', 'Article enrichi par l\'IA avec noms scientifiques', {
+                originalLength: article.length,
+                upgradedLength: data.upgraded.length
+              });
+              
+              // 3️⃣ Ensuite, traiter l'article enrichi avec le service iNaturalist pour les URLs
+              return this.addScientificNameService.processAddUrlFromScientificNameInHtml(data.upgraded);
             }
-          })
-        );
-      }),
-      // Retourner le dernier état de l'article après traitement de tous les paragraphes
-      map(() => upgradedArticle),
-      tap((finalArticle: string) => {
+            
+            // Si pas de contenu upgraded, utiliser l'article original
+            return this.addScientificNameService.processAddUrlFromScientificNameInHtml(article);
+            
+          } catch (error) {
+            this.loggingService.error('INFRASTRUCTURE', 'Erreur parsing réponse IA vegetal', error);
+            // En cas d'erreur de parsing, utiliser le service iNaturalist comme fallback
+            return this.addScientificNameService.processAddUrlFromScientificNameInHtml(article);
+          }
+        }),
+        map((finalArticle: string) => {
         this.loggingService.info('INFRASTRUCTURE', '📨 Réponse vegetal complète', { 
           originalLength: article.length, 
           finalLength: finalArticle.length 
         });
+          return finalArticle;
       })
     ),
     'vegetal',
-    `Ajout de noms botaniques dans un article de ${article.length} caractères`
+      `Enrichissement botanique complet de l'article (${article.length} caractères)`
     );
   }
 
