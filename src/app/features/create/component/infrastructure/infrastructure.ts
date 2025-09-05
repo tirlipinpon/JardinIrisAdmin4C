@@ -1,10 +1,10 @@
 import { inject, Injectable } from '@angular/core';
-import { from, map, Observable, of, switchMap, concatMap, toArray, catchError } from 'rxjs';
+import { from, map, Observable, of, catchError } from 'rxjs';
 import { SupabaseService } from '../../../../shared/services/supabase.service';
 import { PostgrestError } from '@supabase/supabase-js';
 import { LoggingService } from '../../../../shared/services/logging.service';
 import { OpenaiApiService } from '../../services/openai-api/openai-api.service';
-import { GoogleSearchService, VideoInfo } from '../../services/google-search/google-search.service';
+import { GoogleSearchService } from '../../services/google-search/google-search.service';
 import { PexelsApiService } from '../../services/pexels-api/pexels-api.service';
 import { parseJsonSafe, extractJSONBlock } from '../../utils/cleanJsonObject';
 import { Post } from '../../types/post';
@@ -12,6 +12,10 @@ import { GetPromptsService } from '../../services/get-prompts/get-prompts.servic
 import { environment } from '../../../../../environments/environment';
 import { InternalImageData } from '../../types/internalImageData';
 import { AddScientificNameService } from '../../services/add-scientific-name/add-scientific-name.service';
+import { InternalImageService } from '../../services/internal-image/internal-image.service';
+import { ImageUploadService } from '../../services/image-upload/image-upload.service';
+import { VideoService } from '../../services/video/video.service';
+import { VegetalService } from '../../services/vegetal/vegetal.service';
 
 
 @Injectable({
@@ -25,6 +29,11 @@ export class Infrastructure {
   private readonly googleSearchService = inject(GoogleSearchService);
   private readonly pexelsApiService = inject(PexelsApiService);
   private readonly addScientificNameService = inject(AddScientificNameService);
+  // new dedicated services
+  private readonly internalImageService = inject(InternalImageService);
+  private readonly imageUploadService = inject(ImageUploadService);
+  private readonly videoService = inject(VideoService);
+  private readonly vegetalService = inject(VegetalService);
 
   /**
    * Méthode de test pour vérifier que les erreurs remontent bien dans le store
@@ -235,66 +244,28 @@ export class Infrastructure {
   setImageUrl(phraseAccroche: string, postId: number): Observable<string | PostgrestError> {
     const shouldReturnError = false;
     const shouldReturnMock = false;
-    const shouldMockImageGeneration = true; // ✅ Mock seulement la génération OpenAI, pas l'upload Supabase
+    const shouldMockImageGeneration = true;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
         message: 'Erreur de test: Échec de la génération d\'image',
-        details: 'Simulation d\'une erreur lors de la génération d\'image avec OpenAI DALL-E',
-        hint: 'Vérifiez votre clé API OpenAI et les crédits DALL-E disponibles',
+        details: 'Simulation d\'une erreur lors de la génération d\'image',
+        hint: 'Vérifiez la clé API et le storage',
         code: 'TEST_ERROR_004',
         name: 'PostgrestError'
       };
-      this.loggingService.info('INFRASTRUCTURE', '📨 Réponse: Erreur simulée pour setImageUrl', mockError);
+      this.loggingService.info('INFRASTRUCTURE', '📨 Erreur simulée setImageUrl', mockError);
       return from(Promise.resolve(mockError));
     }
     
     if (shouldReturnMock) {
-      const dummyImageUrl = `https://images.unsplash.com/photo-1416879595882-3373a0480b5b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80`;
-      this.loggingService.info('INFRASTRUCTURE', '📨 Réponse: Mock data pour setImageUrl', { imageUrl: dummyImageUrl, postId });
+      const dummyImageUrl = 'https://via.placeholder.com/800x400/4caf50/white?text=Image+Mock';
+      this.loggingService.info('INFRASTRUCTURE', '📨 Mock imageUrl', { imageUrl: dummyImageUrl, postId });
       return from(Promise.resolve(dummyImageUrl));
     }
     
     return this.wrapWithErrorHandling(
-      () => from((async () => {
-        // 1️⃣ Générer l'image en base64 (ou utiliser mock)
-        let b64_json: string | null;
-
-        if (shouldMockImageGeneration) {
-          // Mock d'une image base64 valide (1x1 pixel transparent PNG)
-          b64_json = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-          this.loggingService.info('INFRASTRUCTURE', '🎭 Mock image base64 utilisé pour test Supabase Storage', { postId, mockLength: b64_json.length });
-        } else {
-          // Vraie génération OpenAI DALL-E
-          b64_json = await this.openaiApiService.imageGeneratorUrl(this.getPromptsService.getOpenAiPromptImageGenerator(phraseAccroche)) || null;
-        }
-        
-        // 2️⃣ Convertir le base64 en Blob
-        if (b64_json) {
-          try {
-            // 3️⃣ Uploader le Blob dans Supabase Storage
-            const imageUrl = await this.supabaseService.uploadBase64ToSupabase(postId, b64_json);
-            if (imageUrl) {
-              // 4️⃣ Mettre à jour le post avec l'URL publique
-              await this.supabaseService.updateImageUrlPostByIdForm(postId, imageUrl);
-              this.loggingService.info('INFRASTRUCTURE', '🖼️ Upload d\'image réussi', { postId, imageUrl });
-              return imageUrl;
-            } else {
-              const warningMessage = `Upload d'image échoué pour le post ${postId} - Image par défaut utilisée`;
-              this.loggingService.warn('INFRASTRUCTURE', '⚠️ Upload d\'image échoué - URL par défaut utilisée', { postId });
-              this.signalWarning(warningMessage);
-              return 'https://via.placeholder.com/800x400/4caf50/white?text=Image+Jardin+Iris';
-            }
-          } catch (uploadError) {
-            const errorMessage = `Erreur Supabase Storage: ${uploadError instanceof Error ? uploadError.message : String(uploadError)} - Image par défaut utilisée`;
-            this.loggingService.error('INFRASTRUCTURE', '🚫 Erreur upload Supabase Storage', { postId, error: uploadError });
-            this.signalWarning(errorMessage);
-            return 'https://via.placeholder.com/800x400/4caf50/white?text=Image+Non+Disponible';
-          }
-        }
-        this.loggingService.warn('INFRASTRUCTURE', '⚠️ Pas d\'image générée par l\'IA', { postId });
-        return 'https://via.placeholder.com/800x400/666/white?text=Aucune+Image+Generee';
-      })()),
+      () => this.imageUploadService.generateAndUploadImage(phraseAccroche, postId, shouldMockImageGeneration),
       'setImageUrl',
       `Génération et upload d'image pour le post ${postId} avec la phrase: ${phraseAccroche}`
     );
@@ -306,52 +277,24 @@ export class Infrastructure {
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
-        message: 'Erreur de test: Échec de la recherche vidéo',
-        details: 'Simulation d\'une erreur lors de la recherche vidéo YouTube',
-        hint: 'Vérifiez votre clé API YouTube et les quotas disponibles',
+        message: 'Erreur de test: Échec recherche vidéo',
+        details: 'Simulation d\'erreur YouTube/OpenAI',
+        hint: 'Vérifiez clé/quotas',
         code: 'TEST_ERROR_005',
         name: 'PostgrestError'
       };
-      this.loggingService.info('INFRASTRUCTURE', '📨 Réponse: Erreur simulée pour setVideo', mockError);
+      this.loggingService.info('INFRASTRUCTURE', '📨 Erreur simulée setVideo', mockError);
       return from(Promise.resolve(mockError));
     }
     
     if (shouldReturnMock) {
-      const dummyVideoUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"; // Rick Roll classique pour le test
-      this.loggingService.info('INFRASTRUCTURE', '📨 Réponse: Mock data pour setVideo', { videoUrl: dummyVideoUrl, postId });
-      return from(Promise.resolve(dummyVideoUrl));
+      const dummy = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+      this.loggingService.info('INFRASTRUCTURE', '📨 Mock vidéo', { dummy, postId });
+      return from(Promise.resolve(dummy));
     }
-    
-    const prompt = this.getPromptsService.generateKeyWordForSearchVideo(phrase_accroche);
+
     return this.wrapWithErrorHandling(
-      () => from(this.openaiApiService.fetchData(prompt, true, 'setVideo keyword')).pipe(
-        switchMap(result => {
-          if (!result) return of('');
-          try {
-            const keywordData: { keywords: string } = JSON.parse(extractJSONBlock(result));
-            const keywords = keywordData.keywords;
-            if (!keywords) return of('');
-            return this.googleSearchService.searchFrenchVideo(keywords).pipe(
-              switchMap((videoUrls: VideoInfo[]) => {
-                if (!videoUrls.length) return of('');
-                const videoPrompt = this.getPromptsService.searchVideoFromYoutubeResult(phrase_accroche, videoUrls);
-                return from(this.openaiApiService.fetchData(videoPrompt, true, 'setVideo french video')).pipe(
-                  switchMap(videoResult => {
-                    const videoData: { video: string } = JSON.parse(extractJSONBlock(videoResult));
-                    const videoUrl = videoData.video && videoData.video.length ? videoData.video : null;
-                    return videoUrl ? of(videoUrl) : of('');
-                  })
-                );
-              })
-            );
-          } catch (error) {
-            const warningMessage = `Erreur parsing keyword pour vidéo - Pas de vidéo trouvée`;
-            this.loggingService.error('INFRASTRUCTURE', 'Erreur lors du parsing du keyword', error);
-            this.signalWarning(warningMessage);
-            return of('');
-          }
-        })
-      ),
+      () => this.videoService.findBestVideoUrl(phrase_accroche, false),
       'setVideo',
       `Recherche de vidéo YouTube pour la phrase: ${phrase_accroche}`
     );
@@ -407,9 +350,7 @@ export class Infrastructure {
           if (result === null) {
             throw new Error('Aucun résultat retourné par l\'API OpenAI');
           }
-          const data: {question: string; response: string}[]  = JSON.parse(extractJSONBlock(result))
-          // TODO: Utiliser postId pour sauvegarder la FAQ dans Supabase
-          return data;
+          return JSON.parse(extractJSONBlock(result))
         })
       ),
       'setFaq',
@@ -423,183 +364,27 @@ export class Infrastructure {
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
-        message: 'Erreur de test: Impossible d\'ajouter les images internes',
-        details: 'Simulation d\'une erreur pour tester la gestion d\'erreur',
-        hint: 'Vérifiez la connexion à l\'API Pexels',
+        message: 'Erreur de test: internalImage',
+        details: 'Simulation d\'erreur Pexels/OpenAI',
+        hint: 'Vérifiez API keys',
         code: 'TEST_ERROR_INTERNAL_IMAGE',
         name: 'PostgrestError'
       };
-      this.loggingService.info('INFRASTRUCTURE', '📨 Réponse: Erreur simulée pour internalImage', mockError);
+      this.loggingService.info('INFRASTRUCTURE', '📨 Erreur simulée internalImage', mockError);
       return from(Promise.resolve(mockError));
     }
 
     if (shouldReturnMock) {
-      // Mock data avec images simulées
       const mockImages: InternalImageData[] = [
-        {
-          chapitre_id: 1,
-          chapitre_key_word: 'garden',
-          url_Image: 'https://images.pexels.com/photos/1000445/pexels-photo-1000445.jpeg',
-          explanation_word: 'Image de jardin pour illustrer le premier chapitre'
-        },
-        {
-          chapitre_id: 2,
-          chapitre_key_word: 'plants',
-          url_Image: 'https://images.pexels.com/photos/1000446/pexels-photo-1000446.jpeg',
-          explanation_word: 'Image de plantes pour illustrer le deuxième chapitre'
-        }
+        { chapitre_id: 1, chapitre_key_word: 'garden', url_Image: 'https://images.pexels.com/photos/1000445/pexels-photo-1000445.jpeg', explanation_word: 'Image de jardin' },
+        { chapitre_id: 2, chapitre_key_word: 'plants', url_Image: 'https://images.pexels.com/photos/1000446/pexels-photo-1000446.jpeg', explanation_word: 'Image de plantes' }
       ];
-      
-      this.loggingService.info('INFRASTRUCTURE', '📨 Réponse: Mock images internes ajoutées', { 
-        originalLength: article.length,
-        imagesCount: mockImages.length
-      });
-      
-      return from(Promise.resolve({ 
-        article: article, 
-        images: mockImages 
-      }));
+      this.loggingService.info('INFRASTRUCTURE', '📨 Mock internalImage', { count: mockImages.length });
+      return from(Promise.resolve({ article, images: mockImages }));
     }
-
-    this.loggingService.info('INFRASTRUCTURE', '🔧 Début internalImage() - Version complète (sans sauvegarde Supabase)', { articleLength: article.length, postId });
-    
-    // Créer un tableau des IDs de chapitres à traiter
-    const chapterIds = Array.from({ length: environment.globalNbChapter }, (_, i) => i + 1);
-    const usedKeywords: string[] = [];
     
     return this.wrapWithErrorHandling(
-      () => from(chapterIds).pipe(
-      concatMap((chapitreId: number) => {
-        this.loggingService.info('INFRASTRUCTURE', `🔧 Traitement du chapitre ${chapitreId}/${environment.globalNbChapter}`);
-        
-        // 1️⃣ Extraire le contenu <h4> du paragraphe
-        const paragraphRegex = new RegExp(`<span id=['"]paragraphe-${chapitreId}['"][^>]*>(.*?)</span>`, 's');
-        const paragraphMatch = article.match(paragraphRegex);
-        
-        if (!paragraphMatch) {
-          this.loggingService.warn('INFRASTRUCTURE', `Paragraphe ${chapitreId} non trouvé`, {
-            searchPattern: `<span id=['"]paragraphe-${chapitreId}['"]`,
-            articleStart: article.substring(0, 200) + '...'
-          });
-          return of(null);
-        }
-        
-        const paragraphContent = paragraphMatch[1];
-        const h4Regex = /<h4[^>]*>(.*?)<\/h4>/;
-        const h4Match = paragraphContent.match(h4Regex);
-        
-        if (!h4Match) {
-          this.loggingService.warn('INFRASTRUCTURE', `Aucun titre <h4> trouvé dans le paragraphe ${chapitreId}`);
-          return of(null);
-        }
-        
-        const h4Content = h4Match[1];
-        this.loggingService.info('INFRASTRUCTURE', `📝 Titre extrait du chapitre ${chapitreId}: ${h4Content}`);
-        
-        // 2️⃣ Envoyer le contenu <h4> à l'IA pour extraire un mot-clé
-        const keywordPrompt = this.getPromptsService.getPromptGenericSelectKeyWordsFromChapitresInArticle(h4Content, usedKeywords);
-        
-        return from(this.openaiApiService.fetchData(keywordPrompt, true, 'internalImage ='+ usedKeywords)).pipe(
-          switchMap(keywordResult => {
-            if (!keywordResult) {
-              this.loggingService.warn('INFRASTRUCTURE', `Aucun mot-clé généré pour le chapitre ${chapitreId}`);
-              return of(null);
-            }
-            
-            try {
-              const keywordData: { keyWord: string; explanation: string } = JSON.parse(extractJSONBlock(keywordResult));
-              const keyword = keywordData.keyWord;
-              const explanation = keywordData.explanation;
-              
-              if (!keyword || usedKeywords.includes(keyword)) {
-                this.loggingService.warn('INFRASTRUCTURE', `Mot-clé invalide ou déjà utilisé: ${keyword}`);
-                return of(null);
-              }
-              
-              usedKeywords.push(keyword);
-              this.loggingService.info('INFRASTRUCTURE', `🔑 Mot-clé généré pour chapitre ${chapitreId}: ${keyword} (${explanation})`);
-              
-              // 3️⃣ Utiliser le mot-clé avec l'API Pexels pour récupérer 5 images
-              return this.pexelsApiService.searchImages(keyword, 5).pipe(
-                switchMap(images => {
-                  if (!images.length) {
-                    this.loggingService.warn('INFRASTRUCTURE', `Aucune image trouvée sur Pexels pour: ${keyword}`);
-                    return of(null);
-                  }
-                  
-                  this.loggingService.info('INFRASTRUCTURE', `🖼️ ${images.length} images trouvées sur Pexels pour: ${keyword}`);
-                  
-                  // 4️⃣ Envoyer les 5 images à l'IA Vision pour sélectionner la meilleure
-                  const imageUrls = images.map(img => img.src.medium);
-                  const visionPrompt = this.getPromptsService.getPromptGenericSelectBestImageForChapitresInArticleWithVision(paragraphContent, imageUrls);
-                  
-                  return from(this.openaiApiService.fetchDataImage(visionPrompt, imageUrls, 'internalImage ='+ usedKeywords)).pipe(
-                    switchMap(visionResult => {
-                      if (!visionResult) {
-                        this.loggingService.warn('INFRASTRUCTURE', `Aucune sélection d'image par l'IA Vision pour le chapitre ${chapitreId}`);
-                        return of(null);
-                      }
-                      
-                      try {
-                        const imageSelection: { imageUrl: string } = JSON.parse(extractJSONBlock(visionResult));
-                        const selectedImageUrl = imageSelection.imageUrl;
-                        
-                        if (!selectedImageUrl || !imageUrls.includes(selectedImageUrl)) {
-                          this.loggingService.warn('INFRASTRUCTURE', `URL d'image sélectionnée invalide: ${selectedImageUrl}`);
-                          return of(null);
-                        }
-                        
-                        // Trouver l'image complète correspondante
-                        const selectedImage = images.find(img => img.src.medium === selectedImageUrl);
-                        if (!selectedImage) {
-                          this.loggingService.warn('INFRASTRUCTURE', `Image correspondante non trouvée pour l'URL: ${selectedImageUrl}`);
-                          return of(null);
-                        }
-                        
-                        this.loggingService.info('INFRASTRUCTURE', `✅ Image sélectionnée pour chapitre ${chapitreId}: ${selectedImage.alt || keyword}`);
-                        
-                        // 5️⃣ Créer les données d'image (sans insertion dans l'article)
-                        const imageData: InternalImageData = {
-                          chapitre_id: chapitreId,
-                          chapitre_key_word: keyword,
-                          url_Image: selectedImage.src.large,
-                          explanation_word: explanation
-                        };
-                        
-                        this.loggingService.info('INFRASTRUCTURE', `📦 Données d'image préparées pour chapitre ${chapitreId}`, imageData);
-                        return of(imageData);
-                      } catch (error) {
-                        const warningMessage = `Erreur parsing sélection image chapitre ${chapitreId} - Image non ajoutée`;
-                        this.loggingService.error('INFRASTRUCTURE', `Erreur parsing sélection image chapitre ${chapitreId}`, error);
-                        this.signalWarning(warningMessage);
-                        return of(null);
-                      }
-                    })
-                  );
-                })
-              );
-            } catch (error) {
-              const warningMessage = `Erreur parsing mot-clé pour chapitre ${chapitreId} - Image non ajoutée`;
-              this.loggingService.error('INFRASTRUCTURE', `Erreur parsing mot-clé chapitre ${chapitreId}`, error);
-              this.signalWarning(warningMessage);
-              return of(null);
-            }
-          })
-        );
-      }),
-      // Collecter tous les résultats
-      toArray(),
-      map(results => {
-        const validResults = results.filter(result => result !== null) as InternalImageData[];
-        this.loggingService.info('INFRASTRUCTURE', `📨 InternalImage terminé: ${validResults.length}/${environment.globalNbChapter} chapitres traités avec succès`);
-        
-        // Retourner l'article original (non modifié) et les données des images
-        return {
-          article: article,
-          images: validResults
-        };
-      })
-    ),
+      () => this.internalImageService.generateInternalImages(article, postId, (msg) => this.signalWarning(msg)),
     'internalImage',
     `Ajout d'images internes pour ${environment.globalNbChapter} chapitres dans l'article du post ${postId}`
     );
@@ -639,14 +424,10 @@ export class Infrastructure {
     return this.wrapWithErrorHandling(
       () => from(this.openaiApiService.fetchData(prompt, true, 'setInternalLink')).pipe(
         map(result => {
-          if (result === null) {
-            throw new Error('Aucun résultat retourné par l\'API OpenAI pour les liens internes');
-          }
+          if (result === null) { throw new Error('Aucun résultat retourné par l\'API OpenAI pour les liens internes'); }
           const raw = extractJSONBlock(result);
           try {
-          
             const data: { upgraded: string; idToRemove?: string } = JSON.parse(raw);
-            this.loggingService.info('INFRASTRUCTURE', '📨 Réponse setInternalLink', { hasUpgraded: !!data.upgraded, idToRemove: data.idToRemove });
             return data.upgraded;
           } catch (error) {
             this.loggingService.error('INFRASTRUCTURE', 'Erreur lors du parsing du résultat setInternalLink', error);
@@ -667,84 +448,25 @@ export class Infrastructure {
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
-        message: 'Erreur de test: Échec de l\'ajout des noms botaniques',
-        details: 'Simulation d\'une erreur lors de l\'enrichissement botanique avec OpenAI',
-        hint: 'Vérifiez votre clé API OpenAI et les crédits disponibles',
+        message: 'Erreur de test: vegetal',
+        details: 'Simulation d\'erreur OpenAI/iNaturalist',
+        hint: 'Vérifiez les APIs',
         code: 'TEST_ERROR_008',
         name: 'PostgrestError'
       };
-      this.loggingService.info('INFRASTRUCTURE', '📨 Réponse: Erreur simulée pour vegetal', mockError);
+      this.loggingService.info('INFRASTRUCTURE', '📨 Erreur simulée vegetal', mockError);
       return from(Promise.resolve(mockError));
     }
     
     if (shouldReturnMock) {
       let counter = 1;
-      const upgradedArticle = article
-        .replace(/tomates cerises/gi, `<span class="inat-vegetal" data-taxon-name="Solanum lycopersicum" data-paragraphe-id="mock-${counter++}">tomates cerises<div class="inat-vegetal-tooltip"><img src="https://inaturalist-open-data.s3.amazonaws.com/photos/560287697/large.jpg" alt="Solanum lycopersicum"/></div></span>`)
-        .replace(/basilic/gi, `<span class="inat-vegetal" data-taxon-name="Ocimum basilicum" data-paragraphe-id="mock-${counter++}">basilic<div class="inat-vegetal-tooltip"><img src="https://inaturalist-open-data.s3.amazonaws.com/photos/559299228/large.jpg" alt="Ocimum basilicum"/></div></span>`)
-        .replace(/persil/gi, `<span class="inat-vegetal" data-taxon-name="Petroselinum crispum" data-paragraphe-id="mock-${counter++}">persil<div class="inat-vegetal-tooltip"><img src="https://inaturalist-open-data.s3.amazonaws.com/photos/559297839/large.jpg" alt="Petroselinum crispum"/></div></span>`)
-        .replace(/thym/gi, `<span class="inat-vegetal" data-taxon-name="Thymus vulgaris" data-paragraphe-id="mock-${counter++}">thym<div class="inat-vegetal-tooltip"><img src="https://static.inaturalist.org/photos/560305263/large.jpg" alt="Thymus vulgaris"/></div></span>`)
-        .replace(/romarin/gi, `<span class="inat-vegetal" data-taxon-name="Rosmarinus officinalis" data-paragraphe-id="mock-${counter++}">romarin<div class="inat-vegetal-tooltip"><img src="https://inaturalist-open-data.s3.amazonaws.com/photos/560303647/large.jpg" alt="Rosmarinus officinalis"/></div></span>`)
-        .replace(/lavande/gi, `<span class="inat-vegetal" data-taxon-name="Lavandula angustifolia" data-paragraphe-id="mock-${counter++}">lavande<div class="inat-vegetal-tooltip"><img src="https://inaturalist-open-data.s3.amazonaws.com/photos/559299228/large.jpg" alt="Lavandula angustifolia"/></div></span>`)
-        .replace(/roses/gi, `<span class="inat-vegetal" data-taxon-name="Rosa" data-paragraphe-id="mock-${counter++}">roses<div class="inat-vegetal-tooltip"><img src="https://static.inaturalist.org/photos/560305263/large.jpg" alt="Rosa"/></div></span>`)
-        .replace(/géraniums/gi, `<span class="inat-vegetal" data-taxon-name="Pelargonium" data-paragraphe-id="mock-${counter++}">géraniums<div class="inat-vegetal-tooltip"><img src="https://inaturalist-open-data.s3.amazonaws.com/photos/560287697/large.jpg" alt="Pelargonium"/></div></span>`)
-        .replace(/pétunias/gi, `<span class="inat-vegetal" data-taxon-name="Petunia" data-paragraphe-id="mock-${counter++}">pétunias<div class="inat-vegetal-tooltip"><img src="https://inaturalist-open-data.s3.amazonaws.com/photos/559297839/large.jpg" alt="Petunia"/></div></span>`)
-        .replace(/sauge/gi, `<span class="inat-vegetal" data-taxon-name="Salvia officinalis" data-paragraphe-id="mock-${counter++}">sauge<div class="inat-vegetal-tooltip"><img src="https://inaturalist-open-data.s3.amazonaws.com/photos/560303647/large.jpg" alt="Salvia officinalis"/></div></span>`);
-      
-      const inatSpansCount = (upgradedArticle.match(/<span class="inat-vegetal"/g) || []).length;
-      this.loggingService.info('INFRASTRUCTURE', '📨 Réponse: Mock data pour vegetal', { 
-        originalLength: article.length, 
-        upgradedLength: upgradedArticle.length,
-        inatSpansAdded: inatSpansCount
-      });
-      return from(Promise.resolve(upgradedArticle));
+      const upgraded = article.replace(/tomates cerises/gi, `<span class="inat-vegetal" data-taxon-name="Solanum lycopersicum" data-paragraphe-id="mock-${counter++}">tomates cerises<div class="inat-vegetal-tooltip"><img src="https://inaturalist-open-data.s3.amazonaws.com/photos/560287697/large.jpg" alt="Solanum lycopersicum"/></div></span>`);
+      this.loggingService.info('INFRASTRUCTURE', '📨 Mock vegetal');
+      return from(Promise.resolve(upgraded));
     }
-    
-    this.loggingService.info('INFRASTRUCTURE', '🔧 Début vegetal()', { articleLength: article.length });
-    
-    // 1️⃣ D'abord, utiliser l'IA pour injecter les noms scientifiques dans l'article complet
-    const prompt = this.getPromptsService.getPromptAddVegetalInArticle(article, 0); // 0 = traitement global
 
     return this.wrapWithErrorHandling(
-      () => from(this.openaiApiService.fetchData(prompt, false, 'vegetal global')).pipe(
-        switchMap(result => {
-            if (result === null) {
-            this.loggingService.warn('INFRASTRUCTURE', 'Aucun résultat de l\'IA pour l\'enrichissement botanique');
-            // 2️⃣ En cas d'échec de l'IA, utiliser le service iNaturalist comme fallback
-            return this.addScientificNameService.processAddUrlFromScientificNameInHtml(article);
-            }
-            
-            try {
-              const data: { upgraded: string } = JSON.parse(extractJSONBlock(result));
-              if (data.upgraded) {
-              this.loggingService.info('INFRASTRUCTURE', 'Article enrichi par l\'IA avec noms scientifiques', {
-                originalLength: article.length,
-                upgradedLength: data.upgraded.length
-              });
-              
-              // 3️⃣ Ensuite, traiter l'article enrichi avec le service iNaturalist pour les URLs
-              return this.addScientificNameService.processAddUrlFromScientificNameInHtml(data.upgraded);
-            }
-            
-            // Si pas de contenu upgraded, utiliser l'article original
-            return this.addScientificNameService.processAddUrlFromScientificNameInHtml(article);
-            
-          } catch (error) {
-            const warningMessage = `Erreur parsing réponse IA pour noms botaniques - Service iNaturalist utilisé en fallback`;
-            this.loggingService.error('INFRASTRUCTURE', 'Erreur parsing réponse IA vegetal', error);
-            this.signalWarning(warningMessage);
-            // En cas d'erreur de parsing, utiliser le service iNaturalist comme fallback
-            return this.addScientificNameService.processAddUrlFromScientificNameInHtml(article);
-          }
-        }),
-        map((finalArticle: string) => {
-        this.loggingService.info('INFRASTRUCTURE', '📨 Réponse vegetal complète', { 
-          originalLength: article.length, 
-          finalLength: finalArticle.length 
-        });
-          return finalArticle;
-      })
-    ),
+      () => this.vegetalService.enrichArticleWithBotanicalNames(article, false),
     'vegetal',
       `Enrichissement botanique complet de l'article (${article.length} caractères)`
     );
