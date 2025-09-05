@@ -1,11 +1,16 @@
 import { TestBed } from '@angular/core/testing';
+import { provideZonelessChangeDetection } from '@angular/core';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { AddScientificNameService } from './add-scientific-name.service';
 
 describe('AddScientificNameService', () => {
   let service: AddScientificNameService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule],
+      providers: [ provideZonelessChangeDetection() ]
+    });
     service = TestBed.inject(AddScientificNameService);
   });
 
