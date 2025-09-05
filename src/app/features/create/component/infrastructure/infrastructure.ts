@@ -104,11 +104,7 @@ export class Infrastructure {
   /**
    * Wrapper générique pour les opérations asynchrones avec gestion d'erreur
    */
-  private wrapWithErrorHandling<T>(
-    operation: () => Observable<T>, 
-    methodName: string, 
-    context: string = ''
-  ): Observable<T | PostgrestError> {
+  private wrapWithErrorHandling<T>(operation: () => Observable<T>, methodName: string, context: string = ''): Observable<T | PostgrestError> {
     return operation().pipe(
       catchError(error => {
         const postgrestError = this.handleError(error, context, methodName);
@@ -239,6 +235,7 @@ export class Infrastructure {
   setImageUrl(phraseAccroche: string, postId: number): Observable<string | PostgrestError> {
     const shouldReturnError = false;
     const shouldReturnMock = false;
+    const shouldMockImageGeneration = true; // ✅ Mock seulement la génération OpenAI, pas l'upload Supabase
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -260,18 +257,28 @@ export class Infrastructure {
     
     return this.wrapWithErrorHandling(
       () => from((async () => {
-        // 1️⃣ Générer l'image en base64
-        const b64_json = await this.openaiApiService.imageGeneratorUrl(this.getPromptsService.getOpenAiPromptImageGenerator(phraseAccroche));
+        // 1️⃣ Générer l'image en base64 (ou utiliser mock)
+        let b64_json: string | null;
+
+        if (shouldMockImageGeneration) {
+          // Mock d'une image base64 valide (1x1 pixel transparent PNG)
+          b64_json = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+          this.loggingService.info('INFRASTRUCTURE', '🎭 Mock image base64 utilisé pour test Supabase Storage', { postId, mockLength: b64_json.length });
+        } else {
+          // Vraie génération OpenAI DALL-E
+          b64_json = await this.openaiApiService.imageGeneratorUrl(this.getPromptsService.getOpenAiPromptImageGenerator(phraseAccroche)) || null;
+        }
+        
         // 2️⃣ Convertir le base64 en Blob
         if (b64_json) {
           try {
-          // 3️⃣ Uploader le Blob dans Supabase Storage
-          const imageUrl = await this.supabaseService.uploadBase64ToSupabase(postId, b64_json);
+            // 3️⃣ Uploader le Blob dans Supabase Storage
+            const imageUrl = await this.supabaseService.uploadBase64ToSupabase(postId, b64_json);
             if (imageUrl) {
-          // 4️⃣ Mettre à jour le post avec l'URL publique
-          await this.supabaseService.updateImageUrlPostByIdForm(postId, imageUrl);
+              // 4️⃣ Mettre à jour le post avec l'URL publique
+              await this.supabaseService.updateImageUrlPostByIdForm(postId, imageUrl);
               this.loggingService.info('INFRASTRUCTURE', '🖼️ Upload d\'image réussi', { postId, imageUrl });
-          return imageUrl;
+              return imageUrl;
             } else {
               const warningMessage = `Upload d'image échoué pour le post ${postId} - Image par défaut utilisée`;
               this.loggingService.warn('INFRASTRUCTURE', '⚠️ Upload d\'image échoué - URL par défaut utilisée', { postId });
@@ -338,7 +345,9 @@ export class Infrastructure {
               })
             );
           } catch (error) {
+            const warningMessage = `Erreur parsing keyword pour vidéo - Pas de vidéo trouvée`;
             this.loggingService.error('INFRASTRUCTURE', 'Erreur lors du parsing du keyword', error);
+            this.signalWarning(warningMessage);
             return of('');
           }
         })
@@ -560,7 +569,9 @@ export class Infrastructure {
                         this.loggingService.info('INFRASTRUCTURE', `📦 Données d'image préparées pour chapitre ${chapitreId}`, imageData);
                         return of(imageData);
                       } catch (error) {
+                        const warningMessage = `Erreur parsing sélection image chapitre ${chapitreId} - Image non ajoutée`;
                         this.loggingService.error('INFRASTRUCTURE', `Erreur parsing sélection image chapitre ${chapitreId}`, error);
+                        this.signalWarning(warningMessage);
                         return of(null);
                       }
                     })
@@ -568,7 +579,9 @@ export class Infrastructure {
                 })
               );
             } catch (error) {
+              const warningMessage = `Erreur parsing mot-clé pour chapitre ${chapitreId} - Image non ajoutée`;
               this.loggingService.error('INFRASTRUCTURE', `Erreur parsing mot-clé chapitre ${chapitreId}`, error);
+              this.signalWarning(warningMessage);
               return of(null);
             }
           })
@@ -717,7 +730,9 @@ export class Infrastructure {
             return this.addScientificNameService.processAddUrlFromScientificNameInHtml(article);
             
           } catch (error) {
+            const warningMessage = `Erreur parsing réponse IA pour noms botaniques - Service iNaturalist utilisé en fallback`;
             this.loggingService.error('INFRASTRUCTURE', 'Erreur parsing réponse IA vegetal', error);
+            this.signalWarning(warningMessage);
             // En cas d'erreur de parsing, utiliser le service iNaturalist comme fallback
             return this.addScientificNameService.processAddUrlFromScientificNameInHtml(article);
           }
