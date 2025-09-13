@@ -152,7 +152,7 @@ export class Infrastructure {
 
   getLastPostTitreAndId(): Observable<{ titre: string; id: number; new_href: string }[] | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock =  false;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -193,7 +193,7 @@ export class Infrastructure {
 
   setPost(articleIdea: string): Observable<Post | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = true;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -244,7 +244,7 @@ export class Infrastructure {
   setImageUrl(phraseAccroche: string, postId: number): Observable<string | PostgrestError> {
     const shouldReturnError = false;
     const shouldReturnMock = false;
-    const shouldMockImageGeneration = true;
+    const shouldMockImageGeneration = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -273,7 +273,7 @@ export class Infrastructure {
 
   setVideo(phrase_accroche: string, postId: number): Observable<string | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = true;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -302,7 +302,7 @@ export class Infrastructure {
 
   setFaq(article: string): Observable<{ question: string; response: string }[] | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = true;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -360,7 +360,7 @@ export class Infrastructure {
 
   internalImage(article: string, postId: number): Observable<{ article: string; images: InternalImageData[] } | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = true;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -392,7 +392,7 @@ export class Infrastructure {
 
   setInternalLink(article: string, postTitreAndId: { titre: string; id: number; new_href: string }[]): Observable<string | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = true;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -444,7 +444,7 @@ export class Infrastructure {
 
   vegetal(article: string): Observable<string | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = true;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -473,6 +473,26 @@ export class Infrastructure {
   }
 
   savePostComplete(post: Post): Observable<boolean | PostgrestError> {
+    const shouldReturnError = false;
+    const shouldReturnMock = false;
+    
+    if (shouldReturnError) {
+      const mockError: PostgrestError = {
+        message: 'Erreur de test: Échec de la sauvegarde du post',
+        details: 'Simulation d\'une erreur lors de la sauvegarde du post complet',
+        hint: 'Vérifiez la connexion à Supabase',
+        code: 'TEST_ERROR_009',
+        name: 'PostgrestError'
+      };
+      this.loggingService.info('INFRASTRUCTURE', '📨 Réponse: Erreur simulée pour savePostComplete', mockError);
+      return from(Promise.resolve(mockError));
+    }
+    
+    if (shouldReturnMock) {
+      this.loggingService.info('INFRASTRUCTURE', '📨 Réponse: Mock data pour savePostComplete', { postId: post.id });
+      return from(Promise.resolve(true));
+    }
+    
     this.loggingService.info('INFRASTRUCTURE', '💾 Sauvegarde post complet', { postId: post.id });
     
     return this.wrapWithErrorHandling(
@@ -488,6 +508,26 @@ export class Infrastructure {
   }
 
   saveFaqItems(postId: number, faqItems: { question: string; response: string }[]): Observable<boolean | PostgrestError> {
+    const shouldReturnError = false;
+    const shouldReturnMock = false;
+    
+    if (shouldReturnError) {
+      const mockError: PostgrestError = {
+        message: 'Erreur de test: Échec de la sauvegarde des FAQ',
+        details: 'Simulation d\'une erreur lors de la sauvegarde des items FAQ',
+        hint: 'Vérifiez la connexion à Supabase',
+        code: 'TEST_ERROR_010',
+        name: 'PostgrestError'
+      };
+      this.loggingService.info('INFRASTRUCTURE', '📨 Réponse: Erreur simulée pour saveFaqItems', mockError);
+      return from(Promise.resolve(mockError));
+    }
+    
+    if (shouldReturnMock) {
+      this.loggingService.info('INFRASTRUCTURE', '📨 Réponse: Mock data pour saveFaqItems', { postId, count: faqItems.length });
+      return from(Promise.resolve(true));
+    }
+    
     this.loggingService.info('INFRASTRUCTURE', '💾 Sauvegarde FAQ', { postId, count: faqItems.length });
     
     return this.wrapWithErrorHandling(
@@ -503,6 +543,26 @@ export class Infrastructure {
   }
 
   saveInternalImages(postId: number, images: InternalImageData[]): Observable<boolean | PostgrestError> {
+    const shouldReturnError = false;
+    const shouldReturnMock = false;
+    
+    if (shouldReturnError) {
+      const mockError: PostgrestError = {
+        message: 'Erreur de test: Échec de la sauvegarde des images internes',
+        details: 'Simulation d\'une erreur lors de la sauvegarde des images internes',
+        hint: 'Vérifiez la connexion à Supabase',
+        code: 'TEST_ERROR_011',
+        name: 'PostgrestError'
+      };
+      this.loggingService.info('INFRASTRUCTURE', '📨 Réponse: Erreur simulée pour saveInternalImages', mockError);
+      return from(Promise.resolve(mockError));
+    }
+    
+    if (shouldReturnMock) {
+      this.loggingService.info('INFRASTRUCTURE', '📨 Réponse: Mock data pour saveInternalImages', { postId, count: images.length });
+      return from(Promise.resolve(true));
+    }
+    
     this.loggingService.info('INFRASTRUCTURE', '💾 Sauvegarde images internes', { postId, count: images.length });
     
     return this.wrapWithErrorHandling(

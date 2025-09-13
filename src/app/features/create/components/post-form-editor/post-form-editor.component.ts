@@ -195,13 +195,33 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
             
             <!-- Aperçu de la vidéo -->
             <div class="video-player" *ngIf="videoUrl && extractVideoId(videoUrl)">
+              <!-- Indicateur de chargement -->
+              <div class="video-loading" *ngIf="videoLoading">
+                <mat-icon>refresh</mat-icon>
+                <p>Chargement de la vidéo...</p>
+              </div>
+              
+              <!-- Lecteur vidéo -->
               <iframe 
+                *ngIf="!videoLoading && !videoError"
                 [src]="getYouTubeEmbedUrl(extractVideoId(videoUrl)!)"
                 width="100%" 
                 height="315" 
                 frameborder="0" 
-                allowfullscreen>
+                allowfullscreen
+                (load)="onVideoLoad()"
+                (error)="onVideoError()">
               </iframe>
+              
+              <!-- Message d'erreur -->
+              <div class="video-error" *ngIf="videoError">
+                <mat-icon>error</mat-icon>
+                <p>Erreur lors du chargement de la vidéo. Veuillez vérifier l'URL.</p>
+                <button mat-button color="primary" (click)="retryVideo()">
+                  <mat-icon>refresh</mat-icon>
+                  Réessayer
+                </button>
+              </div>
             </div>
 
             <!-- Message si URL invalide -->
@@ -497,6 +517,63 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
        margin: 0;
        font-size: 14px;
      }
+
+     .video-loading {
+       display: flex;
+       flex-direction: column;
+       align-items: center;
+       justify-content: center;
+       padding: 40px;
+       background: #f8f9fa;
+       border: 2px dashed #dee2e6;
+       border-radius: 8px;
+       color: #6c757d;
+     }
+
+     .video-loading mat-icon {
+       font-size: 32px;
+       width: 32px;
+       height: 32px;
+       margin-bottom: 12px;
+       animation: spin 1s linear infinite;
+     }
+
+     .video-loading p {
+       margin: 0;
+       font-size: 14px;
+       font-weight: 500;
+     }
+
+     @keyframes spin {
+       0% { transform: rotate(0deg); }
+       100% { transform: rotate(360deg); }
+     }
+
+     .video-error {
+       display: flex;
+       flex-direction: column;
+       align-items: center;
+       gap: 12px;
+       padding: 20px;
+       background: #fff3cd;
+       border: 1px solid #ffeaa7;
+       border-radius: 8px;
+       color: #856404;
+       text-align: center;
+     }
+
+     .video-error mat-icon {
+       font-size: 32px;
+       width: 32px;
+       height: 32px;
+       color: #f39c12;
+     }
+
+     .video-error p {
+       margin: 0;
+       font-size: 14px;
+       font-weight: 500;
+     }
    `]
 })
 export class PostFormEditorComponent implements OnInit, OnDestroy {
@@ -513,6 +590,8 @@ export class PostFormEditorComponent implements OnInit, OnDestroy {
    
    videoUrl = '';
    originalVideoUrl = '';
+   videoLoading = false;
+   videoError = false;
 
   constructor() {
     // Effet pour synchroniser automatiquement depuis le store
@@ -536,6 +615,8 @@ export class PostFormEditorComponent implements OnInit, OnDestroy {
       if (storeVideo !== this.videoUrl) {
         this.videoUrl = storeVideo;
         this.originalVideoUrl = this.videoUrl;
+        this.videoLoading = !!storeVideo; // Activer le chargement si une vidéo est présente
+        this.videoError = false;
         this.loggingService.info('POST_FORM_EDITOR', '🔄 Synchronisation vidéo depuis le store', { videoUrl: this.videoUrl });
       }
     });
@@ -646,7 +727,8 @@ export class PostFormEditorComponent implements OnInit, OnDestroy {
   }
 
   getYouTubeEmbedUrl(videoId: string): SafeResourceUrl {
-    const url = `https://www.youtube.com/embed/${videoId}`;
+    // Ajouter des paramètres pour désactiver les appels generate_204 et améliorer les performances
+    const url = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&fs=1&cc_load_policy=0&iv_load_policy=3&autohide=0&controls=1&disablekb=1&enablejsapi=0&origin=${window.location.origin}`;
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 
@@ -669,7 +751,27 @@ export class PostFormEditorComponent implements OnInit, OnDestroy {
      
      this.videoUrl = '';
      this.originalVideoUrl = '';
+     this.videoLoading = false;
+     this.videoError = false;
      this.store.updateVideo('');
+   }
+
+   onVideoLoad() {
+     this.loggingService.info('POST_FORM_EDITOR', '✅ Vidéo chargée avec succès');
+     this.videoLoading = false;
+     this.videoError = false;
+   }
+
+   onVideoError() {
+     this.loggingService.error('POST_FORM_EDITOR', '❌ Erreur lors du chargement de la vidéo');
+     this.videoLoading = false;
+     this.videoError = true;
+   }
+
+   retryVideo() {
+     this.loggingService.info('POST_FORM_EDITOR', '🔄 Nouvelle tentative de chargement de la vidéo');
+     this.videoLoading = true;
+     this.videoError = false;
    }
 
   saveFaqItem(index: number) {
