@@ -39,6 +39,8 @@ export class Application {
   }
 
   generate(articleIdea: string): void {
+    this.loggingService.info('APPLICATION', '🚀 Début du processus de génération', { articleIdea });
+    this.store.startGeneration();
     this.store.getNextPostId();
     this.store.getLastPostTitreAndId();
     this.store.setPost(articleIdea);

@@ -1,6 +1,6 @@
 // Ce fichier est généré automatiquement
-// Last updated: 2025-08-14T15:24:53.274Z
+// Last updated: 2025-09-13T14:26:55.173Z
 export const VERSION = {
-  buildNumber: '0.0.01',
-  buildDate: '2025-08-14T15:24:53.275Z'
+  buildNumber: '0.0.02',
+  buildDate: '2025-09-13T14:26:55.174Z'
 };

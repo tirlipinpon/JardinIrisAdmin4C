@@ -77,6 +77,7 @@ export interface SearchState {
   step: number;
   postId: number | PostgrestError | null;
   isLoading: boolean;
+  isGenerating: boolean; // État global pour le processus de génération complet
   error: string[];
   titre: string | null;
   description_meteo: string | null;
@@ -97,6 +98,7 @@ const initialValue: SearchState = {
   step: 0,
   postId: null,
   isLoading: false,
+  isGenerating: false,
   error: [],
   titre: null,
   description_meteo: null,
@@ -118,7 +120,8 @@ export const SearchStore =  signalStore(
   withDevtools('search'),
   withState(initialValue),
   withComputed((state) => ({
-    isLoading: state.isLoading
+    isLoading: state.isLoading,
+    isGenerating: state.isGenerating
   })),
   withMethods((store, infra = inject(Infrastructure), loggingService = inject(LoggingService))=> {
     
@@ -168,6 +171,17 @@ export const SearchStore =  signalStore(
     
     clearErrors: () => patchState(store, { error: [] }),
     
+    // Méthodes pour la gestion de l'état de génération global
+    startGeneration: () => {
+      patchState(store, { isGenerating: true, step: 0 });
+      loggingService.info('STORE', '🚀 Début du processus de génération');
+    },
+    
+    stopGeneration: () => {
+      patchState(store, { isGenerating: false });
+      loggingService.info('STORE', '✅ Fin du processus de génération');
+    },
+    
     getNextPostId: rxMethod<void>(
       pipe(
         concatMap(() =>
@@ -202,8 +216,11 @@ export const SearchStore =  signalStore(
     
     setPost: rxMethod<string>(
       pipe(
-        concatMap((articleIdea: string) =>
-          infra.setPost(articleIdea).pipe(
+        concatMap((articleIdea: string) => {
+          // Démarrer la génération globale
+          patchState(store, { isGenerating: true, step: 0 });
+          
+          return infra.setPost(articleIdea).pipe(
             withLoading(store, 'setPost'),
             map((response: any | PostgrestError) => throwOnPostgrestError(response)),
             tap({
@@ -216,14 +233,19 @@ export const SearchStore =  signalStore(
                   new_href: postData.new_href || null,
                   citation: postData.citation || null,
                   lien_url_article: postData.lien_url_article?.lien1 || null,
-                  categorie: postData.categorie || null
+                  categorie: postData.categorie || null,
+                  step: 1
                 });
-                patchState(store, { step: 1 });
+                loggingService.info('STORE', '✅ Article généré avec succès - étape 1 terminée');
               },
-              error: (error: unknown) => addError(extractErrorMessage(error))
+              error: (error: unknown) => {
+                addError(extractErrorMessage(error));
+                patchState(store, { isGenerating: false }); // Arrêter la génération en cas d'erreur
+                loggingService.error('STORE', '❌ Erreur lors de la génération de l\'article', error);
+              }
             })
-          )
-        )
+          );
+        })
       )
     ),
 
@@ -385,9 +407,18 @@ export const SearchStore =  signalStore(
             map((response: string | PostgrestError) => throwOnPostgrestError(response)),
             tap({
               next: (upgradedArticle: string) => {
-                patchState(store, { article: upgradedArticle, step: 4 });
+                patchState(store, { 
+                  article: upgradedArticle, 
+                  step: 4,
+                  isGenerating: false // Fin du processus de génération
+                });
+                loggingService.info('STORE', '🎉 Processus de génération terminé avec succès - étape 4 terminée');
               },
-              error: (error: unknown) => addError(extractErrorMessage(error))
+              error: (error: unknown) => {
+                addError(extractErrorMessage(error));
+                patchState(store, { isGenerating: false }); // Arrêter la génération en cas d'erreur
+                loggingService.error('STORE', '❌ Erreur lors de l\'étape végétale', error);
+              }
             })
           );
         })

@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
@@ -30,6 +31,7 @@ import { ProcessCompletionDialogComponent } from './components/process-completio
     MatFormFieldModule,
     MatInputModule,
     MatProgressBarModule,
+    MatProgressSpinnerModule,
     MatChipsModule,
     MatDividerModule,
     MatDialogModule,
@@ -55,11 +57,11 @@ export class CreateComponent {
     // Effet pour détecter la fin du processus
     effect(() => {
       const step = this.store.step();
-      const isLoading = this.store.isLoading();
+      const isGenerating = this.store.isGenerating();
       const article = this.store.article();
       
-      // Si on est à l'étape 4, qu'on n'est plus en chargement et qu'on a un article
-      if (step === 4 && !isLoading && article && !this.showCompletionDialog) {
+      // Si on est à l'étape 4, qu'on n'est plus en génération et qu'on a un article
+      if (step === 4 && !isGenerating && article && !this.showCompletionDialog) {
         this.showCompletionDialog = true;
         this.showProcessCompletionDialog();
       }

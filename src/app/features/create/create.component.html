@@ -48,22 +48,30 @@
             color="primary" 
             (click)="generate()" 
             class="generate-button"
-            [disabled]="!articleIdea.trim() || store.isLoading()">
-            <mat-icon>rocket_launch</mat-icon>
-            Générer l'article
+            [disabled]="!articleIdea.trim() || store.isGenerating()">
+            <mat-spinner *ngIf="store.isGenerating()" diameter="20" class="button-spinner"></mat-spinner>
+            <mat-icon *ngIf="!store.isGenerating()">rocket_launch</mat-icon>
+            {{ store.isGenerating() ? 'Génération en cours...' : 'Générer l\'article' }}
           </button>
           
         </div>
       </div>
     </mat-card-content>
     
-    <mat-card-footer *ngIf="store.isLoading()" class="progress-section">
+    <mat-card-footer *ngIf="store.isGenerating()" class="progress-section">
       <div class="progress-info">
         <div class="progress-text">
           <strong>Génération en cours...</strong>
           <span>Étape {{ store.step() }}/4</span>
         </div>
         <mat-progress-bar mode="determinate" [value]="(store.step() / 4) * 100" class="progress-bar"></mat-progress-bar>
+        <div class="progress-details">
+          <span *ngIf="store.step() === 0">Initialisation...</span>
+          <span *ngIf="store.step() === 1">Génération de l'article de base...</span>
+          <span *ngIf="store.step() === 2">Ajout des images et enrichissement...</span>
+          <span *ngIf="store.step() === 3">Ajout des liens internes...</span>
+          <span *ngIf="store.step() === 4">Finalisation avec les noms botaniques...</span>
+        </div>
       </div>
     </mat-card-footer>
   </mat-card>
@@ -79,7 +87,7 @@
           mat-raised-button 
           color="accent"
           (click)="saveAllData()"
-          [disabled]="store.isLoading() || !canSave()"
+          [disabled]="store.isGenerating() || !canSave()"
           class="save-button">
           <mat-icon>save</mat-icon>
           Sauvegarder tout
@@ -253,6 +261,35 @@
   background: linear-gradient(135deg, #2c5530 0%, #4caf50 100%) !important;
   box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4) !important;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.generate-button:disabled {
+  background: linear-gradient(135deg, #9e9e9e 0%, #bdbdbd 100%) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.generate-button:disabled::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
 }
 
 .generate-button:hover:not(:disabled) {
@@ -262,6 +299,14 @@
 
 .generate-button mat-icon {
   margin-right: 8px;
+}
+
+.button-spinner {
+  margin-right: 8px !important;
+}
+
+.button-spinner ::ng-deep circle {
+  stroke: white !important;
 }
 
 .button-group {
@@ -412,9 +457,10 @@
 
 /* Progress Section */
 .progress-section {
-  background: #f8f9fa !important;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
   border-top: 1px solid #e9ecef;
-  padding: 16px 24px !important;
+  padding: 20px 24px !important;
+  animation: slideInUp 0.5s ease-out;
 }
 
 .progress-info {
@@ -437,6 +483,25 @@
 .progress-text span {
   color: #666;
   font-size: 12px;
+}
+
+.progress-details {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #555;
+  font-style: italic;
+  animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .progress-bar {
