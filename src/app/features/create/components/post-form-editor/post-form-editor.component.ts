@@ -195,32 +195,72 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
             
             <!-- Aperçu de la vidéo -->
             <div class="video-player" *ngIf="videoUrl && extractVideoId(videoUrl)">
-              <!-- Indicateur de chargement -->
-              <div class="video-loading" *ngIf="videoLoading">
-                <mat-icon>refresh</mat-icon>
-                <p>Chargement de la vidéo...</p>
-              </div>
-              
-              <!-- Lecteur vidéo -->
-              <iframe 
-                *ngIf="!videoLoading && !videoError"
-                [src]="getYouTubeEmbedUrl(extractVideoId(videoUrl)!)"
-                width="100%" 
-                height="315" 
-                frameborder="0" 
-                allowfullscreen
-                (load)="onVideoLoad()"
-                (error)="onVideoError()">
-              </iframe>
-              
-              <!-- Message d'erreur -->
-              <div class="video-error" *ngIf="videoError">
-                <mat-icon>error</mat-icon>
-                <p>Erreur lors du chargement de la vidéo. Veuillez vérifier l'URL.</p>
-                <button mat-button color="primary" (click)="retryVideo()">
-                  <mat-icon>refresh</mat-icon>
-                  Réessayer
+              <!-- Contrôles de mode d'affichage -->
+              <div class="video-controls">
+                <button 
+                  mat-button 
+                  [color]="usePreviewMode ? 'primary' : 'accent'"
+                  (click)="toggleVideoMode()"
+                  class="mode-toggle-btn">
+                  <mat-icon>{{ usePreviewMode ? 'image' : 'play_circle' }}</mat-icon>
+                  {{ usePreviewMode ? 'Mode Prévisualisation' : 'Mode Lecteur' }}
                 </button>
+                <span class="mode-description">
+                  {{ usePreviewMode ? 'Aucun appel API - Image de prévisualisation' : 'Lecteur intégré (peut générer des appels)' }}
+                </span>
+              </div>
+
+              <!-- Mode prévisualisation (recommandé) -->
+              <div class="video-preview" *ngIf="usePreviewMode">
+                <div class="video-thumbnail" (click)="openVideoInNewTab()">
+                  <img 
+                    [src]="getYouTubeThumbnailUrl(extractVideoId(videoUrl)!)" 
+                    [alt]="'Aperçu de la vidéo YouTube'"
+                    class="thumbnail-image">
+                  <div class="play-overlay">
+                    <mat-icon class="play-icon">play_circle_filled</mat-icon>
+                    <p>Cliquer pour ouvrir sur YouTube</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mode lecteur intégré -->
+              <div class="video-iframe" *ngIf="!usePreviewMode">
+                <!-- Indicateur de chargement -->
+                <div class="video-loading" *ngIf="videoLoading">
+                  <mat-icon>refresh</mat-icon>
+                  <p>Chargement de la vidéo...</p>
+                  <button mat-button color="warn" (click)="forceStopLoading()" class="stop-loading-btn">
+                    <mat-icon>stop</mat-icon>
+                    Arrêter le chargement
+                  </button>
+                </div>
+                
+                <!-- Lecteur vidéo -->
+                <iframe 
+                  *ngIf="!videoLoading && !videoError"
+                  [src]="getYouTubeEmbedUrl(extractVideoId(videoUrl)!)"
+                  width="100%" 
+                  height="315" 
+                  frameborder="0" 
+                  allowfullscreen
+                  sandbox="allow-scripts allow-same-origin allow-presentation"
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                  (load)="onVideoLoad()"
+                  (error)="onVideoError()"
+                  style="display: block; border: none;">
+                </iframe>
+                
+                <!-- Message d'erreur -->
+                <div class="video-error" *ngIf="videoError">
+                  <mat-icon>error</mat-icon>
+                  <p>Erreur lors du chargement de la vidéo. Veuillez vérifier l'URL.</p>
+                  <button mat-button color="primary" (click)="retryVideo()">
+                    <mat-icon>refresh</mat-icon>
+                    Réessayer
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -544,6 +584,18 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
        font-weight: 500;
      }
 
+     .stop-loading-btn {
+       margin-top: 12px;
+       font-size: 12px;
+     }
+
+     .stop-loading-btn mat-icon {
+       font-size: 16px;
+       width: 16px;
+       height: 16px;
+       margin-right: 4px;
+     }
+
      @keyframes spin {
        0% { transform: rotate(0deg); }
        100% { transform: rotate(360deg); }
@@ -574,6 +626,94 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
        font-size: 14px;
        font-weight: 500;
      }
+
+     .video-controls {
+       display: flex;
+       flex-direction: column;
+       gap: 8px;
+       margin-bottom: 16px;
+       padding: 12px;
+       background: #f8f9fa;
+       border-radius: 8px;
+       border: 1px solid #e9ecef;
+     }
+
+     .mode-toggle-btn {
+       align-self: flex-start;
+       font-weight: 500;
+     }
+
+     .mode-description {
+       font-size: 12px;
+       color: #6c757d;
+       font-style: italic;
+     }
+
+     .video-preview {
+       position: relative;
+       width: 100%;
+       max-width: 560px;
+       margin: 0 auto;
+     }
+
+     .video-thumbnail {
+       position: relative;
+       cursor: pointer;
+       border-radius: 8px;
+       overflow: hidden;
+       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+       transition: transform 0.3s ease, box-shadow 0.3s ease;
+     }
+
+     .video-thumbnail:hover {
+       transform: translateY(-2px);
+       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+     }
+
+     .thumbnail-image {
+       width: 100%;
+       height: auto;
+       display: block;
+     }
+
+     .play-overlay {
+       position: absolute;
+       top: 0;
+       left: 0;
+       right: 0;
+       bottom: 0;
+       background: rgba(0, 0, 0, 0.6);
+       display: flex;
+       flex-direction: column;
+       align-items: center;
+       justify-content: center;
+       color: white;
+       opacity: 0;
+       transition: opacity 0.3s ease;
+     }
+
+     .video-thumbnail:hover .play-overlay {
+       opacity: 1;
+     }
+
+     .play-icon {
+       font-size: 64px !important;
+       width: 64px !important;
+       height: 64px !important;
+       margin-bottom: 8px;
+       color: #ff0000;
+     }
+
+     .play-overlay p {
+       margin: 0;
+       font-size: 14px;
+       font-weight: 500;
+       text-align: center;
+     }
+
+     .video-iframe {
+       position: relative;
+     }
    `]
 })
 export class PostFormEditorComponent implements OnInit, OnDestroy {
@@ -592,6 +732,7 @@ export class PostFormEditorComponent implements OnInit, OnDestroy {
    originalVideoUrl = '';
    videoLoading = false;
    videoError = false;
+   usePreviewMode = true; // Mode prévisualisation pour éviter les appels generate_204
 
   constructor() {
     // Effet pour synchroniser automatiquement depuis le store
@@ -615,8 +756,9 @@ export class PostFormEditorComponent implements OnInit, OnDestroy {
       if (storeVideo !== this.videoUrl) {
         this.videoUrl = storeVideo;
         this.originalVideoUrl = this.videoUrl;
-        this.videoLoading = !!storeVideo; // Activer le chargement si une vidéo est présente
+        this.videoLoading = false; // Ne pas bloquer l'affichage
         this.videoError = false;
+        
         this.loggingService.info('POST_FORM_EDITOR', '🔄 Synchronisation vidéo depuis le store', { videoUrl: this.videoUrl });
       }
     });
@@ -727,9 +869,19 @@ export class PostFormEditorComponent implements OnInit, OnDestroy {
   }
 
   getYouTubeEmbedUrl(videoId: string): SafeResourceUrl {
-    // Ajouter des paramètres pour désactiver les appels generate_204 et améliorer les performances
-    const url = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&fs=1&cc_load_policy=0&iv_load_policy=3&autohide=0&controls=1&disablekb=1&enablejsapi=0&origin=${window.location.origin}`;
+    // Paramètres optimisés pour éliminer les appels generate_204 et améliorer les performances
+    const url = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&fs=0&cc_load_policy=0&iv_load_policy=3&autohide=0&controls=1&disablekb=1&enablejsapi=0&origin=${window.location.origin}&widget_referrer=${window.location.origin}&html5=1&wmode=opaque&playsinline=1&mute=0&loop=0&autoplay=0&start=0&end=0&showinfo=0&theme=light&color=white`;
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+
+  getYouTubeThumbnailUrl(videoId: string): string {
+    // URL de prévisualisation YouTube haute qualité
+    return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+  }
+
+  getYouTubeWatchUrl(videoId: string): string {
+    // URL pour ouvrir la vidéo dans un nouvel onglet
+    return `https://www.youtube.com/watch?v=${videoId}`;
   }
 
      isVideoUrlDirty(): boolean {
@@ -756,23 +908,61 @@ export class PostFormEditorComponent implements OnInit, OnDestroy {
      this.store.updateVideo('');
    }
 
-   onVideoLoad() {
-     this.loggingService.info('POST_FORM_EDITOR', '✅ Vidéo chargée avec succès');
-     this.videoLoading = false;
-     this.videoError = false;
-   }
+  onVideoLoad() {
+    this.loggingService.info('POST_FORM_EDITOR', '✅ Vidéo chargée avec succès');
+    this.videoLoading = false;
+    this.videoError = false;
+  }
 
-   onVideoError() {
-     this.loggingService.error('POST_FORM_EDITOR', '❌ Erreur lors du chargement de la vidéo');
-     this.videoLoading = false;
-     this.videoError = true;
-   }
+  onVideoError() {
+    this.loggingService.error('POST_FORM_EDITOR', '❌ Erreur lors du chargement de la vidéo');
+    this.videoLoading = false;
+    this.videoError = true;
+  }
 
-   retryVideo() {
-     this.loggingService.info('POST_FORM_EDITOR', '🔄 Nouvelle tentative de chargement de la vidéo');
-     this.videoLoading = true;
-     this.videoError = false;
-   }
+  retryVideo() {
+    this.loggingService.info('POST_FORM_EDITOR', '🔄 Nouvelle tentative de chargement de la vidéo');
+    this.videoLoading = true;
+    this.videoError = false;
+    this.startVideoLoadTimeout();
+  }
+
+  // Méthode pour forcer l'arrêt du chargement
+  forceStopLoading() {
+    this.loggingService.info('POST_FORM_EDITOR', '🛑 Arrêt forcé du chargement de la vidéo');
+    this.videoLoading = false;
+    this.videoError = false;
+  }
+
+  toggleVideoMode() {
+    this.usePreviewMode = !this.usePreviewMode;
+    this.loggingService.info('POST_FORM_EDITOR', `🔄 Basculement vers le mode ${this.usePreviewMode ? 'Prévisualisation' : 'Lecteur'}`);
+    
+    // Réinitialiser les états d'erreur lors du changement de mode
+    this.videoLoading = false;
+    this.videoError = false;
+  }
+
+  openVideoInNewTab() {
+    const videoId = this.extractVideoId(this.videoUrl);
+    if (videoId) {
+      const watchUrl = this.getYouTubeWatchUrl(videoId);
+      this.loggingService.info('POST_FORM_EDITOR', '🔗 Ouverture de la vidéo dans un nouvel onglet', { watchUrl });
+      window.open(watchUrl, '_blank', 'noopener,noreferrer');
+    }
+  }
+
+  // Méthode pour forcer l'arrêt du chargement après un délai
+  private startVideoLoadTimeout() {
+    // Arrêter le chargement après 10 secondes maximum
+    setTimeout(() => {
+      if (this.videoLoading) {
+        this.loggingService.warn('POST_FORM_EDITOR', '⏰ Timeout du chargement de la vidéo');
+        this.videoLoading = false;
+        this.videoError = true;
+      }
+    }, 10000);
+  }
 
   saveFaqItem(index: number) {
     const faqItems = this.store.faq();

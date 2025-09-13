@@ -243,7 +243,7 @@ export class Infrastructure {
 
   setImageUrl(phraseAccroche: string, postId: number): Observable<string | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = false;
+    const shouldReturnMock = true;
     const shouldMockImageGeneration = false;
     
     if (shouldReturnError) {
