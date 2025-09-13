@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,12 +9,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { LoggingService } from '../../shared/services/logging.service';
 import { VersionService } from '../../shared/services/versions/versions.service';
 import { Application } from './component/application/application';
 import { SearchStore } from './store';
 import { ArticleEditorComponent } from './components/article-editor/article-editor.component';
 import { PostFormEditorComponent } from './components/post-form-editor/post-form-editor.component';
+import { ProcessCompletionDialogComponent } from './components/process-completion-dialog/process-completion-dialog.component';
 
 @Component({
   selector: 'app-create',
@@ -30,6 +32,7 @@ import { PostFormEditorComponent } from './components/post-form-editor/post-form
     MatProgressBarModule,
     MatChipsModule,
     MatDividerModule,
+    MatDialogModule,
     ArticleEditorComponent, 
     PostFormEditorComponent
   ],
@@ -39,13 +42,28 @@ export class CreateComponent {
   private readonly application = inject(Application);
   private readonly loggingService = inject(LoggingService);
   private readonly versionService = inject(VersionService);
+  private readonly dialog = inject(MatDialog);
   readonly store = inject(SearchStore);
   
   articleIdea = '';
+  showCompletionDialog = false;
 
   constructor() {
     // Afficher la version au démarrage
     this.versionService.logToConsole();
+    
+    // Effet pour détecter la fin du processus
+    effect(() => {
+      const step = this.store.step();
+      const isLoading = this.store.isLoading();
+      const article = this.store.article();
+      
+      // Si on est à l'étape 4, qu'on n'est plus en chargement et qu'on a un article
+      if (step === 4 && !isLoading && article && !this.showCompletionDialog) {
+        this.showCompletionDialog = true;
+        this.showProcessCompletionDialog();
+      }
+    });
   }
 
   generate() {
@@ -82,6 +100,29 @@ export class CreateComponent {
     return (article.match(/<span class=['"]inat-vegetal['"]/g) || []).length;
   }
 
+  getInternalLinksStats() {
+    const article = this.store.article() || '';
+    
+    // Compter tous les liens internes (balises <a>)
+    const allLinks = article.match(/<a[^>]*class=['"]myTooltip['"][^>]*>/g) || [];
+    const totalLinks = allLinks.length;
+    
+    // Extraire les URLs pour compter les uniques
+    const urls = allLinks.map(link => {
+      const urlMatch = link.match(/href=['"]([^'"]*)['"]/);
+      return urlMatch ? urlMatch[1] : '';
+    }).filter(url => url);
+    
+    const uniqueUrls = new Set(urls);
+    const uniqueLinks = uniqueUrls.size;
+    
+    return {
+      total: totalLinks,
+      unique: uniqueLinks,
+      duplicates: totalLinks - uniqueLinks
+    };
+  }
+
   canSave(): boolean {
     return !!(this.store.postId() && this.store.article() && typeof this.store.postId() === 'number');
   }
@@ -93,13 +134,29 @@ export class CreateComponent {
     }
   }
 
-  testErrorHandling() {
-    this.loggingService.info('COMPONENT', '🧪 Déclenchement test d\'erreur');
-    this.store.testErrorHandling();
-  }
-  
-  testSupabaseStorageError() {
-    this.loggingService.info('COMPONENT', '🗜️ Déclenchement test erreur Supabase Storage');
-    this.store.testSupabaseStorageError();
+
+  private showProcessCompletionDialog() {
+    const stats = this.getArticleStats();
+    const internalLinksStats = this.getInternalLinksStats();
+    const botanicalCount = this.getBotanicalNamesCount();
+    
+    const dialogRef = this.dialog.open(ProcessCompletionDialogComponent, {
+      width: '600px',
+      data: {
+        stats,
+        internalLinksStats,
+        botanicalCount,
+        faqCount: this.store.faq().length,
+        imagesCount: this.store.internalImages().length,
+        hasVideo: !!this.store.video()
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      this.showCompletionDialog = false;
+      if (result === 'save') {
+        this.saveAllData();
+      }
+    });
   }
 } 

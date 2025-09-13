@@ -1,0 +1,18 @@
+<div class="completion-dialog">
+  <div class="header">
+    <mat-icon class="success-icon">check_circle</mat-icon>
+    <h2>🎉 C'est terminé !</h2>
+    <p>Votre article a été généré et enrichi automatiquement</p>
+  </div>
+
+  <div class="actions">
+    <button mat-button (click)="onClose()">
+      <mat-icon>close</mat-icon>
+      Fermer
+    </button>
+    <button mat-raised-button color="primary" (click)="onSave()">
+      <mat-icon>save</mat-icon>
+      Sauvegarder l'article
+    </button>
+  </div>
+</div>

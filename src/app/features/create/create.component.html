@@ -1,17 +1,4 @@
 <div class="create-container">
-  <mat-card class="header-card">
-    <mat-card-content>
-      <div class="header-content">
-        <div class="brand-section">
-          <div class="logo-large">🌱</div>
-          <div>
-            <h1>Générateur d'Articles</h1>
-            <p class="subtitle">Créez du contenu de jardinage avec l'IA</p>
-          </div>
-        </div>
-      </div>
-    </mat-card-content>
-  </mat-card>
 
   <!-- Section d'affichage des erreurs -->
   <mat-card class="error-card" *ngIf="store.error().length > 0">
@@ -66,26 +53,6 @@
             Générer l'article
           </button>
           
-          <!-- Boutons de test d'erreur (temporaires) -->
-          <button 
-            mat-stroked-button 
-            color="warn" 
-            (click)="testErrorHandling()" 
-            class="test-error-button"
-            [disabled]="store.isLoading()">
-            <mat-icon>bug_report</mat-icon>
-            Test Erreur
-          </button>
-          
-          <button 
-            mat-stroked-button 
-            color="accent" 
-            (click)="testSupabaseStorageError()" 
-            class="test-storage-button"
-            [disabled]="store.isLoading()">
-            <mat-icon>storage</mat-icon>
-            Test Storage
-          </button>
         </div>
       </div>
     </mat-card-content>
@@ -177,6 +144,30 @@
             <div class="stat-label">Noms botaniques</div>
           </div>
         </div>
+        
+        <div class="stat-card" *ngIf="getInternalLinksStats().total > 0">
+          <mat-icon class="stat-icon">link</mat-icon>
+          <div class="stat-content">
+            <div class="stat-value">{{ getInternalLinksStats().total }}</div>
+            <div class="stat-label">Liens internes</div>
+          </div>
+        </div>
+        
+        <div class="stat-card" *ngIf="getInternalLinksStats().unique > 0">
+          <mat-icon class="stat-icon">link_off</mat-icon>
+          <div class="stat-content">
+            <div class="stat-value">{{ getInternalLinksStats().unique }}</div>
+            <div class="stat-label">Liens uniques</div>
+          </div>
+        </div>
+        
+        <div class="stat-card" *ngIf="getInternalLinksStats().duplicates > 0">
+          <mat-icon class="stat-icon">content_copy</mat-icon>
+          <div class="stat-content">
+            <div class="stat-value">{{ getInternalLinksStats().duplicates }}</div>
+            <div class="stat-label">Doublons</div>
+          </div>
+        </div>
       </div>
     </mat-card-content>
   </mat-card>
@@ -203,48 +194,6 @@
   min-height: 100vh;
 }
 
-/* Header Card */
-.header-card {
-  margin-bottom: 24px;
-  border-radius: 16px !important;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: white !important;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3) !important;
-}
-
-.header-content {
-  padding: 20px 0;
-}
-
-.brand-section {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.logo-large {
-  font-size: 64px;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-
-.header-content h1 {
-  margin: 0;
-  font-size: 32px;
-  font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.subtitle {
-  margin: 8px 0 0 0;
-  font-size: 16px;
-  opacity: 0.9;
-  font-weight: 300;
-}
 
 /* Error Card */
 .error-card {
@@ -358,6 +307,106 @@
 }
 
 .test-storage-button mat-icon {
+  margin-right: 8px;
+}
+
+.test-global-error-button {
+  height: 56px;
+  border-radius: 28px !important;
+  font-size: 14px;
+  font-weight: 600;
+  border: 2px solid #2196f3 !important;
+  color: #2196f3 !important;
+  transition: all 0.3s ease;
+}
+
+.test-global-error-button:hover:not(:disabled) {
+  background: #2196f3 !important;
+  color: white !important;
+  transform: translateY(-2px);
+}
+
+.test-global-error-button mat-icon {
+  margin-right: 8px;
+}
+
+.test-sync-error-button {
+  height: 56px;
+  border-radius: 28px !important;
+  font-size: 14px;
+  font-weight: 600;
+  border: 2px solid #ff5722 !important;
+  color: #ff5722 !important;
+  transition: all 0.3s ease;
+}
+
+.test-sync-error-button:hover:not(:disabled) {
+  background: #ff5722 !important;
+  color: white !important;
+  transform: translateY(-2px);
+}
+
+.test-sync-error-button mat-icon {
+  margin-right: 8px;
+}
+
+.test-async-error-button {
+  height: 56px;
+  border-radius: 28px !important;
+  font-size: 14px;
+  font-weight: 600;
+  border: 2px solid #9c27b0 !important;
+  color: #9c27b0 !important;
+  transition: all 0.3s ease;
+}
+
+.test-async-error-button:hover:not(:disabled) {
+  background: #9c27b0 !important;
+  color: white !important;
+  transform: translateY(-2px);
+}
+
+.test-async-error-button mat-icon {
+  margin-right: 8px;
+}
+
+.test-promise-error-button {
+  height: 56px;
+  border-radius: 28px !important;
+  font-size: 14px;
+  font-weight: 600;
+  border: 2px solid #607d8b !important;
+  color: #607d8b !important;
+  transition: all 0.3s ease;
+}
+
+.test-promise-error-button:hover:not(:disabled) {
+  background: #607d8b !important;
+  color: white !important;
+  transform: translateY(-2px);
+}
+
+.test-promise-error-button mat-icon {
+  margin-right: 8px;
+}
+
+.test-simple-error-button {
+  height: 56px;
+  border-radius: 28px !important;
+  font-size: 14px;
+  font-weight: 600;
+  border: 2px solid #e91e63 !important;
+  color: #e91e63 !important;
+  transition: all 0.3s ease;
+}
+
+.test-simple-error-button:hover:not(:disabled) {
+  background: #e91e63 !important;
+  color: white !important;
+  transform: translateY(-2px);
+}
+
+.test-simple-error-button mat-icon {
   margin-right: 8px;
 }
 
