@@ -1,14 +1,11 @@
+import 'zone.js';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideZonelessChangeDetection } from '@angular/core';
 import { App } from './app/app';
+import { appConfig } from './app/app.config';
 import { VERSION } from './app/shared/services/version';
 
 if (typeof window !== 'undefined') {
   (window as any).appVersion = VERSION;
 }
-bootstrapApplication(App, {
-  providers: [
-    provideZonelessChangeDetection()
-  ]
-})
+bootstrapApplication(App, appConfig)
   .catch((err) => console.error(err));

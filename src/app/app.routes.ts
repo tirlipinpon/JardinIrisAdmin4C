@@ -1,9 +1,10 @@
 import { Routes } from '@angular/router';
 import { canActivate } from './login/services/auth.guard';
+import { LoginComponent } from './login/login.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
-  { path: 'login', loadComponent: () => import('./login/login.component').then(m => m.LoginComponent) },
+  { path: 'login', component: LoginComponent },
   { path: 'dashboard', redirectTo: '', pathMatch: 'full' },
   { 
     path: '', 

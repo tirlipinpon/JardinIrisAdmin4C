@@ -2,13 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from './services/auth.service';
 
 @Component({
@@ -17,17 +10,54 @@ import { AuthService } from './services/auth.service';
   imports: [
     CommonModule, 
     FormsModule, 
-    ReactiveFormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule
+    ReactiveFormsModule
   ],
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  template: `
+    <div style="padding: 20px; max-width: 400px; margin: 0 auto;">
+      <h1 style="color: #2e7d32; text-align: center;">🌱 Jardin Iris Admin</h1>
+      <p style="text-align: center; color: #666;">Votre espace de création d'articles</p>
+      
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" style="margin-top: 30px;">
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Email :</label>
+          <input 
+            type="email" 
+            formControlName="email" 
+            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
+            placeholder="votre@email.com">
+          <div style="color: red; font-size: 12px; margin-top: 5px;" 
+               *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+            {{ getErrorMessage('email') }}
+          </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Mot de passe :</label>
+          <input 
+            type="password" 
+            formControlName="password" 
+            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
+            placeholder="Votre mot de passe">
+          <div style="color: red; font-size: 12px; margin-top: 5px;" 
+               *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+            {{ getErrorMessage('password') }}
+          </div>
+        </div>
+
+        <button 
+          type="submit" 
+          [disabled]="isLoading"
+          style="width: 100%; padding: 12px; background: #2e7d32; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer;">
+          <span *ngIf="!isLoading">🚀 Se connecter</span>
+          <span *ngIf="isLoading">⏳ Connexion...</span>
+        </button>
+      </form>
+      
+      <p style="text-align: center; margin-top: 20px; color: #666;">
+        🌿 Cultivez vos idées, récoltez du contenu de qualité
+      </p>
+    </div>
+  `
 })
 export class LoginComponent {
   loginForm: FormGroup;
@@ -37,8 +67,7 @@ export class LoginComponent {
   constructor(
     private router: Router, 
     private auth: AuthService,
-    private fb: FormBuilder,
-    private snackBar: MatSnackBar
+    private fb: FormBuilder
   ) {
     this.loginForm = this.fb.group({
       email: ['tony-ster@hotmail.com', [Validators.required, Validators.email]],
@@ -78,24 +107,14 @@ export class LoginComponent {
       const { data, error } = await this.auth.signIn(email, password);
       
       if (error) {
-        this.snackBar.open(`Erreur de connexion: ${error.message}`, 'Fermer', {
-          duration: 5000,
-          panelClass: ['error-snackbar']
-        });
+        alert(`Erreur de connexion: ${error.message}`);
         return;
       }
       
-      this.snackBar.open('Connexion réussie !', 'Fermer', {
-        duration: 3000,
-        panelClass: ['success-snackbar']
-      });
-      
+      alert('Connexion réussie !');
       this.router.navigate(['/create']);
     } catch (error) {
-      this.snackBar.open('Erreur inattendue lors de la connexion', 'Fermer', {
-        duration: 5000,
-        panelClass: ['error-snackbar']
-      });
+      alert('Erreur inattendue lors de la connexion');
     } finally {
       this.isLoading = false;
     }
