@@ -24,12 +24,6 @@ describe('SupabaseService', () => {
     expect(service.client).toBeDefined();
   });
 
-  describe('getFirstIdeaPostByMonth()', () => {
-    it('should be defined', () => {
-      expect(service.getFirstIdeaPostByMonth).toBeDefined();
-      expect(typeof service.getFirstIdeaPostByMonth).toBe('function');
-    });
-  });
 
   describe('getNextPostId()', () => {
     it('should be defined', () => {
@@ -84,7 +78,6 @@ describe('SupabaseService', () => {
     it('should have correct method signatures', () => {
       // Test that all methods exist and are functions
       const methods = [
-        'getFirstIdeaPostByMonth',
         'getNextPostId',
         'getLastPostTitreAndId',
         'uploadBase64ToSupabase',
@@ -111,7 +104,6 @@ describe('SupabaseService', () => {
   describe('Async methods return promises', () => {
     it('should return promises for async methods', () => {
       const asyncMethods = [
-        () => service.getFirstIdeaPostByMonth(6, 2024),
         () => service.getNextPostId(),
         () => service.getLastPostTitreAndId(),
         () => service.uploadBase64ToSupabase(123, 'test'),
@@ -132,7 +124,6 @@ describe('SupabaseService', () => {
     it('should handle errors gracefully', async () => {
       // Test that methods don't throw synchronous errors
       expect(() => {
-        service.getFirstIdeaPostByMonth(6, 2024);
         service.getNextPostId();
         service.getLastPostTitreAndId();
         service.uploadBase64ToSupabase(123, 'test');

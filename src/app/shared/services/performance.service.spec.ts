@@ -88,14 +88,20 @@ describe('PerformanceService', () => {
       const observable = throwError(() => error);
       
       service.measure('testMethod', 'Test Category', () => observable).subscribe({
+        next: () => {
+          fail('Should not emit next value');
+        },
         error: (err) => {
           expect(err).toBe(error);
           
-          const metrics = service.getMetrics();
-          expect(metrics.length).toBe(1);
-          expect(metrics[0].success).toBe(false);
-          expect(metrics[0].error).toBe('Observable error');
-          done();
+          // Wait a bit for the metric to be recorded
+          setTimeout(() => {
+            const metrics = service.getMetrics();
+            expect(metrics.length).toBe(1);
+            expect(metrics[0].success).toBe(false);
+            expect(metrics[0].error).toBe('Observable error');
+            done();
+          }, 10);
         }
       });
     });
@@ -133,12 +139,17 @@ describe('PerformanceService', () => {
       
       service.measure('testMethod', 'Test Category', () => promise);
       
-      promise.catch(() => {
-        const metrics = service.getMetrics();
-        expect(metrics.length).toBe(1);
-        expect(metrics[0].success).toBe(false);
-        expect(metrics[0].error).toBe('Promise error');
-        done();
+      promise.catch((err) => {
+        expect(err).toBe(error);
+        
+        // Wait a bit for the metric to be recorded
+        setTimeout(() => {
+          const metrics = service.getMetrics();
+          expect(metrics.length).toBe(1);
+          expect(metrics[0].success).toBe(false);
+          expect(metrics[0].error).toBe('Promise error');
+          done();
+        }, 10);
       });
     });
   });
