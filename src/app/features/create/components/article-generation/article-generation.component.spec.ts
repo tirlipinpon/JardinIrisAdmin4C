@@ -23,254 +23,292 @@ describe('ArticleGenerationComponent', () => {
 
   describe('onGenerate()', () => {
     it('devrait émettre l\'événement generate', () => {
-      spyOn(component.generate, 'emit');
+      let emitted = false;
+      component.generate.subscribe(() => emitted = true);
       
       component.onGenerate();
       
-      expect(component.generate.emit).toHaveBeenCalled();
+      expect(emitted).toBe(true);
     });
 
     it('devrait émettre l\'événement generate même si appelé plusieurs fois', () => {
-      spyOn(component.generate, 'emit');
+      let callCount = 0;
+      component.generate.subscribe(() => callCount++);
       
       component.onGenerate();
       component.onGenerate();
       
-      expect(component.generate.emit).toHaveBeenCalledTimes(2);
+      expect(callCount).toBe(2);
     });
 
     it('devrait émettre l\'événement generate sans paramètres', () => {
-      spyOn(component.generate, 'emit');
+      let emitted = false;
+      component.generate.subscribe(() => emitted = true);
       
       component.onGenerate();
       
-      expect(component.generate.emit).toHaveBeenCalledWith();
+      expect(emitted).toBe(true);
     });
 
     it('devrait fonctionner avec des appels rapides', () => {
-      spyOn(component.generate, 'emit');
+      let callCount = 0;
+      component.generate.subscribe(() => callCount++);
       
       // Appels rapides successifs
       for (let i = 0; i < 5; i++) {
         component.onGenerate();
       }
       
-      expect(component.generate.emit).toHaveBeenCalledTimes(5);
+      expect(callCount).toBe(5);
     });
 
     it('devrait être une méthode pure sans effets de bord', () => {
-      spyOn(component.generate, 'emit');
-      spyOn(component.articleIdeaChange, 'emit');
+      let generateEmitted = false;
+      let changeEmitted = false;
+      component.generate.subscribe(() => generateEmitted = true);
+      component.articleIdeaChange.subscribe(() => changeEmitted = true);
       
       component.onGenerate();
       
-      expect(component.generate.emit).toHaveBeenCalled();
-      expect(component.articleIdeaChange.emit).not.toHaveBeenCalled();
+      expect(generateEmitted).toBe(true);
+      expect(changeEmitted).toBe(false);
     });
   });
 
   describe('onArticleIdeaChange(value: string)', () => {
     it('devrait émettre l\'événement articleIdeaChange avec la valeur fournie', () => {
       const testValue = 'Comment planter des roses';
-      spyOn(component.articleIdeaChange, 'emit');
+      let emittedValue = '';
+      component.articleIdeaChange.subscribe(value => emittedValue = value);
       
       component.onArticleIdeaChange(testValue);
       
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledWith(testValue);
+      expect(emittedValue).toBe(testValue);
     });
 
     it('devrait émettre une chaîne vide', () => {
-      spyOn(component.articleIdeaChange, 'emit');
+      let emittedValue = 'not empty';
+      component.articleIdeaChange.subscribe(value => emittedValue = value);
       
       component.onArticleIdeaChange('');
       
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledWith('');
+      expect(emittedValue).toBe('');
     });
 
     it('devrait émettre une valeur avec des espaces', () => {
       const testValue = '  Idée avec espaces  ';
-      spyOn(component.articleIdeaChange, 'emit');
+      let emittedValue = '';
+      component.articleIdeaChange.subscribe(value => emittedValue = value);
       
       component.onArticleIdeaChange(testValue);
       
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledWith(testValue);
+      expect(emittedValue).toBe(testValue);
     });
 
     it('devrait gérer les valeurs longues', () => {
       const longValue = 'Ceci est une très longue idée d\'article qui décrit en détail comment créer un jardin urbain avec des plantes comestibles et des fleurs ornementales dans un espace limité';
-      spyOn(component.articleIdeaChange, 'emit');
+      let emittedValue = '';
+      component.articleIdeaChange.subscribe(value => emittedValue = value);
       
       component.onArticleIdeaChange(longValue);
       
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledWith(longValue);
+      expect(emittedValue).toBe(longValue);
     });
 
     it('devrait gérer les caractères spéciaux', () => {
       const specialValue = 'Article avec éàçù & "guillemets" et <balises>';
-      spyOn(component.articleIdeaChange, 'emit');
+      let emittedValue = '';
+      component.articleIdeaChange.subscribe(value => emittedValue = value);
       
       component.onArticleIdeaChange(specialValue);
       
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledWith(specialValue);
+      expect(emittedValue).toBe(specialValue);
     });
 
     it('devrait gérer les caractères Unicode', () => {
       const unicodeValue = '🌱 Jardinage avec plantes 🌿 et fleurs 🌸';
-      spyOn(component.articleIdeaChange, 'emit');
+      let emittedValue = '';
+      component.articleIdeaChange.subscribe(value => emittedValue = value);
       
       component.onArticleIdeaChange(unicodeValue);
       
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledWith(unicodeValue);
+      expect(emittedValue).toBe(unicodeValue);
     });
 
     it('devrait gérer plusieurs appels avec différentes valeurs', () => {
-      spyOn(component.articleIdeaChange, 'emit');
+      const emittedValues: string[] = [];
+      component.articleIdeaChange.subscribe(value => emittedValues.push(value));
       
       const values = ['Première idée', 'Deuxième idée', 'Troisième idée'];
       values.forEach(value => {
         component.onArticleIdeaChange(value);
       });
       
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledTimes(3);
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledWith('Première idée');
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledWith('Deuxième idée');
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledWith('Troisième idée');
+      expect(emittedValues.length).toBe(3);
+      expect(emittedValues[0]).toBe('Première idée');
+      expect(emittedValues[1]).toBe('Deuxième idée');
+      expect(emittedValues[2]).toBe('Troisième idée');
     });
 
     it('devrait être une méthode pure sans effets de bord', () => {
       const testValue = 'Test value';
-      spyOn(component.generate, 'emit');
-      spyOn(component.articleIdeaChange, 'emit');
+      let generateEmitted = false;
+      let changeEmitted = false;
+      component.generate.subscribe(() => generateEmitted = true);
+      component.articleIdeaChange.subscribe(() => changeEmitted = true);
       
       component.onArticleIdeaChange(testValue);
       
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledWith(testValue);
-      expect(component.generate.emit).not.toHaveBeenCalled();
+      expect(changeEmitted).toBe(true);
+      expect(generateEmitted).toBe(false);
     });
 
     it('devrait préserver la valeur exacte passée en paramètre', () => {
       const exactValue = 'Valeur exacte avec espaces   et caractères spéciaux éàçù';
-      spyOn(component.articleIdeaChange, 'emit');
+      let emittedValue = '';
+      component.articleIdeaChange.subscribe(value => emittedValue = value);
       
       component.onArticleIdeaChange(exactValue);
       
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledWith(exactValue);
+      expect(emittedValue).toBe(exactValue);
     });
 
     it('devrait gérer les chaînes contenant des URLs', () => {
       const urlValue = 'Article sur https://example.com/jardinage avec des liens';
-      spyOn(component.articleIdeaChange, 'emit');
+      let emittedValue = '';
+      component.articleIdeaChange.subscribe(value => emittedValue = value);
       
       component.onArticleIdeaChange(urlValue);
       
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledWith(urlValue);
+      expect(emittedValue).toBe(urlValue);
     });
 
     it('devrait gérer les chaînes contenant des emails', () => {
       const emailValue = 'Contact: jardinier@example.com pour plus d\'infos';
-      spyOn(component.articleIdeaChange, 'emit');
+      let emittedValue = '';
+      component.articleIdeaChange.subscribe(value => emittedValue = value);
       
       component.onArticleIdeaChange(emailValue);
       
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledWith(emailValue);
+      expect(emittedValue).toBe(emailValue);
     });
 
     it('devrait gérer les chaînes contenant des nombres', () => {
       const numberValue = 'Planter 15 graines à 2cm de profondeur';
-      spyOn(component.articleIdeaChange, 'emit');
+      let emittedValue = '';
+      component.articleIdeaChange.subscribe(value => emittedValue = value);
       
       component.onArticleIdeaChange(numberValue);
       
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledWith(numberValue);
+      expect(emittedValue).toBe(numberValue);
     });
 
     it('devrait gérer les chaînes contenant des mesures', () => {
       const measureValue = 'Arroser 2.5L d\'eau par m² tous les 3-4 jours';
-      spyOn(component.articleIdeaChange, 'emit');
+      let emittedValue = '';
+      component.articleIdeaChange.subscribe(value => emittedValue = value);
       
       component.onArticleIdeaChange(measureValue);
       
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledWith(measureValue);
+      expect(emittedValue).toBe(measureValue);
     });
   });
 
   describe('Intégration des deux méthodes', () => {
     it('devrait pouvoir appeler les deux méthodes indépendamment', () => {
-      spyOn(component.generate, 'emit');
-      spyOn(component.articleIdeaChange, 'emit');
+      let generateCount = 0;
+      let changeCount = 0;
+      let lastChangeValue = '';
+      
+      component.generate.subscribe(() => generateCount++);
+      component.articleIdeaChange.subscribe(value => {
+        changeCount++;
+        lastChangeValue = value;
+      });
       
       component.onGenerate();
       component.onArticleIdeaChange('Test idea');
       
-      expect(component.generate.emit).toHaveBeenCalledTimes(1);
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledTimes(1);
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledWith('Test idea');
+      expect(generateCount).toBe(1);
+      expect(changeCount).toBe(1);
+      expect(lastChangeValue).toBe('Test idea');
     });
 
     it('devrait pouvoir appeler les deux méthodes dans n\'importe quel ordre', () => {
-      spyOn(component.generate, 'emit');
-      spyOn(component.articleIdeaChange, 'emit');
+      let generateCount = 0;
+      let changeCount = 0;
+      
+      component.generate.subscribe(() => generateCount++);
+      component.articleIdeaChange.subscribe(() => changeCount++);
       
       component.onArticleIdeaChange('Première idée');
       component.onGenerate();
       component.onArticleIdeaChange('Deuxième idée');
       
-      expect(component.generate.emit).toHaveBeenCalledTimes(1);
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledTimes(2);
+      expect(generateCount).toBe(1);
+      expect(changeCount).toBe(2);
     });
 
     it('devrait maintenir l\'état correct entre les appels', () => {
-      spyOn(component.generate, 'emit');
-      spyOn(component.articleIdeaChange, 'emit');
+      let generateCount = 0;
+      let changeCount = 0;
+      
+      component.generate.subscribe(() => generateCount++);
+      component.articleIdeaChange.subscribe(() => changeCount++);
       
       component.onGenerate();
       component.onArticleIdeaChange('Idée après génération');
       component.onGenerate();
       
-      expect(component.generate.emit).toHaveBeenCalledTimes(2);
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledTimes(1);
+      expect(generateCount).toBe(2);
+      expect(changeCount).toBe(1);
     });
   });
 
   describe('Tests de robustesse', () => {
     it('devrait gérer les appels multiples rapides sur onGenerate', () => {
-      spyOn(component.generate, 'emit');
+      let callCount = 0;
+      component.generate.subscribe(() => callCount++);
       
       // Simuler des clics rapides
       for (let i = 0; i < 20; i++) {
         component.onGenerate();
       }
       
-      expect(component.generate.emit).toHaveBeenCalledTimes(20);
+      expect(callCount).toBe(20);
     });
 
     it('devrait gérer les changements rapides sur onArticleIdeaChange', () => {
-      spyOn(component.articleIdeaChange, 'emit');
+      const emittedValues: string[] = [];
+      component.articleIdeaChange.subscribe(value => emittedValues.push(value));
       
       // Simuler des changements rapides de texte
       for (let i = 0; i < 50; i++) {
         component.onArticleIdeaChange(`Valeur ${i}`);
       }
       
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledTimes(50);
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledWith('Valeur 49');
+      expect(emittedValues.length).toBe(50);
+      expect(emittedValues[49]).toBe('Valeur 49');
     });
 
     it('devrait maintenir la cohérence des appels', () => {
-      spyOn(component.generate, 'emit');
-      spyOn(component.articleIdeaChange, 'emit');
+      let generateCount = 0;
+      let changeCount = 0;
       
-      const generateCount = 5;
-      const changeCount = 10;
+      component.generate.subscribe(() => generateCount++);
+      component.articleIdeaChange.subscribe(() => changeCount++);
+      
+      const expectedGenerateCount = 5;
+      const expectedChangeCount = 10;
       
       // Appels alternés
-      for (let i = 0; i < Math.max(generateCount, changeCount); i++) {
-        if (i < generateCount) component.onGenerate();
-        if (i < changeCount) component.onArticleIdeaChange(`Value ${i}`);
+      for (let i = 0; i < Math.max(expectedGenerateCount, expectedChangeCount); i++) {
+        if (i < expectedGenerateCount) component.onGenerate();
+        if (i < expectedChangeCount) component.onArticleIdeaChange(`Value ${i}`);
       }
       
-      expect(component.generate.emit).toHaveBeenCalledTimes(generateCount);
-      expect(component.articleIdeaChange.emit).toHaveBeenCalledTimes(changeCount);
+      expect(generateCount).toBe(expectedGenerateCount);
+      expect(changeCount).toBe(expectedChangeCount);
     });
   });
 
