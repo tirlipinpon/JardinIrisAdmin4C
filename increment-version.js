@@ -9,6 +9,7 @@ console.log('Chemin package.json:', packageJsonPath);
 
 // Lire le fichier package.json
 try {
+  console.log('📁 Lecture du fichier package.json...');
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
   // Incrémenter la version
