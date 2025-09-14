@@ -18,12 +18,12 @@ try {
   const newVersion = `${major}.${minor}.${String(newPatch).padStart(2, '0')}`;
   packageJson.version = newVersion;
   
-  console.log(`Version actuelle: ${currentVersion}`);
-  console.log(`Nouvelle version: ${newVersion}`);
+  console.log(`📦 Version actuelle: ${currentVersion}`);
+  console.log(`🚀 Nouvelle version: ${newVersion}`);
   
 
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-  console.log(`Version incrémentée à: ${newVersion}`);
+  console.log(`✅ Version incrémentée à: ${newVersion}`);
 
   // Créer le dossier src/app/shared/services si il n'existe pas
   const srcDir = path.join(process.cwd(), 'src');
@@ -82,4 +82,19 @@ export const VERSION = {
 
 } catch (error) {
   console.error('Erreur:', error);
+}
+
+// Si un argument est passé, exécuter la commande après l'incrémentation
+const args = process.argv.slice(2);
+if (args.length > 0) {
+  const { execSync } = require('child_process');
+  const command = args.join(' ');
+  console.log(`\n🔨 Exécution de: ${command}`);
+  try {
+    execSync(command, { stdio: 'inherit' });
+    console.log('\n✅ Commande exécutée avec succès !');
+  } catch (error) {
+    console.error('\n❌ Erreur lors de l\'exécution de la commande:', error.message);
+    process.exit(1);
+  }
 }
