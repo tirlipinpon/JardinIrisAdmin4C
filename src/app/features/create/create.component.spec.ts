@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { MatDialog } from '@angular/material/dialog';
 import { CreateComponent } from './create.component';
 import { VersionService } from '../../shared/services/versions/versions.service';
 import { LoggingService } from '../../shared/services/logging.service';
@@ -15,11 +16,12 @@ describe('CreateComponent', () => {
   let loggingService: jasmine.SpyObj<LoggingService>;
   let performanceService: jasmine.SpyObj<PerformanceService>;
   let application: jasmine.SpyObj<Application>;
+  let dialog: jasmine.SpyObj<MatDialog>;
   let store: any;
 
   beforeEach(async () => {
     const versionServiceSpy = jasmine.createSpyObj('VersionService', ['logToConsole']);
-    const loggingServiceSpy = jasmine.createSpyObj('LoggingService', ['info']);
+    const loggingServiceSpy = jasmine.createSpyObj('LoggingService', ['info', 'error']);
     const performanceServiceSpy = jasmine.createSpyObj('PerformanceService', [
       'measure', 
       'logSummary', 
@@ -29,7 +31,8 @@ describe('CreateComponent', () => {
     ]);
     
     const applicationSpy = jasmine.createSpyObj('Application', ['generate']);
-    const storeSpy = jasmine.createSpyObj('SearchStore', ['updateArticle', 'clearErrors', 'article', 'image_url', 'updateImageUrl', 'step', 'isGenerating', 'error', 'postId', 'internalImages', 'faq', 'video', 'titre']);
+    const dialogSpy = jasmine.createSpyObj('MatDialog', ['open']);
+    const storeSpy = jasmine.createSpyObj('SearchStore', ['updateArticle', 'clearErrors', 'article', 'image_url', 'updateImageUrl', 'step', 'isGenerating', 'error', 'postId', 'internalImages', 'faq', 'video', 'titre', 'saveAllToSupabase', 'resetAll']);
     
     // Configurer les valeurs de retour par défaut
     performanceServiceSpy.getMetrics.and.returnValue([]);
@@ -53,6 +56,7 @@ describe('CreateComponent', () => {
         { provide: LoggingService, useValue: loggingServiceSpy },
         { provide: PerformanceService, useValue: performanceServiceSpy },
         { provide: Application, useValue: applicationSpy },
+        { provide: MatDialog, useValue: dialogSpy },
         { provide: SearchStore, useValue: storeSpy }
       ]
     })
@@ -64,6 +68,7 @@ describe('CreateComponent', () => {
     loggingService = TestBed.inject(LoggingService) as jasmine.SpyObj<LoggingService>;
     performanceService = TestBed.inject(PerformanceService) as jasmine.SpyObj<PerformanceService>;
     application = TestBed.inject(Application) as jasmine.SpyObj<Application>;
+    dialog = TestBed.inject(MatDialog) as jasmine.SpyObj<MatDialog>;
     store = TestBed.inject(SearchStore);
   });
 
@@ -540,5 +545,195 @@ describe('CreateComponent', () => {
         expect(stats.duplicates).toBe(0);
       });
     });
+  });
+
+  describe('Image Management Methods', () => {
+    describe('editImageUrl()', () => {
+      it('should prompt for new URL when current URL exists', () => {
+        const currentUrl = 'https://example.com/current.jpg';
+        const newUrl = 'https://example.com/new.jpg';
+        
+        store.image_url.and.returnValue(currentUrl);
+        spyOn(window, 'prompt').and.returnValue(newUrl);
+        
+        component.editImageUrl();
+        
+        expect(window.prompt).toHaveBeenCalledWith('Modifier l\'URL de l\'image principale:', currentUrl);
+        expect(store.updateImageUrl).toHaveBeenCalledWith(newUrl);
+        expect(loggingService.info).toHaveBeenCalledWith('COMPONENT', '🖼️ URL image principale mise à jour', {
+          oldUrl: currentUrl,
+          newUrl: newUrl
+        });
+      });
+
+      it('should not update URL when prompt returns null', () => {
+        const currentUrl = 'https://example.com/current.jpg';
+        
+        store.image_url.and.returnValue(currentUrl);
+        spyOn(window, 'prompt').and.returnValue(null);
+        
+        component.editImageUrl();
+        
+        expect(window.prompt).toHaveBeenCalledWith('Modifier l\'URL de l\'image principale:', currentUrl);
+        expect(store.updateImageUrl).not.toHaveBeenCalled();
+        expect(loggingService.info).not.toHaveBeenCalled();
+      });
+
+      it('should not update URL when new URL is same as current', () => {
+        const currentUrl = 'https://example.com/current.jpg';
+        
+        store.image_url.and.returnValue(currentUrl);
+        spyOn(window, 'prompt').and.returnValue(currentUrl);
+        
+        component.editImageUrl();
+        
+        expect(window.prompt).toHaveBeenCalledWith('Modifier l\'URL de l\'image principale:', currentUrl);
+        expect(store.updateImageUrl).not.toHaveBeenCalled();
+        expect(loggingService.info).not.toHaveBeenCalled();
+      });
+
+      it('should not prompt when no current URL', () => {
+        store.image_url.and.returnValue('');
+        spyOn(window, 'prompt');
+        
+        component.editImageUrl();
+        
+        expect(window.prompt).not.toHaveBeenCalled();
+        expect(store.updateImageUrl).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('openImageInNewTab()', () => {
+      it('should open image URL in new tab when URL exists', () => {
+        const imageUrl = 'https://example.com/image.jpg';
+        
+        store.image_url.and.returnValue(imageUrl);
+        spyOn(window, 'open');
+        
+        component.openImageInNewTab();
+        
+        expect(window.open).toHaveBeenCalledWith(imageUrl, '_blank');
+        expect(loggingService.info).toHaveBeenCalledWith('COMPONENT', '🖼️ Image ouverte dans un nouvel onglet', { imageUrl });
+      });
+
+      it('should not open new tab when no URL', () => {
+        store.image_url.and.returnValue('');
+        spyOn(window, 'open');
+        
+        component.openImageInNewTab();
+        
+        expect(window.open).not.toHaveBeenCalled();
+        expect(loggingService.info).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('onImageError()', () => {
+      it('should log error when image fails to load', () => {
+        const mockEvent = { type: 'error', target: 'img' } as any;
+        
+        component.onImageError(mockEvent);
+        
+        expect(loggingService.error).toHaveBeenCalledWith('COMPONENT', '❌ Erreur de chargement de l\'image', mockEvent);
+      });
+    });
+
+    describe('onImageLoad()', () => {
+      it('should log success when image loads', () => {
+        const mockEvent = { type: 'load', target: 'img' } as any;
+        
+        component.onImageLoad(mockEvent);
+        
+        expect(loggingService.info).toHaveBeenCalledWith('COMPONENT', '✅ Image chargée avec succès');
+      });
+    });
+  });
+
+  describe('Save and Reset Methods', () => {
+    describe('canSave()', () => {
+      it('should return true when postId is number and article exists', () => {
+        store.postId.and.returnValue(123);
+        store.article.and.returnValue('Test article');
+        
+        const result = component.canSave();
+        
+        expect(result).toBe(true);
+      });
+
+      it('should return false when postId is string', () => {
+        store.postId.and.returnValue('123');
+        store.article.and.returnValue('Test article');
+        
+        const result = component.canSave();
+        
+        expect(result).toBe(false);
+      });
+
+      it('should return false when no article', () => {
+        store.postId.and.returnValue(123);
+        store.article.and.returnValue('');
+        
+        const result = component.canSave();
+        
+        expect(result).toBe(false);
+      });
+
+      it('should return false when no postId', () => {
+        store.postId.and.returnValue(null);
+        store.article.and.returnValue('Test article');
+        
+        const result = component.canSave();
+        
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('saveAllData()', () => {
+      it('should save data when canSave returns true', () => {
+        spyOn(component, 'canSave').and.returnValue(true);
+        
+        component.saveAllData();
+        
+        expect(loggingService.info).toHaveBeenCalledWith('COMPONENT', '💾 Déclenchement sauvegarde manuelle');
+        expect(store.saveAllToSupabase).toHaveBeenCalled();
+        // Note: resetAll() est appelé dans un setTimeout, donc on ne peut pas le tester facilement ici
+      });
+
+      it('should not save data when canSave returns false', () => {
+        spyOn(component, 'canSave').and.returnValue(false);
+        
+        component.saveAllData();
+        
+        expect(loggingService.info).not.toHaveBeenCalled();
+        expect(store.saveAllToSupabase).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('resetAll()', () => {
+      it('should reset all component state', () => {
+        component.articleIdea = 'test idea';
+        component.showCompletionDialog = true;
+        
+        component.resetAll();
+        
+        expect(loggingService.info).toHaveBeenCalledWith('COMPONENT', '🔄 Reset complet de l\'application');
+        expect(store.resetAll).toHaveBeenCalled();
+        expect(component.articleIdea).toBe('');
+        expect(component.showCompletionDialog).toBe(false);
+        expect(performanceService.clearMetrics).toHaveBeenCalled();
+      });
+
+      it('should reset all visibility signals', () => {
+        component.resetAll();
+        
+        expect(component.showPerformance()).toBe(false);
+        expect(component.showErrors()).toBe(false);
+        expect(component.showGeneration()).toBe(true);
+        expect(component.showStats()).toBe(false);
+        expect(component.showImagePreview()).toBe(false);
+        expect(component.showEditor()).toBe(false);
+        expect(component.showFormEditor()).toBe(false);
+      });
+    });
+
   });
 }); 
