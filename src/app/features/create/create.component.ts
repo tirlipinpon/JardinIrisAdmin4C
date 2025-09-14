@@ -63,6 +63,15 @@ export class CreateComponent {
   articleIdea = '';
   showCompletionDialog = false;
 
+  // Signals pour contrôler la visibilité de chaque section
+  readonly showPerformance = signal(true);
+  readonly showErrors = signal(true);
+  readonly showGeneration = signal(true);
+  readonly showStats = signal(true);
+  readonly showImagePreview = signal(true);
+  readonly showEditor = signal(true);
+  readonly showFormEditor = signal(true);
+
   constructor() {
     // Afficher la version au démarrage
     this.versionService.logToConsole();
@@ -101,6 +110,35 @@ export class CreateComponent {
 
   onArticleIdeaChange(value: string): void {
     this.articleIdea = value;
+  }
+
+  // Méthodes pour toggle chaque section
+  togglePerformance(): void {
+    this.showPerformance.set(!this.showPerformance());
+  }
+
+  toggleErrors(): void {
+    this.showErrors.set(!this.showErrors());
+  }
+
+  toggleGeneration(): void {
+    this.showGeneration.set(!this.showGeneration());
+  }
+
+  toggleStats(): void {
+    this.showStats.set(!this.showStats());
+  }
+
+  toggleImagePreview(): void {
+    this.showImagePreview.set(!this.showImagePreview());
+  }
+
+  toggleEditor(): void {
+    this.showEditor.set(!this.showEditor());
+  }
+
+  toggleFormEditor(): void {
+    this.showFormEditor.set(!this.showFormEditor());
   }
 
   onArticleChange(newArticle: string) {

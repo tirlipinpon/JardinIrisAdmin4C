@@ -1,59 +1,127 @@
 <div class="create-container">
 
-  <!-- Composant d'affichage des performances en temps réel -->
-  <app-performance-display></app-performance-display>
 
   <!-- Section d'affichage des erreurs -->
-  <app-error-display 
-    [errors]="store.error()" 
-    (clearErrors)="clearErrors()">
-  </app-error-display>
+  <div class="section-wrapper">
+  <div class="section-header">
+    <h3>Erreurs</h3>
+    <button mat-icon-button (click)="toggleErrors()" [class.collapsed]="!showErrors()" class="toggle-btn">
+      <mat-icon>{{ showErrors() ? 'expand_less' : 'expand_more' }}</mat-icon>
+    </button>
+  </div>
+  <div class="section-content" *ngIf="showErrors()">
+    <app-error-display 
+      [errors]="store.error()" 
+      (clearErrors)="clearErrors()">
+    </app-error-display>
+  </div>
+  </div> 
 
   <!-- Section de génération d'article -->
-  <app-article-generation
-    [articleIdea]="articleIdea"
-    [isGenerating]="store.isGenerating()"
-    [step]="store.step()"
-    (generate)="generate()"
-    (articleIdeaChange)="onArticleIdeaChange($event)">
-  </app-article-generation>
+  <div class="section-wrapper">
+      <div class="section-header">
+        <h3>Génération d'article</h3>
+        <button mat-icon-button (click)="toggleGeneration()" [class.collapsed]="!showGeneration()" class="toggle-btn">
+          <mat-icon>{{ showGeneration() ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+      </div>
+      <div class="section-content" *ngIf="showGeneration()">
+        <app-article-generation
+          [articleIdea]="articleIdea"
+          [isGenerating]="store.isGenerating()"
+          [step]="store.step()"
+          (generate)="generate()"
+          (articleIdeaChange)="onArticleIdeaChange($event)">
+        </app-article-generation>
+      </div>
+  </div>
+    
+  <!-- Composant d'affichage des performances en temps réel -->
+  <div class="section-wrapper">
+    <div class="section-header">
+      <h3>Performances</h3>
+      <button mat-icon-button (click)="togglePerformance()" [class.collapsed]="!showPerformance()" class="toggle-btn">
+        <mat-icon>{{ showPerformance() ? 'expand_less' : 'expand_more' }}</mat-icon>
+      </button>
+    </div>
+    <div class="section-content" *ngIf="showPerformance()">
+      <app-performance-display></app-performance-display>
+    </div>
+  </div>
 
   <!-- Statistiques de l'article -->
-  <app-article-stats
-    [article]="store.article()"
-    [isGenerating]="store.isGenerating()"
-    [canSave]="canSave()"
-    [articleStats]="getArticleStats()"
-    [internalImagesCount]="store.internalImages().length"
-    [faqCount]="store.faq().length"
-    [imageUrl]="store.image_url()"
-    [video]="store.video()"
-    [botanicalNamesCount]="getBotanicalNamesCount()"
-    [internalLinksStats]="getInternalLinksStats()"
-    (saveAllData)="saveAllData()"
-    (showPerformanceStats)="showPerformanceStats()"
-    (editImageUrl)="editImageUrl()">
-  </app-article-stats>
+  <div class="section-wrapper">
+    <div class="section-header">
+      <h3>Statistiques</h3>
+      <button mat-icon-button (click)="toggleStats()" [class.collapsed]="!showStats()" class="toggle-btn">
+        <mat-icon>{{ showStats() ? 'expand_less' : 'expand_more' }}</mat-icon>
+      </button>
+    </div>
+    <div class="section-content" *ngIf="showStats()">
+      <app-article-stats
+        [article]="store.article()"
+        [isGenerating]="store.isGenerating()"
+        [canSave]="canSave()"
+        [articleStats]="getArticleStats()"
+        [internalImagesCount]="store.internalImages().length"
+        [faqCount]="store.faq().length"
+        [imageUrl]="store.image_url()"
+        [video]="store.video()"
+        [botanicalNamesCount]="getBotanicalNamesCount()"
+        [internalLinksStats]="getInternalLinksStats()"
+        (saveAllData)="saveAllData()"
+        (showPerformanceStats)="showPerformanceStats()"
+        (editImageUrl)="editImageUrl()">
+      </app-article-stats>
+    </div>
+  </div>
 
   <!-- Section d'affichage de l'image principale -->
-  <app-image-preview
-    [imageUrl]="store.image_url()"
-    [title]="store.titre()"
-    (editImageUrl)="editImageUrl()"
-    (openImageInNewTab)="openImageInNewTab()"
-    (imageError)="onImageError($event)"
-    (imageLoad)="onImageLoad($event)">
-  </app-image-preview>
+  <div class="section-wrapper">
+    <div class="section-header">
+      <h3>Aperçu d'image</h3>
+      <button mat-icon-button (click)="toggleImagePreview()" [class.collapsed]="!showImagePreview()" class="toggle-btn">
+        <mat-icon>{{ showImagePreview() ? 'expand_less' : 'expand_more' }}</mat-icon>
+      </button>
+    </div>
+    <div class="section-content" *ngIf="showImagePreview()">
+      <app-image-preview
+        [imageUrl]="store.image_url()"
+        [title]="store.titre()"
+        (editImageUrl)="editImageUrl()"
+        (openImageInNewTab)="openImageInNewTab()"
+        (imageError)="onImageError($event)"
+        (imageLoad)="onImageLoad($event)">
+      </app-image-preview>
+    </div>
+  </div>
 
-  <div class="editor-section" *ngIf="store.article()">
-    <app-article-editor 
-      [article]="store.article() || ''" 
-      (articleChange)="onArticleChange($event)">
-    </app-article-editor>
+  <!-- Section de l'éditeur d'article -->
+  <div class="section-wrapper" *ngIf="store.article()">
+    <div class="section-header">
+      <h3>Éditeur d'article</h3>
+      <button mat-icon-button (click)="toggleEditor()" [class.collapsed]="!showEditor()" class="toggle-btn">
+        <mat-icon>{{ showEditor() ? 'expand_less' : 'expand_more' }}</mat-icon>
+      </button>
+    </div>
+    <div class="section-content" *ngIf="showEditor()">
+      <app-article-editor 
+        [article]="store.article() || ''" 
+        (articleChange)="onArticleChange($event)">
+      </app-article-editor>
+    </div>
   </div>
 
   <!-- Section des formulaires éditables -->
-  <div class="section" *ngIf="store.article()">
-    <app-post-form-editor></app-post-form-editor>
+  <div class="section-wrapper" *ngIf="store.article()">
+    <div class="section-header">
+      <h3>Éditeur de formulaire</h3>
+      <button mat-icon-button (click)="toggleFormEditor()" [class.collapsed]="!showFormEditor()" class="toggle-btn">
+        <mat-icon>{{ showFormEditor() ? 'expand_less' : 'expand_more' }}</mat-icon>
+      </button>
+    </div>
+    <div class="section-content" *ngIf="showFormEditor()">
+      <app-post-form-editor></app-post-form-editor>
+    </div>
   </div>
 </div>
