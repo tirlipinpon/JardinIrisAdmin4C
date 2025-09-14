@@ -1,6 +1,6 @@
 {
   "name": "jardin-iris-admin4-c",
-  "version": "0.0.13",
+  "version": "0.0.17",
   "scripts": {
     "ng": "ng",
     "start": "node increment-version.js && ng serve",

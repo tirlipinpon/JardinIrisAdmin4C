@@ -9,13 +9,13 @@ import { PexelsApiService } from '../../services/pexels-api/pexels-api.service';
 import { parseJsonSafe, extractJSONBlock } from '../../utils/cleanJsonObject';
 import { Post } from '../../types/post';
 import { GetPromptsService } from '../../services/get-prompts/get-prompts.service';
-import { environment } from '../../../../../environments/environment';
 import { InternalImageData } from '../../types/internalImageData';
 import { AddScientificNameService } from '../../services/add-scientific-name/add-scientific-name.service';
 import { InternalImageService } from '../../services/internal-image/internal-image.service';
 import { ImageUploadService } from '../../services/image-upload/image-upload.service';
 import { VideoService } from '../../services/video/video.service';
 import { VegetalService } from '../../services/vegetal/vegetal.service';
+import { environment } from '../../../../../environments/environment';
 
 
 @Injectable({
@@ -124,11 +124,8 @@ export class Infrastructure {
 
   getNextPostId(): Observable<number | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = environment.isLocalhost;
+    const shouldReturnMock = false;
     
-    if (environment.isLocalhost) {
-      this.loggingService.info('INFRASTRUCTURE', '🏠 Mode localhost détecté - Mocks activés');
-    }
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -156,7 +153,7 @@ export class Infrastructure {
 
   getLastPostTitreAndId(): Observable<{ titre: string; id: number; new_href: string }[] | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = environment.isLocalhost;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -197,7 +194,7 @@ export class Infrastructure {
 
   setPost(articleIdea: string): Observable<Post | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = environment.isLocalhost;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -247,8 +244,8 @@ export class Infrastructure {
 
   setImageUrl(phraseAccroche: string, postId: number): Observable<string | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = environment.isLocalhost;
-    const shouldMockImageGeneration = environment.isLocalhost;
+    const shouldReturnMock = false;
+    const shouldMockImageGeneration = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -277,7 +274,7 @@ export class Infrastructure {
 
   setVideo(phrase_accroche: string, postId: number): Observable<string | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = environment.isLocalhost;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -306,7 +303,7 @@ export class Infrastructure {
 
   setFaq(article: string): Observable<{ question: string; response: string }[] | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = environment.isLocalhost;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -364,7 +361,7 @@ export class Infrastructure {
 
   internalImage(article: string, postId: number): Observable<{ article: string; images: InternalImageData[] } | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = environment.isLocalhost;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -396,7 +393,7 @@ export class Infrastructure {
 
   setInternalLink(article: string, postTitreAndId: { titre: string; id: number; new_href: string }[]): Observable<string | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = environment.isLocalhost;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -448,7 +445,7 @@ export class Infrastructure {
 
   vegetal(article: string): Observable<string | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = environment.isLocalhost;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -478,7 +475,7 @@ export class Infrastructure {
 
   savePostComplete(post: Post): Observable<boolean | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = environment.isLocalhost;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -513,7 +510,7 @@ export class Infrastructure {
 
   saveFaqItems(postId: number, faqItems: { question: string; response: string }[]): Observable<boolean | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = environment.isLocalhost;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -548,7 +545,7 @@ export class Infrastructure {
 
   saveInternalImages(postId: number, images: InternalImageData[]): Observable<boolean | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = environment.isLocalhost;
+    const shouldReturnMock = false;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
