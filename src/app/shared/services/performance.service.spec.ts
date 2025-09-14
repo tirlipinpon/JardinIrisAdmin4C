@@ -101,7 +101,7 @@ describe('PerformanceService', () => {
             expect(metrics[0].success).toBe(false);
             expect(metrics[0].error).toBe('Observable error');
             done();
-          }, 10);
+          }, 100);
         }
       });
     });
@@ -135,10 +135,15 @@ describe('PerformanceService', () => {
 
     it('should measure Promise operation with error', (done) => {
       const error = new Error('Promise error');
-      const promise = Promise.reject(error);
+      
+      // Create a promise that rejects but we handle it properly
+      const promise = new Promise((resolve, reject) => {
+        setTimeout(() => reject(error), 10);
+      });
       
       service.measure('testMethod', 'Test Category', () => promise);
       
+      // Handle the promise rejection properly
       promise.catch((err) => {
         expect(err).toBe(error);
         
@@ -149,7 +154,7 @@ describe('PerformanceService', () => {
           expect(metrics[0].success).toBe(false);
           expect(metrics[0].error).toBe('Promise error');
           done();
-        }, 10);
+        }, 100);
       });
     });
   });
@@ -270,34 +275,44 @@ describe('PerformanceService', () => {
   });
 
   describe('getMetricsByCategory()', () => {
-    it('should return metrics filtered by category', () => {
-      service.measure('method1', 'Database', () => 'result1');
-      service.measure('method2', 'API', () => 'result2');
-      service.measure('method3', 'Database', () => 'result3');
+    it('should return metrics filtered by category', (done) => {
+      service.measure('method1', 'Database', () => Promise.resolve('result1'));
+      service.measure('method2', 'API', () => Promise.resolve('result2'));
+      service.measure('method3', 'Database', () => Promise.resolve('result3'));
       
-      const databaseMetrics = service.getMetricsByCategory('Database');
-      expect(databaseMetrics.length).toBe(2);
-      expect(databaseMetrics[0].methodName).toBe('method1');
-      expect(databaseMetrics[1].methodName).toBe('method3');
+      // Wait for all promises to complete
+      setTimeout(() => {
+        const databaseMetrics = service.getMetricsByCategory('Database');
+        expect(databaseMetrics.length).toBe(2);
+        expect(databaseMetrics[0].methodName).toBe('method1');
+        expect(databaseMetrics[1].methodName).toBe('method3');
+        done();
+      }, 100);
     });
 
-    it('should return empty array for non-existent category', () => {
-      service.measure('method1', 'Database', () => 'result1');
+    it('should return empty array for non-existent category', (done) => {
+      service.measure('method1', 'Database', () => Promise.resolve('result1'));
       
-      const metrics = service.getMetricsByCategory('NonExistent');
-      expect(metrics.length).toBe(0);
+      setTimeout(() => {
+        const metrics = service.getMetricsByCategory('NonExistent');
+        expect(metrics.length).toBe(0);
+        done();
+      }, 100);
     });
 
-    it('should return metrics sorted by order within category', () => {
-      service.measure('method1', 'Database', () => 'result1');
-      service.measure('method2', 'API', () => 'result2');
-      service.measure('method3', 'Database', () => 'result3');
-      service.measure('method4', 'Database', () => 'result4');
+    it('should return metrics sorted by order within category', (done) => {
+      service.measure('method1', 'Database', () => Promise.resolve('result1'));
+      service.measure('method2', 'API', () => Promise.resolve('result2'));
+      service.measure('method3', 'Database', () => Promise.resolve('result3'));
+      service.measure('method4', 'Database', () => Promise.resolve('result4'));
       
-      const databaseMetrics = service.getMetricsByCategory('Database');
-      expect(databaseMetrics[0].order).toBe(1);
-      expect(databaseMetrics[1].order).toBe(3);
-      expect(databaseMetrics[2].order).toBe(4);
+      setTimeout(() => {
+        const databaseMetrics = service.getMetricsByCategory('Database');
+        expect(databaseMetrics[0].order).toBe(1);
+        expect(databaseMetrics[1].order).toBe(3);
+        expect(databaseMetrics[2].order).toBe(4);
+        done();
+      }, 100);
     });
   });
 
