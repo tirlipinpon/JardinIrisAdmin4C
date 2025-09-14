@@ -8,6 +8,7 @@ import { PostgrestError } from "@supabase/supabase-js";
 import { LoggingService } from "../../../shared/services/logging.service";
 import { InternalImageData } from "../types/internalImageData";
 import { ValidationRule } from "../types/validationRule";
+import { InfrastructurePerformanceService } from "../../../shared/services/infrastructure-performance.service";
 
 function throwOnError<T, E>(response: T | E, errorCheck: (val: any) => val is E): T {
   if (errorCheck(response)) {
@@ -123,7 +124,7 @@ export const SearchStore =  signalStore(
     isLoading: state.isLoading,
     isGenerating: state.isGenerating
   })),
-  withMethods((store, infra = inject(Infrastructure), loggingService = inject(LoggingService))=> {
+  withMethods((store, infra = inject(Infrastructure), infraPerf = inject(InfrastructurePerformanceService), loggingService = inject(LoggingService))=> {
     
     // Méthodes helper pour la validation
     const clearErrors = () => patchState(store, { error: [] });
@@ -185,7 +186,7 @@ export const SearchStore =  signalStore(
     getNextPostId: rxMethod<void>(
       pipe(
         concatMap(() =>
-          (infra as Infrastructure).getNextPostId().pipe(
+          infraPerf.getNextPostId().pipe(
             withLoading(store, 'getNextPostId'),
             map((response: number | PostgrestError) => {
               return throwOnPostgrestError(response);
@@ -202,7 +203,7 @@ export const SearchStore =  signalStore(
     getLastPostTitreAndId: rxMethod<void>(
       pipe(
         concatMap(() =>
-          infra.getLastPostTitreAndId().pipe(
+          infraPerf.getLastPostTitreAndId().pipe(
             withLoading(store, 'getLastPostTitreAndId'),
             map((response: { titre: string; id: number; new_href: string }[] | PostgrestError) => throwOnPostgrestError(response)),
             tap({
@@ -220,7 +221,7 @@ export const SearchStore =  signalStore(
           // Démarrer la génération globale
           patchState(store, { isGenerating: true, step: 0 });
           
-          return infra.setPost(articleIdea).pipe(
+          return infraPerf.setPost(articleIdea).pipe(
             withLoading(store, 'setPost'),
             map((response: any | PostgrestError) => throwOnPostgrestError(response)),
             tap({
@@ -264,7 +265,7 @@ export const SearchStore =  signalStore(
             return [];
           }
           
-          return infra.setImageUrl(phraseAccroche!, postId as number).pipe(
+          return infraPerf.setImageUrl(phraseAccroche!, postId as number).pipe(
             withLoading(store, 'setImageUrl'),
             map((response: string | PostgrestError) => throwOnPostgrestError(response)),
             tap({
@@ -289,7 +290,7 @@ export const SearchStore =  signalStore(
           if (validationError) { 
             return of(''); 
           }
-          return infra.setVideo(phrase_accroche!, postId as number).pipe(
+          return infraPerf.setVideo(phrase_accroche!, postId as number).pipe(
             withLoading(store, 'setVideo'),
             map((response: string | PostgrestError) => throwOnPostgrestError(response)),
             tap({
@@ -313,7 +314,7 @@ export const SearchStore =  signalStore(
             return [];
           }
           
-          return infra.setFaq(article!).pipe(
+          return infraPerf.setFaq(article!).pipe(
             withLoading(store, 'setFaq'),
             map((response: { question: string; response: string }[] | PostgrestError) => throwOnPostgrestError(response)),
             tap({
@@ -339,7 +340,7 @@ export const SearchStore =  signalStore(
             return of({ article: '', images: [] }); 
           }
           
-          return infra.internalImage(article!, postId as number).pipe(
+          return infraPerf.internalImage(article!, postId as number).pipe(
             withLoading(store, 'internalImage'),
             map((response: { article: string; images: InternalImageData[] } | PostgrestError) => throwOnPostgrestError(response)),
             tap({
@@ -375,7 +376,7 @@ export const SearchStore =  signalStore(
             return [];
           }
           
-          return infra.setInternalLink(article!, postTitreAndId).pipe(
+          return infraPerf.setInternalLink(article!, postTitreAndId).pipe(
             withLoading(store, 'setInternalLink'),
             map((response: string | PostgrestError) => throwOnPostgrestError(response)),
             tap({
@@ -402,7 +403,7 @@ export const SearchStore =  signalStore(
             return [];
           }
           
-          return infra.vegetal(article!).pipe(
+          return infraPerf.vegetal(article!).pipe(
             withLoading(store, 'vegetal'),
             map((response: string | PostgrestError) => throwOnPostgrestError(response)),
             tap({
@@ -570,7 +571,7 @@ export const SearchStore =  signalStore(
       });
       
       // 1️⃣ Sauvegarder le post complet
-      infra.savePostComplete({
+      infraPerf.savePostComplete({
         id: postId,
         titre: store.titre() || '',
         description_meteo: store.description_meteo() || '',
@@ -589,7 +590,7 @@ export const SearchStore =  signalStore(
           
           // 2️⃣ Sauvegarder la FAQ (après le post)
           const faqSave$ = faq.length > 0 
-            ? infra.saveFaqItems(postId, faq).pipe(
+            ? infraPerf.saveFaqItems(postId, faq).pipe(
                 tap({
                   next: () => loggingService.info('STORE', '✅ FAQ sauvegardée avec succès'),
                   error: (error) => addError(`Erreur sauvegarde FAQ: ${error}`)
@@ -599,7 +600,7 @@ export const SearchStore =  signalStore(
             
           // 3️⃣ Sauvegarder les images internes (après le post)
           const imagesSave$ = internalImages.length > 0
-            ? infra.saveInternalImages(postId, internalImages).pipe(
+            ? infraPerf.saveInternalImages(postId, internalImages).pipe(
                 tap({
                   next: () => loggingService.info('STORE', '✅ Images internes sauvegardées avec succès'),
                   error: (error) => addError(`Erreur sauvegarde images: ${error}`)

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, effect } from '@angular/core';
+import { Component, inject, effect, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,11 +13,17 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { LoggingService } from '../../shared/services/logging.service';
 import { VersionService } from '../../shared/services/versions/versions.service';
+import { PerformanceService } from '../../shared/services/performance.service';
 import { Application } from './component/application/application';
 import { SearchStore } from './store';
 import { ArticleEditorComponent } from './components/article-editor/article-editor.component';
 import { PostFormEditorComponent } from './components/post-form-editor/post-form-editor.component';
 import { ProcessCompletionDialogComponent } from './components/process-completion-dialog/process-completion-dialog.component';
+import { PerformanceDisplayComponent } from './components/performance-display/performance-display.component';
+import { ErrorDisplayComponent } from './components/error-display/error-display.component';
+import { ArticleGenerationComponent } from './components/article-generation/article-generation.component';
+import { ArticleStatsComponent } from './components/article-stats/article-stats.component';
+import { ImagePreviewComponent } from './components/image-preview/image-preview.component';
 
 @Component({
   selector: 'app-create',
@@ -36,14 +42,21 @@ import { ProcessCompletionDialogComponent } from './components/process-completio
     MatDividerModule,
     MatDialogModule,
     ArticleEditorComponent, 
-    PostFormEditorComponent
+    PostFormEditorComponent,
+    PerformanceDisplayComponent,
+    ErrorDisplayComponent,
+    ArticleGenerationComponent,
+    ArticleStatsComponent,
+    ImagePreviewComponent
   ],
-  templateUrl: './create.component.html'
+  templateUrl: './create.component.html',
+  styleUrl: './create.component.css'
 })
 export class CreateComponent {
   private readonly application = inject(Application);
   private readonly loggingService = inject(LoggingService);
   private readonly versionService = inject(VersionService);
+  private readonly performanceService = inject(PerformanceService);
   private readonly dialog = inject(MatDialog);
   readonly store = inject(SearchStore);
   
@@ -69,8 +82,25 @@ export class CreateComponent {
   }
 
   generate() {
-    this.loggingService.info('COMPONENT', '🚀 Début appel generate()');    
-    this.application.generate(this.articleIdea);
+    this.loggingService.info('COMPONENT', '🚀 Début appel generate()');
+    
+    // Mesurer les performances de la génération complète
+    this.performanceService.measure(
+      'generateArticle',
+      'Article Generation',
+      () => {
+        this.application.generate(this.articleIdea);
+      }
+    );
+    
+    // Afficher le résumé des performances après un délai
+    setTimeout(() => {
+      this.performanceService.logSummary();
+    }, 2000);
+  }
+
+  onArticleIdeaChange(value: string): void {
+    this.articleIdea = value;
   }
 
   onArticleChange(newArticle: string) {
@@ -82,6 +112,11 @@ export class CreateComponent {
   clearErrors() {
     this.loggingService.info('COMPONENT', '🧹 Nettoyage des erreurs');
     this.store.clearErrors();
+  }
+
+  showPerformanceStats() {
+    this.loggingService.info('COMPONENT', '📊 Affichage des statistiques de performance');
+    this.performanceService.logSummary();
   }
 
   trackByIndex(index: number, item: string): number {

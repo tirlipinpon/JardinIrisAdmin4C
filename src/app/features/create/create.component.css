@@ -1,0 +1,24 @@
+.create-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+}
+
+/* Section de l'éditeur d'article */
+.editor-section {
+  margin-bottom: 24px;
+}
+
+/* Section des formulaires éditables */
+.section {
+  margin-bottom: 24px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .create-container {
+    padding: 12px;
+  }
+}
