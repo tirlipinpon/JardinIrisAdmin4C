@@ -12,11 +12,14 @@ try {
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
   // Incrémenter la version
-  const currentVersion = packageJson.version || '0.0.1';
+  const currentVersion = packageJson.version || '0.0.01';
   const [major, minor, patch] = currentVersion.split('.').map(Number);
   const newPatch = (patch || 0) + 1;
   const newVersion = `${major}.${minor}.${String(newPatch).padStart(2, '0')}`;
   packageJson.version = newVersion;
+  
+  console.log(`Version actuelle: ${currentVersion}`);
+  console.log(`Nouvelle version: ${newVersion}`);
   
 
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
