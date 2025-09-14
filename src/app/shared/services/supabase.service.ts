@@ -146,6 +146,7 @@ export class SupabaseService {
           lien_url_article: post.lien_url_article,
           categorie: post.categorie,
           new_href: post.new_href,
+          video: post.video,
           created_at: new Date().toISOString()
         });
 

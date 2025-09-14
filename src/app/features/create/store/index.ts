@@ -557,7 +557,9 @@ export const SearchStore =  signalStore(
       loggingService.info('STORE', '💾 Début sauvegarde complète', {
         postId,
         faqCount: faq.length,
-        imagesCount: internalImages.length
+        imagesCount: internalImages.length,
+        hasVideo: !!store.video(),
+        videoUrl: store.video()
       });
       
       // 1️⃣ Sauvegarder le post complet
@@ -570,7 +572,8 @@ export const SearchStore =  signalStore(
         citation: store.citation() || '',
         lien_url_article: { lien1: store.lien_url_article() || '' },
         categorie: store.categorie() || '',
-        new_href: store.new_href() || ''
+        new_href: store.new_href() || '',
+        video: store.video() || null
       }).pipe(
         withLoading(store, 'savePostComplete'),
         switchMap((postResult) => {
