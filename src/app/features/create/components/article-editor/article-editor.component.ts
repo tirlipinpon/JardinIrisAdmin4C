@@ -49,7 +49,9 @@ export class ArticleEditorComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.editor.destroy();
+    if (this.editor) {
+      this.editor.destroy();
+    }
   }
 
   ngOnChanges() {

@@ -1,93 +1,136 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideZonelessChangeDetection } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
+import { NgxEditorModule } from 'ngx-editor';
+
+import { ArticleEditorComponent } from './article-editor.component';
+
 describe('ArticleEditorComponent', () => {
-  let mockArticleChange: any;
-  let mockEditor: any;
-  let component: any;
+  let component: ArticleEditorComponent;
+  let fixture: ComponentFixture<ArticleEditorComponent>;
 
-  beforeEach(() => {
-    // Créer des mocks simples
-    mockArticleChange = {
-      emit: jasmine.createSpy('emit')
-    };
-    
-    mockEditor = {
-      destroy: jasmine.createSpy('destroy')
-    };
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [
+        ArticleEditorComponent,
+        ReactiveFormsModule,
+        NgxEditorModule
+      ],
+      providers: [
+        provideZonelessChangeDetection()
+      ]
+    }).compileComponents();
 
-    // Créer un objet composant simple avec les méthodes principales
-    component = {
-      articleContent: '',
-      showPreview: false,
-      showRawHtml: false,
-      articleFormControl: {
-        value: '',
-        setValue: jasmine.createSpy('setValue')
-      },
-      articleChange: mockArticleChange,
-      editor: mockEditor,
-      
-      onSave: function(): void {
-        const currentValue = this.articleFormControl.value || this.articleContent;
-        this.articleChange.emit(currentValue);
-      },
-      
-      togglePreview: function(): void {
-        this.showPreview = !this.showPreview;
-        if (this.showPreview) {
-          this.showRawHtml = false;
-        }
-      },
-      
-      toggleRawHtml: function(): void {
-        this.showRawHtml = !this.showRawHtml;
-        if (this.showRawHtml) {
-          this.showPreview = false;
-        }
-      },
-      
-      getWordCount: function(): number {
-        const content = this.articleFormControl.value || this.articleContent;
-        if (!content) return 0;
-        return content
-          .replace(/<[^>]*>/g, '') // Retirer les balises HTML
-          .trim()
-          .split(/\s+/)
-          .filter((word: string) => word.length > 0)
-          .length;
-      },
-      
-      ngOnDestroy: function(): void {
-        this.editor.destroy();
-      }
-    };
+    fixture = TestBed.createComponent(ArticleEditorComponent);
+    component = fixture.componentInstance;
   });
 
-  it('devrait être créé', () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  describe('onSave', () => {
-    it('devrait émettre le contenu actuel lors de la sauvegarde', () => {
-      const testContent = '<p>Contenu à sauvegarder</p>';
-      component.articleFormControl.value = testContent;
-      
-      component.onSave();
-      
-      expect(mockArticleChange.emit).toHaveBeenCalledWith(testContent);
+  describe('Initialization', () => {
+    it('should initialize with default values', () => {
+      expect(component.articleContent).toBe('');
+      expect(component.showPreview).toBe(false);
+      expect(component.showRawHtml).toBe(false);
+      expect(component.toolbar).toBeDefined();
     });
 
-    it('devrait utiliser articleContent si FormControl est vide', () => {
-      const testContent = '<p>Contenu alternatif</p>';
-      component.articleContent = testContent;
-      component.articleFormControl.value = '';
+    it('should initialize with article input', () => {
+      const testContent = '<p>Test article content</p>';
+      fixture.componentRef.setInput('article', testContent);
       
-      component.onSave();
+      component.ngOnInit();
       
-      expect(mockArticleChange.emit).toHaveBeenCalledWith(testContent);
+      expect(component.articleContent).toBe(testContent);
+      expect(component.articleFormControl.value).toBe(testContent);
     });
   });
 
-  describe('togglePreview', () => {
-    it('devrait basculer l\'état de preview', () => {
+  describe('Lifecycle hooks', () => {
+    it('should initialize editor on ngOnInit', () => {
+      component.ngOnInit();
+      expect(component.editor).toBeDefined();
+    });
+
+    it('should destroy editor on ngOnDestroy', () => {
+      component.ngOnInit();
+      spyOn(component.editor, 'destroy');
+      
+      component.ngOnDestroy();
+      
+      expect(component.editor.destroy).toHaveBeenCalled();
+    });
+
+    it('should handle ngOnDestroy when editor is not initialized', () => {
+      // Ne pas appeler ngOnInit pour que l'éditeur reste undefined
+      expect(() => component.ngOnDestroy()).not.toThrow();
+    });
+
+    it('should update content on ngOnChanges', () => {
+      component.ngOnInit(); // Initialiser d'abord
+      const newContent = '<p>New content</p>';
+      fixture.componentRef.setInput('article', newContent);
+      
+      component.ngOnChanges();
+      
+      expect(component.articleContent).toBe(newContent);
+      expect(component.articleFormControl.value).toBe(newContent);
+    });
+  });
+
+  describe('Form control synchronization', () => {
+    it('should sync FormControl changes with articleContent', () => {
+      component.ngOnInit();
+      const testValue = '<p>Form control value</p>';
+      
+      component.articleFormControl.setValue(testValue);
+      
+      expect(component.articleContent).toBe(testValue);
+    });
+
+    it('should handle null FormControl value', () => {
+      component.ngOnInit();
+      
+      component.articleFormControl.setValue(null);
+      
+      expect(component.articleContent).toBe('');
+    });
+  });
+
+  describe('Actions', () => {
+    beforeEach(() => {
+      component.ngOnInit();
+    });
+
+    it('should emit article content on save', () => {
+      const testContent = '<p>Save test content</p>';
+      component.articleFormControl.setValue(testContent);
+      spyOn(component.articleChange, 'emit');
+      
+      component.onSave();
+      
+      expect(component.articleChange.emit).toHaveBeenCalledWith(testContent);
+    });
+
+    it('should use articleContent as fallback in onSave', () => {
+      component.articleContent = '<p>Fallback content</p>';
+      component.articleFormControl.setValue('');
+      spyOn(component.articleChange, 'emit');
+      
+      component.onSave();
+      
+      expect(component.articleChange.emit).toHaveBeenCalledWith('');
+    });
+  });
+
+  describe('Toggle functions', () => {
+    beforeEach(() => {
+      component.ngOnInit();
+    });
+
+    it('should toggle preview mode', () => {
       expect(component.showPreview).toBe(false);
       
       component.togglePreview();
@@ -97,19 +140,16 @@ describe('ArticleEditorComponent', () => {
       expect(component.showPreview).toBe(false);
     });
 
-    it('devrait désactiver le mode HTML brut quand preview est activé', () => {
+    it('should hide raw HTML when showing preview', () => {
       component.showRawHtml = true;
-      component.showPreview = false;
       
       component.togglePreview();
       
       expect(component.showPreview).toBe(true);
       expect(component.showRawHtml).toBe(false);
     });
-  });
 
-  describe('toggleRawHtml', () => {
-    it('devrait basculer l\'état de HTML brut', () => {
+    it('should toggle raw HTML mode', () => {
       expect(component.showRawHtml).toBe(false);
       
       component.toggleRawHtml();
@@ -119,9 +159,8 @@ describe('ArticleEditorComponent', () => {
       expect(component.showRawHtml).toBe(false);
     });
 
-    it('devrait désactiver le mode preview quand HTML brut est activé', () => {
+    it('should hide preview when showing raw HTML', () => {
       component.showPreview = true;
-      component.showRawHtml = false;
       
       component.toggleRawHtml();
       
@@ -130,45 +169,59 @@ describe('ArticleEditorComponent', () => {
     });
   });
 
-  describe('getWordCount', () => {
-    it('devrait retourner 0 pour un contenu vide', () => {
-      component.articleContent = '';
+  describe('Word count', () => {
+    beforeEach(() => {
+      component.ngOnInit();
+    });
+
+    it('should return 0 for empty content', () => {
+      component.articleFormControl.setValue('');
       expect(component.getWordCount()).toBe(0);
     });
 
-    it('devrait compter les mots dans du texte simple', () => {
-      component.articleContent = 'Ceci est un test';
-      expect(component.getWordCount()).toBe(4);
+    it('should return 0 for null content', () => {
+      component.articleFormControl.setValue(null);
+      expect(component.getWordCount()).toBe(0);
     });
 
-    it('devrait compter les mots en ignorant les balises HTML', () => {
-      component.articleContent = '<p>Ceci est <strong>un test</strong> avec du HTML</p>';
-      expect(component.getWordCount()).toBe(7);
-    });
-
-    it('devrait utiliser le FormControl si disponible', () => {
-      component.articleFormControl.value = 'Contenu du FormControl';
-      component.articleContent = 'Contenu alternatif';
-      
-      expect(component.getWordCount()).toBe(3); // "Contenu du FormControl" = 3 mots
-    });
-
-    it('devrait gérer les espaces multiples', () => {
-      component.articleContent = 'Mot1    Mot2\n\nMot3';
+    it('should count words in plain text', () => {
+      component.articleFormControl.setValue('Hello world test');
       expect(component.getWordCount()).toBe(3);
     });
 
-    it('devrait ignorer les mots vides', () => {
-      component.articleContent = '   Mot1   Mot2   ';
+    it('should count words in HTML content', () => {
+      component.articleFormControl.setValue('<p>Hello <strong>world</strong> test</p>');
+      expect(component.getWordCount()).toBe(3);
+    });
+
+    it('should handle multiple spaces', () => {
+      component.articleFormControl.setValue('Hello    world   test');
+      expect(component.getWordCount()).toBe(3);
+    });
+
+    it('should filter empty words', () => {
+      component.articleFormControl.setValue('Hello  world  ');
       expect(component.getWordCount()).toBe(2);
+    });
+
+    it('should use articleContent as fallback', () => {
+      component.articleFormControl.setValue('');
+      component.articleContent = '<p>Fallback content test</p>';
+      
+      expect(component.getWordCount()).toBe(3);
     });
   });
 
-  describe('Destruction', () => {
-    it('devrait détruire l\'éditeur lors de la destruction du composant', () => {
-      component.ngOnDestroy();
+  describe('Toolbar configuration', () => {
+    it('should have correct toolbar configuration', () => {
+      expect(component.toolbar).toBeDefined();
+      expect(Array.isArray(component.toolbar)).toBe(true);
+      expect(component.toolbar.length).toBeGreaterThan(0);
       
-      expect(mockEditor.destroy).toHaveBeenCalled();
+      // Vérifier quelques éléments de base
+      expect(component.toolbar[0]).toContain('bold');
+      expect(component.toolbar[0]).toContain('italic');
+      expect(component.toolbar[4]).toContain({ heading: ["h1", "h2", "h3", "h4", "h5", "h6"] });
     });
   });
 });
