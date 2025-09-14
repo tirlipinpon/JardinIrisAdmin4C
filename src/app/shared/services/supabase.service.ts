@@ -147,6 +147,7 @@ export class SupabaseService {
           categorie: post.categorie,
           new_href: post.new_href,
           video: post.video,
+          image_url: post.image_url,
           created_at: new Date().toISOString()
         });
 

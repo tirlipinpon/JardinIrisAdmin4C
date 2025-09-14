@@ -564,7 +564,9 @@ export const SearchStore =  signalStore(
         faqCount: faq.length,
         imagesCount: internalImages.length,
         hasVideo: !!store.video(),
-        videoUrl: store.video()
+        videoUrl: store.video(),
+        hasImageUrl: !!store.image_url(),
+        imageUrl: store.image_url()
       });
       
       // 1️⃣ Sauvegarder le post complet
@@ -578,7 +580,8 @@ export const SearchStore =  signalStore(
         lien_url_article: { lien1: store.lien_url_article() || '' },
         categorie: store.categorie() || '',
         new_href: store.new_href() || '',
-        video: store.video() || null
+        video: store.video() || null,
+        image_url: store.image_url() || undefined
       }).pipe(
         withLoading(store, 'savePostComplete'),
         switchMap((postResult) => {

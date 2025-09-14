@@ -7,23 +7,37 @@ import { VERSION } from '../services/version';
   standalone: true,
   template: `
     <div class="version-info">
-      <p><strong>Build #:</strong> {{ version.buildNumber }} <strong>Date de build:</strong> {{ formatDate(version.buildDate) }}</p>
+      <div class="version-badge">
+        <span class="version-number">Build #{{ version.buildNumber }}</span>
+        <span class="version-date">{{ formatDate(version.buildDate) }}</span>
+      </div>
     </div>
   `,
   styles: [`
     .version-info {
-      background: #f5f5f5;
-      padding: 15px;
-      border-radius: 5px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 12px 20px;
+      border-radius: 8px;
       margin: 10px 0;
-      font-family: monospace;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
-    .version-info h3 {
-      margin-top: 0;
-      color: #333;
+    .version-badge {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+      font-family: 'Courier New', monospace;
     }
-    .version-info p {
-      margin: 5px 0;
+    .version-number {
+      font-weight: bold;
+      font-size: 16px;
+      background: rgba(255,255,255,0.2);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .version-date {
+      font-size: 14px;
+      opacity: 0.9;
     }
   `]
 })
