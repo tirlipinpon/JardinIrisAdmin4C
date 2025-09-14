@@ -1,0 +1,61 @@
+<div class="article-editor">
+  <div class="editor-header">
+    <h3>📝 Éditeur d'article avancé</h3>
+    <div class="editor-controls">
+      <button 
+        type="button" 
+        class="btn btn-primary" 
+        (click)="onSave()"
+        [disabled]="!articleContent">
+        💾 Sauvegarder
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-secondary" 
+        (click)="togglePreview()">
+        {{ showPreview ? '📝 Éditer' : '👁️ Aperçu' }}
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-info" 
+        (click)="toggleRawHtml()">
+        {{ showRawHtml ? '🎨 Visuel' : '📄 HTML' }}
+      </button>
+    </div>
+  </div>
+  
+  <div class="editor-content">
+    <!-- Éditeur NgxEditor -->
+    <div class="ngx-editor-panel" *ngIf="!showPreview && !showRawHtml">
+      <ngx-editor-menu [editor]="editor" [toolbar]="toolbar"></ngx-editor-menu>
+      <ngx-editor 
+        [editor]="editor" 
+        [formControl]="articleFormControl"
+        placeholder="Votre article apparaîtra ici...">
+      </ngx-editor>
+    </div>
+    
+    <!-- Éditeur HTML brut -->
+    <div class="raw-html-panel" *ngIf="!showPreview && showRawHtml">
+      <textarea
+        [(ngModel)]="articleContent"
+        class="article-textarea"
+        placeholder="Code HTML de l'article..."
+        spellcheck="false">
+      </textarea>
+    </div>
+    
+    <!-- Aperçu -->
+    <div class="preview-panel" *ngIf="showPreview">
+      <div class="article-preview" [innerHTML]="articleFormControl.value || articleContent"></div>
+    </div>
+  </div>
+  
+  <div class="editor-footer">
+    <small class="text-muted">
+      Caractères: {{ (articleFormControl.value || articleContent).length || 0 }} | 
+      Mots: {{ getWordCount() }} |
+      Mode: {{ showPreview ? 'Aperçu' : (showRawHtml ? 'HTML' : 'Visuel') }}
+    </small>
+  </div>
+</div>

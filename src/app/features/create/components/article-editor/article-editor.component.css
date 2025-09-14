@@ -1,0 +1,266 @@
+.article-editor {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+}
+
+.editor-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.editor-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.btn-primary:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #545b62;
+}
+
+.btn-info {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn-info:hover {
+  background: #138496;
+}
+
+.editor-content {
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ngx-editor-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.ngx-editor-menu {
+  border-bottom: 1px solid #ddd;
+}
+
+.ngx-editor {
+  flex: 1;
+  padding: 16px;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.raw-html-panel {
+  flex: 1;
+  display: flex;
+}
+
+.article-textarea {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 16px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: none;
+  background: #f8f9fa;
+}
+
+.article-textarea:focus {
+  background: white;
+}
+
+.preview-panel {
+  flex: 1;
+  padding: 16px;
+  background: white;
+  overflow-y: auto;
+}
+
+.article-preview {
+  max-width: none;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.article-preview h1,
+.article-preview h2,
+.article-preview h3,
+.article-preview h4,
+.article-preview h5,
+.article-preview h6 {
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.article-preview h1 {
+  font-size: 28px;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 8px;
+}
+
+.article-preview h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 6px;
+}
+
+.article-preview h3 {
+  font-size: 20px;
+}
+
+.article-preview p {
+  margin-bottom: 16px;
+}
+
+.article-preview ul,
+.article-preview ol {
+  margin-bottom: 16px;
+  padding-left: 24px;
+}
+
+.article-preview li {
+  margin-bottom: 8px;
+}
+
+.article-preview blockquote {
+  border-left: 4px solid #007bff;
+  margin: 16px 0;
+  padding-left: 16px;
+  color: #666;
+  font-style: italic;
+}
+
+.article-preview code {
+  background: #f1f3f4;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.article-preview pre {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
+.article-preview pre code {
+  background: none;
+  padding: 0;
+}
+
+.article-preview a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.article-preview a:hover {
+  text-decoration: underline;
+}
+
+.article-preview img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 16px 0;
+}
+
+.article-preview table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+}
+
+.article-preview th,
+.article-preview td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.article-preview th {
+  background: #f8f9fa;
+  font-weight: 600;
+}
+
+.editor-footer {
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-top: 1px solid #ddd;
+  font-size: 12px;
+  color: #666;
+}
+
+.text-muted {
+  color: #6c757d;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .editor-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .editor-controls {
+    justify-content: center;
+  }
+  
+  .btn {
+    flex: 1;
+    min-width: 0;
+  }
+}

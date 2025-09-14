@@ -1,0 +1,50 @@
+<mat-card class="performance-card" *ngIf="performanceData()">
+  <mat-card-header>
+    <mat-icon mat-card-avatar>speed</mat-icon>
+    <mat-card-title>Performances</mat-card-title>
+    <mat-card-subtitle>Métriques de génération et traitement</mat-card-subtitle>
+  </mat-card-header>
+  
+  <mat-card-content>
+    <div class="performance-grid">
+      <div class="performance-item">
+        <div class="performance-icon">⚡</div>
+        <div class="performance-content">
+          <div class="performance-label">Temps total</div>
+          <div class="performance-value">{{ performanceData()?.totalTime | number:'1.2-2' }}s</div>
+        </div>
+      </div>
+      
+      <div class="performance-item">
+        <div class="performance-icon">📊</div>
+        <div class="performance-content">
+          <div class="performance-label">Tâches terminées</div>
+          <div class="performance-value">{{ performanceData()?.completedTasks }}/{{ performanceData()?.totalTasks }}</div>
+        </div>
+      </div>
+      
+      <div class="performance-item">
+        <div class="performance-icon">🔄</div>
+        <div class="performance-content">
+          <div class="performance-label">Requêtes API</div>
+          <div class="performance-value">{{ performanceData()?.apiCalls | number }}</div>
+        </div>
+      </div>
+      
+      <div class="performance-item">
+        <div class="performance-icon">💾</div>
+        <div class="performance-content">
+          <div class="performance-label">Données traitées</div>
+          <div class="performance-value">{{ performanceData()?.dataProcessed | number }} KB</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="performance-chart" *ngIf="showChart()">
+      <div class="chart-placeholder">
+        <mat-icon>show_chart</mat-icon>
+        <span>Graphique des performances</span>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

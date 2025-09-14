@@ -1,0 +1,51 @@
+<mat-card class="stats-card" *ngIf="article()">
+  <mat-card-header>
+    <mat-icon mat-card-avatar>analytics</mat-icon>
+    <mat-card-title>Statistiques de l'article</mat-card-title>
+    <mat-card-subtitle>Analyse du contenu et des liens internes</mat-card-subtitle>
+  </mat-card-header>
+  
+  <mat-card-content>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-icon">📝</div>
+        <div class="stat-content">
+          <div class="stat-label">Caractères</div>
+          <div class="stat-value">{{ stats().characters | number }}</div>
+        </div>
+      </div>
+      
+      <div class="stat-item">
+        <div class="stat-icon">📖</div>
+        <div class="stat-content">
+          <div class="stat-label">Mots</div>
+          <div class="stat-value">{{ stats().words | number }}</div>
+        </div>
+      </div>
+      
+      <div class="stat-item">
+        <div class="stat-icon">📄</div>
+        <div class="stat-content">
+          <div class="stat-label">Paragraphes</div>
+          <div class="stat-value">{{ stats().paragraphs | number }}</div>
+        </div>
+      </div>
+      
+      <div class="stat-item">
+        <div class="stat-icon">🔗</div>
+        <div class="stat-content">
+          <div class="stat-label">Liens internes</div>
+          <div class="stat-value">{{ internalLinks().total | number }}</div>
+          <div class="stat-detail">Uniques: {{ internalLinks().unique }}</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="actions" *ngIf="showActions()">
+      <button mat-raised-button color="primary" (click)="onOptimize()">
+        <mat-icon>tune</mat-icon>
+        Optimiser l'article
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>

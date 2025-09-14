@@ -1,0 +1,52 @@
+<mat-card class="generation-card">
+  <mat-card-header>
+    <mat-icon mat-card-avatar>lightbulb</mat-icon>
+    <mat-card-title>Nouvelle Idée d'Article</mat-card-title>
+    <mat-card-subtitle>Décrivez votre idée et laissez l'IA créer le contenu</mat-card-subtitle>
+  </mat-card-header>
+  
+  <mat-card-content>
+    <div class="input-section">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Idée d'article</mat-label>
+        <input 
+          matInput 
+          [ngModel]="articleIdea()" 
+          (ngModelChange)="onArticleIdeaChange($event)"
+          placeholder="Ex: Comment planter des roses en pot sur un balcon"
+          type="text">
+        <mat-icon matSuffix>edit</mat-icon>
+      </mat-form-field>
+      
+      <div class="button-group">
+        <button 
+          mat-raised-button 
+          color="primary" 
+          (click)="onGenerate()" 
+          class="generate-button"
+          [disabled]="!articleIdea().trim() || isGenerating()">
+          <mat-spinner *ngIf="isGenerating()" diameter="20" class="button-spinner"></mat-spinner>
+          <mat-icon *ngIf="!isGenerating()">rocket_launch</mat-icon>
+          {{ isGenerating() ? 'Génération en cours...' : 'Générer l\'article' }}
+        </button>
+      </div>
+    </div>
+  </mat-card-content>
+  
+  <mat-card-footer *ngIf="isGenerating()" class="progress-section">
+    <div class="progress-info">
+      <div class="progress-text">
+        <strong>Génération en cours...</strong>
+        <span>Étape {{ step() }}/4</span>
+      </div>
+      <mat-progress-bar mode="determinate" [value]="(step() / 4) * 100" class="progress-bar"></mat-progress-bar>
+      <div class="progress-details">
+        <span *ngIf="step() === 0">Initialisation...</span>
+        <span *ngIf="step() === 1">Génération de l'article de base...</span>
+        <span *ngIf="step() === 2">Ajout des images et enrichissement...</span>
+        <span *ngIf="step() === 3">Ajout des liens internes...</span>
+        <span *ngIf="step() === 4">Finalisation avec les noms botaniques...</span>
+      </div>
+    </div>
+  </mat-card-footer>
+</mat-card>

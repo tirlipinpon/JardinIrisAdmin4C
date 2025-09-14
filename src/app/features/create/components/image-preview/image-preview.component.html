@@ -1,0 +1,29 @@
+<mat-card class="image-preview-card" *ngIf="imageUrl()">
+  <mat-card-header>
+    <mat-icon mat-card-avatar>image</mat-icon>
+    <mat-card-title>Image principale</mat-card-title>
+    <mat-card-subtitle>Aperçu de l'image générée pour l'article</mat-card-subtitle>
+  </mat-card-header>
+  
+  <mat-card-content>
+    <div class="image-preview-container">
+      <img 
+        [src]="imageUrl()" 
+        [alt]="'Image pour: ' + (title() || 'Article')"
+        class="preview-image"
+        (error)="onImageError($event)"
+        (load)="onImageLoad($event)">
+      
+      <div class="image-actions">
+        <button mat-raised-button color="primary" (click)="onEditImageUrl()">
+          <mat-icon>edit</mat-icon>
+          Modifier l'URL
+        </button>
+        <button mat-raised-button (click)="onOpenImageInNewTab()">
+          <mat-icon>open_in_new</mat-icon>
+          Ouvrir dans un nouvel onglet
+        </button>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>
