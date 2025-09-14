@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { PerformanceService } from './performance.service';
-import { Infrastructure } from '../../features/create/component/infrastructure/infrastructure';
+import { Infrastructure } from '../../features/create/components/infrastructure/infrastructure';
 import { Observable } from 'rxjs';
 import { PostgrestError } from '@supabase/supabase-js';
 import { Post } from '../../features/create/types/post';

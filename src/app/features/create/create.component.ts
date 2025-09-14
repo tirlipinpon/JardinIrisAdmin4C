@@ -14,7 +14,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { LoggingService } from '../../shared/services/logging.service';
 import { VersionService } from '../../shared/services/versions/versions.service';
 import { PerformanceService } from '../../shared/services/performance.service';
-import { Application } from './component/application/application';
+import { Application } from './components/application/application';
 import { SearchStore } from './store';
 import { ArticleEditorComponent } from './components/article-editor/article-editor.component';
 import { PostFormEditorComponent } from './components/post-form-editor/post-form-editor.component';

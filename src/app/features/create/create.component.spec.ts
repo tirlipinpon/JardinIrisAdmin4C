@@ -5,7 +5,7 @@ import { CreateComponent } from './create.component';
 import { VersionService } from '../../shared/services/versions/versions.service';
 import { LoggingService } from '../../shared/services/logging.service';
 import { PerformanceService } from '../../shared/services/performance.service';
-import { Application } from './component/application/application';
+import { Application } from './components/application/application';
 import { SearchStore } from './store';
 
 describe('CreateComponent', () => {

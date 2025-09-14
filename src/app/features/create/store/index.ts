@@ -3,7 +3,7 @@ import { updateState, withDevtools } from "@angular-architects/ngrx-toolkit";
 import { inject } from "@angular/core";
 import { rxMethod } from "@ngrx/signals/rxjs-interop";
 import { concatMap, finalize, map, Observable, of, pipe, tap, switchMap, toArray, catchError, from } from "rxjs";
-import { Infrastructure } from "../component/infrastructure/infrastructure";
+import { Infrastructure } from "../components/infrastructure/infrastructure";
 import { PostgrestError } from "@supabase/supabase-js";
 import { LoggingService } from "../../../shared/services/logging.service";
 import { InternalImageData } from "../types/internalImageData";

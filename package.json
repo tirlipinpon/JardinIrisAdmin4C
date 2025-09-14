@@ -1,13 +1,24 @@
 {
   "name": "jardin-iris-admin4-c",
-  "version": "0.0.191",
+  "version": "0.0.192",
   "scripts": {
     "ng": "ng",
     "start": "node increment-version.js && ng serve",
     "build": "node increment-version.js && ng build",
     "deploy": "node deploy.js",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "test-b": "ng test --watch=true --browsers=Chrome",
+    "test-coverage": "ng test --code-coverage --watch=true --browsers=Chrome",
+    "test-single": "ng test --watch=false --browsers=ChromeHeadless",
+    "test-headless": "ng test --watch=false --browsers=ChromeHeadless",
+    "test-watch": "ng test --watch=true",
+    "lint": "ng lint",
+    "lint-fix": "ng lint --fix",
+    "build-prod": "node increment-version.js && ng build --configuration production",
+    "build-dev": "node increment-version.js && ng build --configuration development",
+    "serve-prod": "ng serve --configuration production",
+    "serve-dev": "ng serve --configuration development"
   },
   "prettier": {
     "overrides": [
