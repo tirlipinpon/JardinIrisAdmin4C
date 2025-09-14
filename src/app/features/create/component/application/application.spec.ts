@@ -24,6 +24,7 @@ describe('Application', () => {
       getNextPostId: jasmine.createSpy('getNextPostId'),
       getLastPostTitreAndId: jasmine.createSpy('getLastPostTitreAndId'),
       setPost: jasmine.createSpy('setPost'),
+      startGeneration: jasmine.createSpy('startGeneration'),
       setVideo: jasmine.createSpy('setVideo'),
       setFaq: jasmine.createSpy('setFaq'),
       internalImage: jasmine.createSpy('internalImage'),
