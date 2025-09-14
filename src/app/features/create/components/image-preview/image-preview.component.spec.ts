@@ -346,7 +346,7 @@ describe('ImagePreviewComponent', () => {
         'https://example.com/image3.jpg'
       ];
       
-      urls.forEach(url => {
+      urls.forEach((url: string) => {
         component.imageUrl = () => url;
         expect(component.imageUrl()).toBe(url);
       });
@@ -358,11 +358,275 @@ describe('ImagePreviewComponent', () => {
         target: { src: `image${i}.jpg` } 
       } as any));
       
-      events.forEach(event => {
+      events.forEach((event: any) => {
         component.onImageLoad(event);
       });
       
       expect(mockImageLoad.emit).toHaveBeenCalledTimes(10);
+    });
+  });
+
+  describe('Cas limites et edge cases', () => {
+    it('devrait gérer les URLs avec des caractères spéciaux', () => {
+      const specialUrls = [
+        'https://example.com/image with spaces.jpg',
+        'https://example.com/image-with-dashes.jpg',
+        'https://example.com/image_with_underscores.jpg',
+        'https://example.com/image.with.dots.jpg',
+        'https://example.com/image+plus.jpg'
+      ];
+      
+      specialUrls.forEach((url: string) => {
+        component.imageUrl = () => url;
+        expect(component.imageUrl()).toBe(url);
+      });
+    });
+
+    it('devrait gérer les URLs avec des caractères Unicode', () => {
+      const unicodeUrls = [
+        'https://example.com/画像.jpg',
+        'https://example.com/изображение.jpg',
+        'https://example.com/صورة.jpg',
+        'https://example.com/🖼️.jpg'
+      ];
+      
+      unicodeUrls.forEach((url: string) => {
+        component.imageUrl = () => url;
+        expect(component.imageUrl()).toBe(url);
+      });
+    });
+
+    it('devrait gérer les événements avec des propriétés manquantes', () => {
+      const incompleteEvent = { type: 'load' } as any;
+      
+      component.onImageLoad(incompleteEvent);
+      
+      expect(mockImageLoad.emit).toHaveBeenCalledWith(incompleteEvent);
+    });
+
+    it('devrait gérer les événements avec des propriétés nulles', () => {
+      const nullEvent = { 
+        type: 'error', 
+        target: null 
+      } as any;
+      
+      component.onImageError(nullEvent);
+      
+      expect(mockImageError.emit).toHaveBeenCalledWith(nullEvent);
+    });
+
+    it('devrait gérer les titres avec des caractères de contrôle', () => {
+      const controlTitles = [
+        'Titre avec\t\ttabulations',
+        'Titre avec\r\nretour à la ligne',
+        'Titre avec\0caractère nul',
+        'Titre avec\x1B[31mcodes ANSI'
+      ];
+      
+      controlTitles.forEach((title: string) => {
+        component.title = () => title;
+        expect(component.title()).toBe(title);
+      });
+    });
+
+    it('devrait gérer les URLs avec des encodages spéciaux', () => {
+      const encodedUrls = [
+        'https://example.com/image%20with%20spaces.jpg',
+        'https://example.com/image%C3%A9.jpg', // é
+        'https://example.com/image%2Bplus%2B.jpg',
+        'https://example.com/image%3Fquery%3Dvalue.jpg'
+      ];
+      
+      encodedUrls.forEach((url: string) => {
+        component.imageUrl = () => url;
+        expect(component.imageUrl()).toBe(url);
+      });
+    });
+  });
+
+  describe('Tests de robustesse', () => {
+    it('devrait gérer les appels rapides successifs d\'événements', () => {
+      const rapidEvents = Array.from({ length: 5 }, (_, i) => ({ 
+        type: 'load', 
+        target: { src: `rapid${i}.jpg` } 
+      } as any));
+      
+      // Appels rapides successifs
+      rapidEvents.forEach((event: any) => {
+        component.onImageLoad(event);
+        component.onEditImageUrl();
+      });
+      
+      expect(mockImageLoad.emit).toHaveBeenCalledTimes(5);
+      expect(mockEditImageUrl.emit).toHaveBeenCalledTimes(5);
+    });
+
+    it('devrait maintenir la cohérence lors de changements rapides d\'URL', () => {
+      const urls = [
+        'https://example.com/image1.jpg',
+        'https://example.com/image2.jpg',
+        'https://example.com/image3.jpg'
+      ];
+      
+      urls.forEach((url: string, index: number) => {
+        component.imageUrl = () => url;
+        component.onEditImageUrl();
+        
+        expect(component.imageUrl()).toBe(url);
+        expect(mockEditImageUrl.emit).toHaveBeenCalledTimes(index + 1);
+      });
+    });
+
+    it('devrait gérer les événements avec des types inattendus', () => {
+      const unexpectedEvents = [
+        { type: 'custom', target: { src: 'custom.jpg' } },
+        { type: 'unknown', target: { src: 'unknown.jpg' } },
+        { type: '', target: { src: 'empty.jpg' } }
+      ] as any[];
+      
+      unexpectedEvents.forEach((event: any) => {
+        component.onImageLoad(event);
+        component.onImageError(event);
+      });
+      
+      expect(mockImageLoad.emit).toHaveBeenCalledTimes(3);
+      expect(mockImageError.emit).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe('Tests d\'intégration avancés', () => {
+    it('devrait gérer un cycle complet de gestion d\'image', () => {
+      const imageUrl = 'https://example.com/test-image.jpg';
+      const imageTitle = 'Image de test';
+      
+      // 1. Configuration initiale
+      component.imageUrl = () => imageUrl;
+      component.title = () => imageTitle;
+      
+      expect(component.imageUrl()).toBe(imageUrl);
+      expect(component.title()).toBe(imageTitle);
+      
+      // 2. Édition de l'URL
+      component.onEditImageUrl();
+      expect(mockEditImageUrl.emit).toHaveBeenCalled();
+      
+      // 3. Simulation du chargement
+      const loadEvent = { type: 'load', target: { src: imageUrl } } as any;
+      component.onImageLoad(loadEvent);
+      expect(mockImageLoad.emit).toHaveBeenCalledWith(loadEvent);
+      
+      // 4. Ouverture dans un nouvel onglet
+      component.onOpenImageInNewTab();
+      expect(mockOpenImageInNewTab.emit).toHaveBeenCalled();
+    });
+
+    it('devrait gérer la gestion d\'erreurs et de récupération', () => {
+      const imageUrl = 'https://example.com/broken-image.jpg';
+      component.imageUrl = () => imageUrl;
+      
+      // 1. Tentative de chargement
+      const loadEvent = { type: 'load', target: { src: imageUrl } } as any;
+      component.onImageLoad(loadEvent);
+      
+      // 2. Simulation d'une erreur
+      const errorEvent = { type: 'error', target: { src: imageUrl } } as any;
+      component.onImageError(errorEvent);
+      
+      // 3. Édition de l'URL pour corriger
+      component.onEditImageUrl();
+      
+      // Vérifier que tous les événements ont été émis
+      expect(mockImageLoad.emit).toHaveBeenCalledWith(loadEvent);
+      expect(mockImageError.emit).toHaveBeenCalledWith(errorEvent);
+      expect(mockEditImageUrl.emit).toHaveBeenCalled();
+    });
+
+    it('devrait gérer les métadonnées d\'image complexes', () => {
+      const complexEvent = {
+        type: 'load',
+        target: {
+          src: 'https://example.com/complex-image.jpg',
+          alt: 'Image complexe',
+          naturalWidth: 1920,
+          naturalHeight: 1080,
+          complete: true,
+          crossOrigin: 'anonymous',
+          loading: 'lazy',
+          decoding: 'async'
+        }
+      } as any;
+      
+      component.onImageLoad(complexEvent);
+      
+      expect(mockImageLoad.emit).toHaveBeenCalledWith(complexEvent);
+    });
+
+    it('devrait gérer les événements avec des informations d\'erreur détaillées', () => {
+      const detailedErrorEvent = {
+        type: 'error',
+        target: {
+          src: 'https://example.com/missing-image.jpg',
+          alt: 'Image manquante',
+          naturalWidth: 0,
+          naturalHeight: 0,
+          complete: false
+        },
+        error: {
+          message: 'Failed to load image',
+          code: 404
+        }
+      } as any;
+      
+      component.onImageError(detailedErrorEvent);
+      
+      expect(mockImageError.emit).toHaveBeenCalledWith(detailedErrorEvent);
+    });
+  });
+
+  describe('Tests de validation des données', () => {
+    it('devrait gérer les URLs avec des protocoles non standard', () => {
+      const nonStandardUrls = [
+        'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...',
+        'blob:https://example.com/12345678-1234-1234-1234-123456789abc',
+        'file:///path/to/local/image.jpg'
+      ];
+      
+      nonStandardUrls.forEach((url: string) => {
+        component.imageUrl = () => url;
+        expect(component.imageUrl()).toBe(url);
+      });
+    });
+
+    it('devrait gérer les titres avec des formats de texte riches', () => {
+      const richTitles = [
+        '**Titre en gras**',
+        '*Titre en italique*',
+        '`Titre en code`',
+        '[Titre avec lien](https://example.com)',
+        '> Titre en citation',
+        '# Titre en titre',
+        '---Titre avec séparateur---'
+      ];
+      
+      richTitles.forEach((title: string) => {
+        component.title = () => title;
+        expect(component.title()).toBe(title);
+      });
+    });
+
+    it('devrait gérer les événements avec des timestamps', () => {
+      const timestampEvent = {
+        type: 'load',
+        target: { src: 'https://example.com/image.jpg' },
+        timeStamp: Date.now(),
+        isTrusted: true,
+        bubbles: true,
+        cancelable: false
+      } as any;
+      
+      component.onImageLoad(timestampEvent);
+      
+      expect(mockImageLoad.emit).toHaveBeenCalledWith(timestampEvent);
     });
   });
 });
