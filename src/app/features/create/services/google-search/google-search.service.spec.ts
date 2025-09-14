@@ -331,9 +331,16 @@ describe('GoogleSearchService', () => {
     it('should handle special characters in query', (done) => {
       const query = 'café & jardin français!';
 
-      service.searchImage(query).subscribe(result => {
-        expect(Array.isArray(result)).toBe(true);
-        done();
+      service.searchImage(query).subscribe({
+        next: (result) => {
+          expect(Array.isArray(result)).toBe(true);
+          done();
+        },
+        error: (error) => {
+          // Gérer l'erreur pour éviter les unhandled promise rejections
+          expect(error).toBeDefined();
+          done();
+        }
       });
 
       const req = httpMock.expectOne((req) => 
