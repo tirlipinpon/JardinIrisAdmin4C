@@ -247,8 +247,8 @@ export class Infrastructure {
 
   setImageUrl(phraseAccroche: string, postId: number): Observable<string | PostgrestError> {
     const shouldReturnError = false;
-    const shouldReturnMock = !environment.isLocalhost;
-    const shouldMockImageGeneration = !environment.isLocalhost;
+    const shouldReturnMock = environment.isLocalhost;
+    const shouldMockImageGeneration = environment.isLocalhost;
     
     if (shouldReturnError) {
       const mockError: PostgrestError = {
@@ -263,7 +263,7 @@ export class Infrastructure {
     }
     
     if (shouldReturnMock) {
-      const dummyImageUrl = 'https://via.placeholder.com/800x400/4caf50/white?text=Image+Mock';
+      const dummyImageUrl = 'https://zmgfaiprgbawcernymqa.supabase.co/storage/v1/object/public/jardin-iris-images-post/704.png';
       this.loggingService.info('INFRASTRUCTURE', '📨 Mock imageUrl', { imageUrl: dummyImageUrl, postId });
       return from(Promise.resolve(dummyImageUrl));
     }

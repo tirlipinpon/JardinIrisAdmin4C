@@ -125,6 +125,36 @@ export class CreateComponent {
     };
   }
 
+  editImageUrl() {
+    const currentImageUrl = this.store.image_url();
+    if (currentImageUrl) {
+      const newImageUrl = prompt('Modifier l\'URL de l\'image principale:', currentImageUrl);
+      if (newImageUrl !== null && newImageUrl !== currentImageUrl) {
+        this.store.updateImageUrl(newImageUrl);
+        this.loggingService.info('COMPONENT', '🖼️ URL image principale mise à jour', { 
+          oldUrl: currentImageUrl, 
+          newUrl: newImageUrl 
+        });
+      }
+    }
+  }
+
+  openImageInNewTab() {
+    const imageUrl = this.store.image_url();
+    if (imageUrl) {
+      window.open(imageUrl, '_blank');
+      this.loggingService.info('COMPONENT', '🖼️ Image ouverte dans un nouvel onglet', { imageUrl });
+    }
+  }
+
+  onImageError(event: Event) {
+    this.loggingService.error('COMPONENT', '❌ Erreur de chargement de l\'image', event);
+  }
+
+  onImageLoad(event: Event) {
+    this.loggingService.info('COMPONENT', '✅ Image chargée avec succès');
+  }
+
   canSave(): boolean {
     return !!(this.store.postId() && this.store.article() && typeof this.store.postId() === 'number');
   }

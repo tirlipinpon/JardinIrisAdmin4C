@@ -466,6 +466,11 @@ export const SearchStore =  signalStore(
       loggingService.info('STORE', '🎥 Vidéo mise à jour', { video });
     },
 
+    updateImageUrl: (image_url: string) => {
+      patchState(store, { image_url });
+      loggingService.info('STORE', '🖼️ Image URL mise à jour', { image_url });
+    },
+
     updateFaqItem: (index: number, faqItem: { question: string; response: string }) => {
       const currentFaq = store.faq();
       const updatedFaq = [...currentFaq];

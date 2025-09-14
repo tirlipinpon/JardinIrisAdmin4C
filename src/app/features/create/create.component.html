@@ -137,6 +137,17 @@
           </div>
         </div>
         
+        <div class="stat-card" *ngIf="store.image_url()">
+          <mat-icon class="stat-icon">image</mat-icon>
+          <div class="stat-content">
+            <div class="stat-value">✓</div>
+            <div class="stat-label">Image principale</div>
+          </div>
+          <button mat-icon-button (click)="editImageUrl()" class="edit-button" title="Éditer l'image">
+            <mat-icon>edit</mat-icon>
+          </button>
+        </div>
+        
         <div class="stat-card" *ngIf="store.video()">
           <mat-icon class="stat-icon">videocam</mat-icon>
           <div class="stat-content">
@@ -175,6 +186,37 @@
             <div class="stat-value">{{ getInternalLinksStats().duplicates }}</div>
             <div class="stat-label">Doublons</div>
           </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Section d'affichage de l'image principale -->
+  <mat-card class="image-preview-card" *ngIf="store.image_url()">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>image</mat-icon>
+      <mat-card-title>Image principale</mat-card-title>
+      <mat-card-subtitle>Aperçu de l'image générée pour l'article</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="image-preview-container">
+        <img 
+          [src]="store.image_url()" 
+          [alt]="'Image pour: ' + (store.titre() || 'Article')"
+          class="preview-image"
+          (error)="onImageError($event)"
+          (load)="onImageLoad($event)">
+        
+        <div class="image-actions">
+          <button mat-raised-button color="primary" (click)="editImageUrl()">
+            <mat-icon>edit</mat-icon>
+            Modifier l'URL
+          </button>
+          <button mat-raised-button (click)="openImageInNewTab()">
+            <mat-icon>open_in_new</mat-icon>
+            Ouvrir dans un nouvel onglet
+          </button>
         </div>
       </div>
     </mat-card-content>
@@ -558,6 +600,46 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+}
+
+.edit-button {
+  margin-left: auto;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.edit-button:hover {
+  opacity: 1;
+}
+
+.image-preview-card {
+  margin-top: 20px;
+}
+
+.image-preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 400px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease;
+}
+
+.preview-image:hover {
+  transform: scale(1.02);
+}
+
+.image-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .stat-card::before {
