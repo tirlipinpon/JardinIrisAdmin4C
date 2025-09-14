@@ -622,6 +622,24 @@ export const SearchStore =  signalStore(
           return of(null);
         })
       ).subscribe();
+    },
+
+    // Méthode de reset complet du store
+    resetAll: () => {
+      loggingService.info('STORE', '🔄 Reset complet du store');
+      patchState(store, {
+        postId: null,
+        article: '',
+        titre: '',
+        image_url: '',
+        video: null,
+        faq: [],
+        internalImages: [],
+        error: [],
+        isGenerating: false,
+        step: 0
+      });
+      loggingService.info('STORE', '✅ Reset du store terminé');
     }
 
   });

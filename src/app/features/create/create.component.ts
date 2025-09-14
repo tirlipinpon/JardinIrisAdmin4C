@@ -236,7 +236,40 @@ export class CreateComponent {
     if (this.canSave()) {
       this.loggingService.info('COMPONENT', '💾 Déclenchement sauvegarde manuelle');
       this.store.saveAllToSupabase();
+      
+      // Reset complet après un délai pour laisser le temps à la sauvegarde
+      setTimeout(() => {
+        this.resetAll();
+      }, 2000);
     }
+  }
+
+  /**
+   * Reset complet de l'application après sauvegarde
+   */
+  resetAll() {
+    this.loggingService.info('COMPONENT', '🔄 Reset complet de l\'application');
+    
+    // Reset du store
+    this.store.resetAll();
+    
+    // Reset des variables locales
+    this.articleIdea = '';
+    this.showCompletionDialog = false;
+    
+    // Fermer toutes les sections (sauf la génération)
+    this.showPerformance.set(false);
+    this.showErrors.set(false);
+    this.showGeneration.set(true); // Garder la génération ouverte
+    this.showStats.set(false);
+    this.showImagePreview.set(false);
+    this.showEditor.set(false);
+    this.showFormEditor.set(false);
+    
+    // Clear des métriques de performance
+    this.performanceService.clearMetrics();
+    
+    this.loggingService.info('COMPONENT', '✅ Reset complet terminé');
   }
 
 
