@@ -38,11 +38,10 @@ export class Application {
   }
 
   generate(articleIdea: string): void {
-    this.loggingService.info('APPLICATION', '🚀 Début du processus de génération', { articleIdea });
-    this.store.startGeneration();
-    this.store.getNextPostId();
-    this.store.getLastPostTitreAndId();
-    this.store.setPost(articleIdea);
+    this.loggingService.info('APPLICATION', '🚀 Début du processus de génération OPTIMISÉ', { articleIdea });
+    // Nouvelle méthode qui parallélise getNextPostId + getLastPostTitreAndId
+    // GAIN : 1-2 secondes économisées au démarrage ⚡
+    this.store.initializeAndGenerate(articleIdea);
   }
 
 

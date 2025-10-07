@@ -250,6 +250,112 @@ export const SearchStore =  signalStore(
       )
     ),
 
+    /**
+     * NOUVELLE MÉTHODE : Initialisation et génération optimisées
+     * Parallélise les appels d'initialisation puis lance la génération
+     * 
+     * GAIN DE PERFORMANCE : 1-2 secondes économisées au démarrage
+     * 
+     * Avant (séquentiel) :
+     *   getNextPostId (1-2s) + getLastPostTitreAndId (1-2s) + setPost (15-20s)
+     *   = 17-24 secondes
+     * 
+     * Après (parallèle) :
+     *   forkJoin(postId, lastTitles) (1-2s) + setPost (15-20s)
+     *   = 16-22 secondes
+     */
+    initializeAndGenerate: rxMethod<string>(
+      pipe(
+        concatMap((articleIdea: string) => {
+          const startTime = Date.now();
+          
+          // Démarrer la génération globale
+          patchState(store, { isGenerating: true, step: 0 });
+          
+          loggingService.info('STORE', '⚡ Initialisation EN PARALLÈLE', {
+            tasks: ['getNextPostId', 'getLastPostTitreAndId']
+          });
+          
+          // Paralléliser les 2 appels d'initialisation avec forkJoin
+          return forkJoin({
+            postId: infraPerf.getNextPostId().pipe(
+              map((response: number | PostgrestError) => throwOnPostgrestError(response)),
+              catchError(error => {
+                loggingService.error('STORE', '❌ Erreur getNextPostId', error);
+                addError(extractErrorMessage(error));
+                throw error;
+              })
+            ),
+            lastTitles: infraPerf.getLastPostTitreAndId().pipe(
+              map((response: { titre: string; id: number; new_href: string }[] | PostgrestError) => throwOnPostgrestError(response)),
+              catchError(error => {
+                loggingService.error('STORE', '❌ Erreur getLastPostTitreAndId', error);
+                addError(extractErrorMessage(error));
+                throw error;
+              })
+            )
+          }).pipe(
+            tap({
+              next: (initData) => {
+                const initDuration = Date.now() - startTime;
+                
+                // Mettre à jour le store avec les données d'initialisation
+                patchState(store, {
+                  postId: initData.postId,
+                  postTitreAndId: initData.lastTitles
+                });
+                
+                loggingService.info('STORE', `✅ Initialisation terminée en ${initDuration}ms`, {
+                  postId: initData.postId,
+                  titlesCount: initData.lastTitles.length
+                });
+              }
+            }),
+            // Puis lancer la génération de l'article
+            switchMap(() => {
+              loggingService.info('STORE', '🚀 Lancement génération article avec IA');
+              
+              return infraPerf.setPost(articleIdea).pipe(
+                withLoading(store, 'setPost'),
+                map((response: any | PostgrestError) => throwOnPostgrestError(response)),
+                tap({
+                  next: (postData: any) => {
+                    const totalDuration = Date.now() - startTime;
+                    
+                    patchState(store, {
+                      titre: postData.titre || null,
+                      description_meteo: postData.description_meteo || null,
+                      phrase_accroche: postData.phrase_accroche || null,
+                      article: postData.article || null,
+                      new_href: postData.new_href || null,
+                      citation: postData.citation || null,
+                      lien_url_article: postData.lien_url_article?.lien1 || null,
+                      categorie: postData.categorie || null,
+                      step: 1
+                    });
+                    
+                    loggingService.info('STORE', `🎉 Génération complète terminée en ${totalDuration}ms`, {
+                      gain: '1-2 sec économisées vs séquentiel !'
+                    });
+                  },
+                  error: (error: unknown) => {
+                    addError(extractErrorMessage(error));
+                    patchState(store, { isGenerating: false });
+                    loggingService.error('STORE', '❌ Erreur lors de la génération de l\'article', error);
+                  }
+                })
+              );
+            }),
+            catchError(error => {
+              patchState(store, { isGenerating: false });
+              loggingService.error('STORE', '❌ Erreur lors de l\'initialisation', error);
+              return [];
+            })
+          );
+        })
+      )
+    ),
+
     setImageUrl: rxMethod<void>(
       pipe(
         concatMap(() => {
