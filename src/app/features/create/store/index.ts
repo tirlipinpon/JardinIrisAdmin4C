@@ -183,6 +183,10 @@ export const SearchStore =  signalStore(
       loggingService.info('STORE', '✅ Fin du processus de génération');
     },
     
+    /**
+     * @deprecated Utilisez initializeAndGenerate() à la place
+     * Cette méthode est conservée pour compatibilité et tests unitaires
+     */
     getNextPostId: rxMethod<void>(
       pipe(
         concatMap(() =>
@@ -200,6 +204,10 @@ export const SearchStore =  signalStore(
       )
     ),
 
+    /**
+     * @deprecated Utilisez initializeAndGenerate() à la place
+     * Cette méthode est conservée pour compatibilité et tests unitaires
+     */
     getLastPostTitreAndId: rxMethod<void>(
       pipe(
         concatMap(() =>
@@ -356,6 +364,10 @@ export const SearchStore =  signalStore(
       )
     ),
 
+    /**
+     * @deprecated Utilisez enrichMediaParallel() à la place pour des performances optimales
+     * Cette méthode est conservée pour compatibilité et tests unitaires
+     */
     setImageUrl: rxMethod<void>(
       pipe(
         concatMap(() => {
@@ -383,6 +395,10 @@ export const SearchStore =  signalStore(
       )
     ),
 
+    /**
+     * @deprecated Utilisez enrichMediaParallel() à la place pour des performances optimales
+     * Cette méthode est conservée pour compatibilité et tests unitaires
+     */
     setVideo: rxMethod<void>(
       pipe(
         concatMap(() => withMethodGuard('setVideo', () => {
@@ -408,6 +424,10 @@ export const SearchStore =  signalStore(
       )
     ),
 
+    /**
+     * @deprecated Utilisez enrichMediaParallel() à la place pour des performances optimales
+     * Cette méthode est conservée pour compatibilité et tests unitaires
+     */
     setFaq: rxMethod<void>(
       pipe(
         concatMap(() => {
@@ -432,6 +452,10 @@ export const SearchStore =  signalStore(
       )
     ),
 
+    /**
+     * @deprecated Utilisez enrichMediaParallel() à la place pour des performances optimales
+     * Cette méthode est conservée pour compatibilité et tests unitaires
+     */
     internalImage: rxMethod<void>(
       pipe(
         concatMap(() => withMethodGuard('internalImage', () => {
