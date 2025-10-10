@@ -1,11 +1,13 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { createClient, SupabaseClient, PostgrestError } from '@supabase/supabase-js';
 import { environment } from '../../../../environment';
+import { ImageProcessingService } from './image-processing.service';
 
 
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
   public client: SupabaseClient;
+  private readonly imageProcessingService = inject(ImageProcessingService);
 
   constructor() {
     this.client = createClient(environment.supabaseUrl, environment.supabaseKey);
@@ -296,20 +298,24 @@ export class SupabaseService {
     });
     
     try {
-      // 1. Générer le nom de fichier avec chemin complet (dossier postId)
+      // 1. Télécharger l'image externe
+      const imageData = await this.downloadExternalImage(externalImageUrl);
+      
+      // 2. Traiter l'image (redimensionner, crop, WebP, compression)
+      console.log('🎨 Traitement de l\'image (700×250, WebP, max 60Ko)...');
+      const processedImageData = await this.imageProcessingService.processImageForChapter(imageData);
+      
+      // 3. Générer le nom de fichier avec chemin complet (dossier postId) - Extension .webp
       const timestamp = Date.now();
-      const fileName = `${postId}/${postId}_chapitre_${chapitreId}_${timestamp}.png`;
+      const fileName = `${postId}/${postId}_chapitre_${chapitreId}_${timestamp}.webp`;
       
       console.log('📁 Chemin de fichier généré:', fileName);
       
-      // 2. Télécharger l'image externe
-      const imageData = await this.downloadExternalImage(externalImageUrl);
-      
-      // 3. Uploader dans Storage
+      // 4. Uploader l'image traitée dans Storage
       const storageUrl = await this.uploadImageToStorage(
         fileName,
-        imageData,
-        'image/png'
+        processedImageData,  // Image optimisée
+        'image/webp'         // Type WebP
       );
       
       if (!storageUrl) {
@@ -319,7 +325,10 @@ export class SupabaseService {
       
       console.log('✅ Image interne uploadée avec succès:', {
         storageUrl,
-        fileName
+        fileName,
+        format: 'WebP',
+        dimensions: '700×250',
+        taille: `${(processedImageData.length / 1024).toFixed(2)} Ko`
       });
       
       return storageUrl;
