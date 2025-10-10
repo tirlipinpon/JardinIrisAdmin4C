@@ -576,18 +576,72 @@ export class Infrastructure {
     
     return this.wrapWithErrorHandling(
       () => from(Promise.all(
-        images.map(image => 
-          this.supabaseService.setNewUrlImagesChapitres(
-            image.url_Image,
-            image.chapitre_id,
-            postId,
-            image.chapitre_key_word,
-            image.explanation_word
-          )
-        )
+        images.map(async (image, index) => {
+          try {
+            this.loggingService.info('INFRASTRUCTURE', `🖼️ Traitement image ${index + 1}/${images.length}`, {
+              chapitreId: image.chapitre_id,
+              keyword: image.chapitre_key_word
+            });
+            
+            // Étape 1 : Upload de l'image externe vers Supabase Storage
+            const storageUrl = await this.supabaseService.uploadInternalImageToStorage(
+              postId,
+              image.chapitre_id,
+              image.url_Image  // URL externe (Pexels, etc.)
+            );
+            
+            // Étape 2 : Déterminer l'URL finale (Storage ou fallback)
+            let finalUrl: string;
+            if (storageUrl) {
+              finalUrl = storageUrl;
+              this.loggingService.info('INFRASTRUCTURE', `✅ Image ${index + 1} uploadée dans Storage`, {
+                chapitreId: image.chapitre_id,
+                url: finalUrl
+              });
+            } else {
+              // Fallback si l'upload échoue
+              finalUrl = 'https://via.placeholder.com/800x400/4caf50/white?text=Image+Non+Disponible';
+              this.loggingService.warn('INFRASTRUCTURE', `⚠️ Fallback utilisé pour chapitre ${image.chapitre_id}`);
+              
+              // Émettre un warning dans le store
+              const warningMessage = `Image du chapitre ${image.chapitre_id} non disponible - Placeholder utilisé`;
+              this.signalWarning(warningMessage);
+            }
+            
+            // Étape 3 : Insertion en DB avec l'URL finale (Storage ou fallback)
+            await this.supabaseService.setNewUrlImagesChapitres(
+              finalUrl,           // URL depuis Storage ou placeholder
+              image.chapitre_id,
+              postId,
+              image.chapitre_key_word,
+              image.explanation_word
+            );
+            
+            this.loggingService.info('INFRASTRUCTURE', `✅ Image ${index + 1} sauvegardée en DB`, {
+              chapitreId: image.chapitre_id,
+              url: finalUrl
+            });
+            
+          } catch (error) {
+            this.loggingService.error('INFRASTRUCTURE', `❌ Erreur image chapitre ${image.chapitre_id}`, error);
+            
+            // En cas d'erreur complète, utiliser un placeholder d'erreur
+            const errorPlaceholder = 'https://via.placeholder.com/800x400/ff5722/white?text=Erreur+Image';
+            await this.supabaseService.setNewUrlImagesChapitres(
+              errorPlaceholder,
+              image.chapitre_id,
+              postId,
+              image.chapitre_key_word,
+              image.explanation_word
+            );
+            
+            // Émettre un warning pour informer l'utilisateur
+            this.signalWarning(`Erreur lors de la sauvegarde de l'image du chapitre ${image.chapitre_id}`);
+          }
+        })
       )).pipe(
         map(() => {
-          this.loggingService.info('INFRASTRUCTURE', '✅ Images internes sauvegardées dans Supabase');
+          this.loggingService.info('INFRASTRUCTURE', '✅ Toutes les images internes sauvegardées');
           return true;
         })
       ),

@@ -187,4 +187,150 @@ export class SupabaseService {
     }
   }
 
+  // ============================================================================
+  // 🖼️ MÉTHODES POUR LES IMAGES DE CHAPITRES
+  // ============================================================================
+
+  /**
+   * Méthode utilitaire : Télécharge une image depuis une URL externe
+   * @param imageUrl URL externe de l'image (Pexels, etc.)
+   * @returns Uint8Array contenant les données de l'image
+   */
+  async downloadExternalImage(imageUrl: string): Promise<Uint8Array> {
+    console.log('📥 Téléchargement image externe:', imageUrl);
+    
+    try {
+      const response = await fetch(imageUrl);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const blob = await response.blob();
+      const arrayBuffer = await blob.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      
+      console.log('✅ Image téléchargée:', {
+        taille: uint8Array.length,
+        type: blob.type
+      });
+      
+      return uint8Array;
+    } catch (error) {
+      console.error('❌ Échec téléchargement image:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Méthode utilitaire : Upload une image dans Supabase Storage
+   * @param fileName Chemin complet du fichier (avec dossier postId)
+   * @param imageData Données de l'image en Uint8Array
+   * @param contentType Type MIME de l'image
+   * @returns URL publique de l'image ou null si échec
+   */
+  async uploadImageToStorage(
+    fileName: string,
+    imageData: Uint8Array,
+    contentType: string = 'image/png'
+  ): Promise<string | null> {
+    console.log('📤 Upload vers Storage:', {
+      fileName,
+      taille: imageData.length
+    });
+    
+    try {
+      // Upload dans le bucket (avec chemin incluant le dossier postId)
+      const { data, error } = await this.client.storage
+        .from('jardin-iris-images-post')
+        .upload(fileName, imageData, {
+          contentType: contentType,
+          upsert: true,
+          cacheControl: '3600'
+        });
+      
+      if (error) {
+        console.error('❌ Erreur Storage upload:', error);
+        throw error;
+      }
+      
+      // Récupérer l'URL publique
+      const { data: publicUrlData } = this.client.storage
+        .from('jardin-iris-images-post')
+        .getPublicUrl(fileName);
+      
+      const urlPublique = publicUrlData?.publicUrl;
+      
+      if (!urlPublique) {
+        console.error('❌ Impossible de récupérer URL publique');
+        return null;
+      }
+      
+      console.log('✅ Upload réussi:', urlPublique);
+      return urlPublique;
+    } catch (error) {
+      console.error('❌ Échec upload Storage:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Upload une image de chapitre dans Supabase Storage
+   * Télécharge l'image externe, l'upload dans Storage et retourne l'URL
+   * Structure: {postId}/{postId}_chapitre_{chapitreId}_{timestamp}.png
+   * 
+   * @param postId ID du post
+   * @param chapitreId ID du chapitre
+   * @param externalImageUrl URL externe de l'image (Pexels, etc.)
+   * @returns URL publique depuis Storage ou null si échec
+   */
+  async uploadInternalImageToStorage(
+    postId: number,
+    chapitreId: number,
+    externalImageUrl: string
+  ): Promise<string | null> {
+    console.log('🖼️ Début upload image interne:', {
+      postId,
+      chapitreId,
+      source: externalImageUrl
+    });
+    
+    try {
+      // 1. Générer le nom de fichier avec chemin complet (dossier postId)
+      const timestamp = Date.now();
+      const fileName = `${postId}/${postId}_chapitre_${chapitreId}_${timestamp}.png`;
+      
+      console.log('📁 Chemin de fichier généré:', fileName);
+      
+      // 2. Télécharger l'image externe
+      const imageData = await this.downloadExternalImage(externalImageUrl);
+      
+      // 3. Uploader dans Storage
+      const storageUrl = await this.uploadImageToStorage(
+        fileName,
+        imageData,
+        'image/png'
+      );
+      
+      if (!storageUrl) {
+        console.warn('⚠️ Upload Storage échoué, retourne null');
+        return null;
+      }
+      
+      console.log('✅ Image interne uploadée avec succès:', {
+        storageUrl,
+        fileName
+      });
+      
+      return storageUrl;
+    } catch (error) {
+      console.error('❌ Erreur complète upload image interne:', {
+        postId,
+        chapitreId,
+        error
+      });
+      return null;
+    }
+  }
+
 } 
