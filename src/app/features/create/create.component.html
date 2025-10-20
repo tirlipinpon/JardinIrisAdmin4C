@@ -58,7 +58,7 @@
       </button>
     </div>
     <div class="section-content" *ngIf="showStats()">
-      <app-article-stats
+      <app-lazy-article-stats
         [article]="store.article()"
         [isGenerating]="store.isGenerating()"
         [canSave]="canSave()"
@@ -72,7 +72,7 @@
         (saveAllData)="saveAllData()"
         (showPerformanceStats)="showPerformanceStats()"
         (editImageUrl)="editImageUrl()">
-      </app-article-stats>
+      </app-lazy-article-stats>
     </div>
   </div>
 
@@ -105,10 +105,10 @@
       </button>
     </div>
     <div class="section-content" *ngIf="showEditor()">
-      <app-article-editor 
+      <app-lazy-article-editor 
         [article]="store.article() || ''" 
         (articleChange)="onArticleChange($event)">
-      </app-article-editor>
+      </app-lazy-article-editor>
     </div>
   </div>
 
@@ -121,7 +121,7 @@
       </button>
     </div>
     <div class="section-content" *ngIf="showFormEditor()">
-      <app-post-form-editor></app-post-form-editor>
+      <app-lazy-post-form-editor></app-lazy-post-form-editor>
     </div>
   </div>
 </div>

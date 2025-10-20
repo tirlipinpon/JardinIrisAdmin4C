@@ -17,13 +17,13 @@ import { VersionService } from '../../shared/services/versions/versions.service'
 import { PerformanceService } from '../../shared/services/performance.service';
 import { Application } from './components/application/application';
 import { SearchStore } from './store';
-import { ArticleEditorComponent } from './components/article-editor/article-editor.component';
-import { PostFormEditorComponent } from './components/post-form-editor/post-form-editor.component';
+import { LazyArticleEditorComponent } from './components/lazy-article-editor/lazy-article-editor.component';
+import { LazyPostFormEditorComponent } from './components/lazy-post-form-editor/lazy-post-form-editor.component';
 import { ProcessCompletionDialogComponent } from './components/process-completion-dialog/process-completion-dialog.component';
 import { PerformanceDisplayComponent } from './components/performance-display/performance-display.component';
 import { ErrorDisplayComponent } from './components/error-display/error-display.component';
 import { ArticleGenerationComponent } from './components/article-generation/article-generation.component';
-import { ArticleStatsComponent } from './components/article-stats/article-stats.component';
+import { LazyArticleStatsComponent } from './components/lazy-article-stats/lazy-article-stats.component';
 import { ImagePreviewComponent } from './components/image-preview/image-preview.component';
 
 @Component({
@@ -42,12 +42,12 @@ import { ImagePreviewComponent } from './components/image-preview/image-preview.
     MatChipsModule,
     MatDividerModule,
     MatDialogModule,
-    ArticleEditorComponent, 
-    PostFormEditorComponent,
+    LazyArticleEditorComponent, 
+    LazyPostFormEditorComponent,
     PerformanceDisplayComponent,
     ErrorDisplayComponent,
     ArticleGenerationComponent,
-    ArticleStatsComponent,
+    LazyArticleStatsComponent,
     ImagePreviewComponent
   ],
   templateUrl: './create.component.html',
