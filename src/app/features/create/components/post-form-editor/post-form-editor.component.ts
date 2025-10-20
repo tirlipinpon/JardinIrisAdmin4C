@@ -324,4 +324,17 @@ export class PostFormEditorComponent implements OnInit, OnDestroy {
     
     this.store.updateInternalImages(updatedImages);
   }
+
+  // trackBy functions to optimize ngFor rendering
+  trackByCategory(index: number, item: { value: string; label: string }): string {
+    return item.value;
+  }
+
+  trackByFaq(index: number, item: { question: string; response: string }): string {
+    return item.question || String(index);
+  }
+
+  trackByInternalImage(index: number, item: any): string | number {
+    return item?.id ?? index;
+  }
 }

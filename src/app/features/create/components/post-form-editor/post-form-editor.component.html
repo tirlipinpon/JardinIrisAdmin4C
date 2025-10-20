@@ -111,7 +111,7 @@
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Catégorie</mat-label>
           <mat-select formControlName="categorie">
-            <mat-option *ngFor="let category of categories" [value]="category.value">
+            <mat-option *ngFor="let category of categories; trackBy: trackByCategory" [value]="category.value">
               {{ category.label }}
             </mat-option>
           </mat-select>
@@ -256,7 +256,7 @@
 
     <mat-card-content>
       <mat-accordion class="faq-accordion">
-        <mat-expansion-panel *ngFor="let faqItem of store.faq(); let i = index" class="faq-panel">
+        <mat-expansion-panel *ngFor="let faqItem of store.faq(); let i = index; trackBy: trackByFaq" class="faq-panel">
           <mat-expansion-panel-header>
             <mat-panel-title>
               <mat-icon>help_outline</mat-icon>
@@ -320,7 +320,7 @@
 
     <mat-card-content>
       <mat-accordion multi>
-        <mat-expansion-panel *ngFor="let image of store.internalImages(); let i = index" class="image-panel">
+        <mat-expansion-panel *ngFor="let image of store.internalImages(); let i = index; trackBy: trackByInternalImage" class="image-panel">
           <mat-expansion-panel-header>
             <mat-panel-title>
               <mat-icon>image</mat-icon>
