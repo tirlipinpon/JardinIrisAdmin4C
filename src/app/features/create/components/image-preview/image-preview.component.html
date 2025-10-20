@@ -8,8 +8,11 @@
   <mat-card-content>
     <div class="image-preview-container">
       <img 
-        [src]="imageUrl()" 
+        ngSrc="{{ imageUrl() || '' }}" 
         [alt]="'Image pour: ' + (title() || 'Article')"
+        width="800"
+        height="400"
+        priority
         class="preview-image"
         (error)="onImageError($event)"
         (load)="onImageLoad($event)">

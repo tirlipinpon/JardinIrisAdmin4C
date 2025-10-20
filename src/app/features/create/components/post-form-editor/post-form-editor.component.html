@@ -181,8 +181,10 @@
           <div class="video-preview" *ngIf="usePreviewMode">
             <div class="video-thumbnail" (click)="openVideoInNewTab()">
               <img 
-                [src]="getYouTubeThumbnailUrl(extractVideoId(videoUrl)!)" 
+                ngSrc="{{ getYouTubeThumbnailUrl(extractVideoId(videoUrl)!) }}" 
                 [alt]="'Aperçu de la vidéo YouTube'"
+                width="320"
+                height="180"
                 class="thumbnail-image">
               <div class="play-overlay">
                 <mat-icon class="play-icon">play_circle_filled</mat-icon>
@@ -333,7 +335,7 @@
 
           <div class="image-form">
             <div class="image-preview" *ngIf="image.url_Image">
-              <img [src]="image.url_Image" [alt]="image.chapitre_key_word" class="preview-img">
+              <img ngSrc="{{ image.url_Image }}" [alt]="image.chapitre_key_word" width="200" height="150" class="preview-img">
             </div>
             
             <mat-form-field appearance="outline" class="full-width">

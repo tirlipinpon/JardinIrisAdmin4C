@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, OnDestroy, effect } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -28,7 +28,8 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
     MatButtonModule,
     MatIconModule,
     MatExpansionModule,
-    MatDividerModule
+    MatDividerModule,
+    NgOptimizedImage
   ],
   templateUrl: './post-form-editor.component.html',
   styleUrls: ['./post-form-editor.component.css']
