@@ -1,4 +1,4 @@
-import { Component, input, output, OnInit, OnDestroy, DestroyRef, inject } from '@angular/core';
+import { Component, input, output, OnInit, OnDestroy, DestroyRef, inject, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -84,7 +84,8 @@ export class ArticleEditorComponent implements OnInit, OnDestroy {
     }
   }
 
-  getWordCount(): number {
+  // Computed signal pour optimiser le comptage des mots
+  readonly wordCount = computed(() => {
     const content = this.articleFormControl.value || this.articleContent;
     if (!content) return 0;
     return content
@@ -93,5 +94,10 @@ export class ArticleEditorComponent implements OnInit, OnDestroy {
       .split(/\s+/)
       .filter(word => word.length > 0)
       .length;
+  });
+
+  // Méthode de compatibilité (dépréciée - utiliser le computed signal)
+  getWordCount(): number {
+    return this.wordCount();
   }
 }

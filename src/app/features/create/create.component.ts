@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, effect, signal, DestroyRef } from '@angular/core';
+import { Component, inject, effect, signal, computed, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -163,21 +163,22 @@ export class CreateComponent {
     return index;
   }
 
-  getArticleStats() {
+  // Computed signals pour optimiser les calculs coûteux
+  readonly articleStats = computed(() => {
     const article = this.store.article() || '';
     const characters = article.length;
     const words = article.split(/\s+/).filter(word => word.length > 0).length;
     const paragraphs = (article.match(/<span id=['"]paragraphe-\d+['"]/g) || []).length;
     
     return { characters, words, paragraphs };
-  }
+  });
 
-  getBotanicalNamesCount(): number {
+  readonly botanicalNamesCount = computed(() => {
     const article = this.store.article() || '';
     return (article.match(/<span class=['"]inat-vegetal['"]/g) || []).length;
-  }
+  });
 
-  getInternalLinksStats() {
+  readonly internalLinksStats = computed(() => {
     const article = this.store.article() || '';
     
     // Compter tous les liens internes (balises <a>)
@@ -198,6 +199,19 @@ export class CreateComponent {
       unique: uniqueLinks,
       duplicates: totalLinks - uniqueLinks
     };
+  });
+
+  // Méthodes de compatibilité (dépréciées - utiliser les computed signals)
+  getArticleStats() {
+    return this.articleStats();
+  }
+
+  getBotanicalNamesCount(): number {
+    return this.botanicalNamesCount();
+  }
+
+  getInternalLinksStats() {
+    return this.internalLinksStats();
   }
 
   editImageUrl() {

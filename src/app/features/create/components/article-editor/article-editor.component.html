@@ -54,7 +54,7 @@
   <div class="editor-footer">
     <small class="text-muted">
       Caractères: {{ (articleFormControl.value || articleContent).length || 0 }} | 
-      Mots: {{ getWordCount() }} |
+      Mots: {{ wordCount() }} |
       Mode: {{ showPreview ? 'Aperçu' : (showRawHtml ? 'HTML' : 'Visuel') }}
     </small>
   </div>
