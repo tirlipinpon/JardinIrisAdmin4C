@@ -26,7 +26,7 @@ export class ImageProcessingService {
 
     try {
       // Étape 1 : Uint8Array → ImageBitmap
-      const blob = new Blob([imageData]);
+      const blob = new Blob([imageData as BlobPart]);
       const imageBitmap = await createImageBitmap(blob);
 
       console.log('📐 Dimensions originales:', {
@@ -196,6 +196,122 @@ export class ImageProcessingService {
 
     console.warn(`⚠️ Impossible d'atteindre ${(maxSizeBytes / 1024).toFixed(0)} Ko. Taille finale: ${(finalBlob.size / 1024).toFixed(2)} Ko`);
     return finalBlob;
+  }
+
+  /**
+   * Traite une image pour le post principal (image DALL-E)
+   * - Redimensionne à 400×400px (l'image est déjà carrée)
+   * - Convertit en WebP
+   * - Compresse jusqu'à 200Ko max
+   * 
+   * @param imageData Image en base64 ou Uint8Array
+   * @returns Image traitée en Uint8Array (WebP)
+   */
+  async processImageForMainPost(imageData: string | Uint8Array): Promise<Uint8Array> {
+    console.log('🎨 [IMAGE_PROCESSING] ===== DÉBUT TRAITEMENT IMAGE PRINCIPALE =====');
+    console.log('🎨 [IMAGE_PROCESSING] Type données entrée:', typeof imageData);
+
+    try {
+      // Étape 1 : Convertir vers Uint8Array si nécessaire
+      let uint8ArrayData: Uint8Array;
+      if (typeof imageData === 'string') {
+        console.log('📝 [IMAGE_PROCESSING] Conversion base64 → Uint8Array');
+        console.log('📝 [IMAGE_PROCESSING] Longueur base64:', imageData.length);
+        uint8ArrayData = this.convertBase64ToUint8Array(imageData);
+        console.log('📝 [IMAGE_PROCESSING] Conversion OK, taille:', uint8ArrayData.length, 'bytes');
+      } else {
+        console.log('📝 [IMAGE_PROCESSING] Déjà Uint8Array, taille:', imageData.length, 'bytes');
+        uint8ArrayData = imageData;
+      }
+
+      console.log('📐 [IMAGE_PROCESSING] Taille originale:', `${(uint8ArrayData.length / 1024).toFixed(2)} Ko`);
+
+      // Étape 2 : Uint8Array → ImageBitmap
+      console.log('🖼️ [IMAGE_PROCESSING] Création ImageBitmap...');
+      const blob = new Blob([uint8ArrayData as BlobPart]);
+      const imageBitmap = await createImageBitmap(blob);
+
+      console.log('📐 [IMAGE_PROCESSING] Dimensions IMAGE ORIGINALE:', {
+        width: imageBitmap.width,
+        height: imageBitmap.height,
+        ratio: (imageBitmap.width / imageBitmap.height).toFixed(2)
+      });
+
+      // Étape 3 : Créer canvas et redimensionner à 400×400
+      const targetSize = 400;
+      console.log('🎯 [IMAGE_PROCESSING] Création canvas cible: 400×400');
+      const canvas = document.createElement('canvas');
+      canvas.width = targetSize;
+      canvas.height = targetSize;
+
+      const context = canvas.getContext('2d');
+      if (!context) {
+        throw new Error('Impossible de créer le contexte 2D du canvas');
+      }
+
+      // Redimensionnement simple (l'image est censée être carrée)
+      console.log('✂️ [IMAGE_PROCESSING] Redimensionnement:', `${imageBitmap.width}×${imageBitmap.height} → 400×400`);
+      context.drawImage(imageBitmap, 0, 0, targetSize, targetSize);
+      console.log('✅ [IMAGE_PROCESSING] Redimensionnement effectué');
+
+      // Étape 4 : Compression itérative jusqu'à 200Ko max
+      const maxSizeBytes = 200 * 1024; // 200Ko
+      console.log('🗜️ [IMAGE_PROCESSING] Compression vers max 200Ko...');
+      const compressedBlob = await this.compressToSize(canvas, maxSizeBytes);
+
+      console.log('✅ [IMAGE_PROCESSING] ===== IMAGE PRINCIPALE TRAITÉE ===== ', {
+        format: 'WebP',
+        dimensionsFinales: `${targetSize}×${targetSize}`,
+        tailleFinale: `${(compressedBlob.size / 1024).toFixed(2)} Ko`,
+        tailleOriginale: `${(uint8ArrayData.length / 1024).toFixed(2)} Ko`,
+        réduction: `${(((uint8ArrayData.length - compressedBlob.size) / uint8ArrayData.length) * 100).toFixed(1)}%`
+      });
+
+      // Étape 5 : Blob → Uint8Array
+      const arrayBuffer = await compressedBlob.arrayBuffer();
+      const finalArray = new Uint8Array(arrayBuffer);
+      console.log('🎁 [IMAGE_PROCESSING] Retour Uint8Array, taille:', finalArray.length, 'bytes');
+      
+      return finalArray;
+
+    } catch (error) {
+      console.error('💥 [IMAGE_PROCESSING] ERREUR TRAITEMENT:', error);
+      console.error('💥 [IMAGE_PROCESSING] Stack:', (error as Error).stack);
+      
+      // Fallback : retourner l'image originale
+      console.warn('⚠️ [IMAGE_PROCESSING] FALLBACK: Utilisation image originale sans traitement');
+      if (typeof imageData === 'string') {
+        const fallbackData = this.convertBase64ToUint8Array(imageData);
+        console.warn('⚠️ [IMAGE_PROCESSING] Retour image originale (base64 converti):', fallbackData.length, 'bytes');
+        return fallbackData;
+      }
+      console.warn('⚠️ [IMAGE_PROCESSING] Retour image originale (Uint8Array):', imageData.length, 'bytes');
+      return imageData;
+    }
+  }
+
+  /**
+   * Convertit une chaîne base64 en Uint8Array
+   * 
+   * @param base64String Chaîne base64 (avec ou sans préfixe data:image)
+   * @returns Uint8Array contenant les données de l'image
+   */
+  private convertBase64ToUint8Array(base64String: string): Uint8Array {
+    // Enlever le préfixe si présent (data:image/png;base64,...)
+    let base64Data = base64String;
+    if (base64String.includes(',')) {
+      base64Data = base64String.split(',')[1];
+    }
+
+    // Décoder le base64
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+
+    return new Uint8Array(byteNumbers);
   }
 }
 

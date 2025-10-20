@@ -404,7 +404,7 @@ Intégrez un lien hypertexte spécifique dans un article HTML : pour chaque pa
 La réponse doit être structurée en JSON comme suit :
 {
   "upgraded": "<le_html_complet_modifié_avec_1_lien_par_paragraphe>",
-  "idToRemove": "id"
+  "idsUsed": ["id1", "id2", "id3", ...]
 }
 
 ## Exemples
@@ -423,7 +423,7 @@ La réponse doit être structurée en JSON comme suit :
 \`\`\`json
 {
   "upgraded": "<span id=\"paragraphe-1\">Le <a class=\"myTooltip\" href=\"https://www.jardin-iris.be/jardinier-paysagiste-belgique-blog/jardin-embellit.html\" title=\"jardin-embellit\">jardin zen japonais embelli<span class=\"myTooltiptext\">jardin zen</span></a> votre espace...</span><span id=\"paragraphe-2\">Pour un <a class=\"myTooltip\" href=\"https://www.jardin-iris.be/jardinier-paysagiste-belgique-blog/entretien-jardin.html\" title=\"entretien de jardin\">entretien de jardin<span class=\"myTooltiptext\">entretien de jardin</span></a> optimal, suivez les conseils d'experts.</span>",
-  "idToRemove": "101"
+  "idsUsed": ["101", "102"]
 }\`\`\`
 
 (Note : Dans la vraie sortie, chaque paragraphe span doit contenir au maximum un lien et le HTML complet. )

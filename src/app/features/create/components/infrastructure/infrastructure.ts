@@ -436,7 +436,8 @@ export class Infrastructure {
           if (result === null) { throw new Error('Aucun résultat retourné par l\'API OpenAI pour les liens internes'); }
           const raw = extractJSONBlock(result);
           try {
-            const data: { upgraded: string; idToRemove?: string } = JSON.parse(raw);
+            const data: { upgraded: string; idsUsed?: string[] } = JSON.parse(raw);
+            this.loggingService.info('INFRASTRUCTURE', `✅ Liens internes ajoutés. IDs utilisés: ${data.idsUsed?.join(', ') || 'aucun'}`);
             return data.upgraded;
           } catch (error) {
             this.loggingService.error('INFRASTRUCTURE', 'Erreur lors du parsing du résultat setInternalLink', error);

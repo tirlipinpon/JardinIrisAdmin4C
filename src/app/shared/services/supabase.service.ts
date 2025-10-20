@@ -76,7 +76,7 @@ export class SupabaseService {
 
       if (error) throw error;
 
-      // 3️⃣ Récupérer l’URL publique
+      // 3️⃣ Récupérer l'URL publique
       const { data: publicUrlData } = this.client.storage
         .from(environment.supabaseBucket)
         .getPublicUrl(`${postId}.png`);
@@ -84,6 +84,54 @@ export class SupabaseService {
       return publicUrlData?.publicUrl || null;
     } catch (err) {
       console.error("Erreur uploadBase64ToSupabase:", err);
+      return null;
+    }
+  }
+
+  /**
+   * Upload une image principale traitée (400×400, WebP) dans Supabase Storage
+   * Cette méthode est destinée aux images principales du post (DALL-E)
+   * 
+   * @param postId ID du post
+   * @param imageData Image traitée en Uint8Array (WebP)
+   * @returns URL publique de l'image ou null si échec
+   */
+  async uploadProcessedImageToStorage(postId: number, imageData: Uint8Array): Promise<string | null> {
+    console.log('📤 [SUPABASE] ===== UPLOAD IMAGE PRINCIPALE TRAITÉE =====', {
+      postId,
+      taille: `${(imageData.length / 1024).toFixed(2)} Ko`,
+      bytes: imageData.length
+    });
+
+    try {
+      // Nom de fichier avec dossier postId et extension .webp
+      const fileName = `${postId}/${postId}.webp`;
+      console.log('📁 [SUPABASE] Nom fichier:', fileName);
+      console.log('📁 [SUPABASE] Bucket: jardin-iris-images-post');
+
+      // Utiliser la méthode générique d'upload
+      console.log('⬆️ [SUPABASE] Appel uploadImageToStorage...');
+      const storageUrl = await this.uploadImageToStorage(
+        fileName,
+        imageData,
+        'image/webp'
+      );
+
+      if (!storageUrl) {
+        console.error('❌ [SUPABASE] Échec upload - URL null retournée');
+        return null;
+      }
+
+      console.log('✅ [SUPABASE] ===== IMAGE PRINCIPALE UPLOADÉE =====', {
+        url: storageUrl,
+        postId,
+        format: 'WebP',
+        dimensions: '400×400'
+      });
+      return storageUrl;
+    } catch (error) {
+      console.error('💥 [SUPABASE] ERREUR upload image principale:', error);
+      console.error('💥 [SUPABASE] Stack:', (error as Error).stack);
       return null;
     }
   }
@@ -236,13 +284,16 @@ export class SupabaseService {
     imageData: Uint8Array,
     contentType: string = 'image/png'
   ): Promise<string | null> {
-    console.log('📤 Upload vers Storage:', {
+    console.log('📤 [STORAGE] ===== UPLOAD VERS STORAGE =====', {
       fileName,
-      taille: imageData.length
+      taille: `${(imageData.length / 1024).toFixed(2)} Ko`,
+      contentType,
+      bucket: 'jardin-iris-images-post'
     });
     
     try {
       // Upload dans le bucket (avec chemin incluant le dossier postId)
+      console.log('⬆️ [STORAGE] Envoi vers Supabase Storage...');
       const { data, error } = await this.client.storage
         .from('jardin-iris-images-post')
         .upload(fileName, imageData, {
@@ -252,11 +303,19 @@ export class SupabaseService {
         });
       
       if (error) {
-        console.error('❌ Erreur Storage upload:', error);
+        console.error('❌ [STORAGE] Erreur Storage upload:', error);
+        console.error('❌ [STORAGE] Error details:', {
+          message: error.message,
+          statusCode: (error as any).statusCode,
+          error: (error as any).error
+        });
         throw error;
       }
       
+      console.log('✅ [STORAGE] Upload réussi, data:', data);
+      
       // Récupérer l'URL publique
+      console.log('🔗 [STORAGE] Récupération URL publique...');
       const { data: publicUrlData } = this.client.storage
         .from('jardin-iris-images-post')
         .getPublicUrl(fileName);
@@ -264,14 +323,20 @@ export class SupabaseService {
       const urlPublique = publicUrlData?.publicUrl;
       
       if (!urlPublique) {
-        console.error('❌ Impossible de récupérer URL publique');
+        console.error('❌ [STORAGE] Impossible de récupérer URL publique');
+        console.error('❌ [STORAGE] publicUrlData:', publicUrlData);
         return null;
       }
       
-      console.log('✅ Upload réussi:', urlPublique);
+      console.log('✅ [STORAGE] ===== UPLOAD STORAGE RÉUSSI =====', {
+        url: urlPublique,
+        fileName,
+        taille: `${(imageData.length / 1024).toFixed(2)} Ko`
+      });
       return urlPublique;
     } catch (error) {
-      console.error('❌ Échec upload Storage:', error);
+      console.error('💥 [STORAGE] ÉCHEC UPLOAD STORAGE:', error);
+      console.error('💥 [STORAGE] Stack:', (error as Error).stack);
       return null;
     }
   }
