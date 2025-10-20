@@ -1,4 +1,5 @@
-import { Component, input, output, OnInit, OnDestroy } from '@angular/core';
+import { Component, input, output, OnInit, OnDestroy, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Editor, NgxEditorModule, Toolbar } from 'ngx-editor';
@@ -11,6 +12,8 @@ import { Editor, NgxEditorModule, Toolbar } from 'ngx-editor';
   styleUrl: './article-editor.component.css'
 })
 export class ArticleEditorComponent implements OnInit, OnDestroy {
+  private readonly destroyRef = inject(DestroyRef);
+  
   article = input<string>('');
   articleChange = output<string>();
 
@@ -43,9 +46,11 @@ export class ArticleEditorComponent implements OnInit, OnDestroy {
     // Pour le réactiver : this.articleFormControl.enable();
     
     // Synchroniser les changements du FormControl avec articleContent
-    this.articleFormControl.valueChanges.subscribe(value => {
-      this.articleContent = value || '';
-    });
+    this.articleFormControl.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(value => {
+        this.articleContent = value || '';
+      });
   }
 
   ngOnDestroy() {

@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, effect, signal } from '@angular/core';
+import { Component, inject, effect, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -58,6 +59,7 @@ export class CreateComponent {
   private readonly versionService = inject(VersionService);
   private readonly performanceService = inject(PerformanceService);
   private readonly dialog = inject(MatDialog);
+  private readonly destroyRef = inject(DestroyRef);
   readonly store = inject(SearchStore);
   
   articleIdea = '';
@@ -290,11 +292,13 @@ export class CreateComponent {
       }
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      this.showCompletionDialog = false;
-      if (result === 'save') {
-        this.saveAllData();
-      }
-    });
+    dialogRef.afterClosed()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        this.showCompletionDialog = false;
+        if (result === 'save') {
+          this.saveAllData();
+        }
+      });
   }
 } 
