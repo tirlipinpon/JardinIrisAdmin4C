@@ -5,6 +5,7 @@ import { SupabaseService } from '../../../../shared/services/supabase.service';
 import { ImageProcessingService } from '../../../../shared/services/image-processing.service';
 import { GetPromptsService } from '../get-prompts/get-prompts.service';
 import { OpenaiApiService } from '../openai-api/openai-api.service';
+import { ImageDescriptionService } from '../image-description/image-description.service';
 
 @Injectable({ providedIn: 'root' })
 export class ImageUploadService {
@@ -13,6 +14,7 @@ export class ImageUploadService {
   private readonly imageProcessingService = inject(ImageProcessingService);
   private readonly getPromptsService = inject(GetPromptsService);
   private readonly openaiApiService = inject(OpenaiApiService);
+  private readonly imageDescriptionService = inject(ImageDescriptionService);
 
   generateAndUploadImage(phraseAccroche: string, postId: number, useMock = false): Observable<string> {
     return from((async () => {
@@ -55,38 +57,73 @@ export class ImageUploadService {
           bytes: processedImageData.length
         });
 
-        // Étape 3 : Uploader l'image traitée
-        console.log('📤 [IMAGE_UPLOAD_SVC] ===== UPLOAD VERS SUPABASE STORAGE =====');
-        const imageUrl = await this.supabaseService.uploadProcessedImageToStorage(postId, processedImageData);
+        // Étape 3 : Upload temporaire dans Supabase Storage
+        const timestamp = Date.now();
+        const tempFilename = `temp_${postId}_${timestamp}.webp`;
+        console.log('📤 [IMAGE_UPLOAD_SVC] ===== UPLOAD TEMPORAIRE VERS SUPABASE =====', { tempFilename });
+        this.loggingService.info('IMAGE_UPLOAD_SVC', '📤 Upload temporaire image', { tempFilename });
+        
+        const tempImageUrl = await this.supabaseService.uploadProcessedImageToStorage(postId, processedImageData, tempFilename);
 
-        if (!imageUrl) {
-          console.error('❌ [IMAGE_UPLOAD_SVC] Upload échoué - URL null');
-          this.loggingService.warn('IMAGE_UPLOAD_SVC', '⚠️ Upload échoué - fallback');
+        if (!tempImageUrl) {
+          console.error('❌ [IMAGE_UPLOAD_SVC] Upload temporaire échoué - URL null');
+          this.loggingService.warn('IMAGE_UPLOAD_SVC', '⚠️ Upload temporaire échoué - fallback');
           return 'https://via.placeholder.com/400x400/4caf50/white?text=Image+Jardin+Iris';
         }
 
-        console.log('✅ [IMAGE_UPLOAD_SVC] Image uploadée:', { imageUrl });
+        console.log('✅ [IMAGE_UPLOAD_SVC] Image temporaire uploadée:', { tempImageUrl });
 
-        // Étape 4 : Mettre à jour l'URL dans la table post
+        // Étape 4 : Générer description SEO avec l'URL publique Supabase
+        console.log('🔍 [IMAGE_UPLOAD_SVC] ===== GÉNÉRATION DESCRIPTION SEO =====');
+        this.loggingService.info('IMAGE_UPLOAD_SVC', '🔍 Génération description SEO avec OpenAI Vision', { tempImageUrl });
+        
+        const seoFilename = await this.imageDescriptionService.generateMainImageFilename(postId, tempImageUrl);
+        
+        console.log('✅ [IMAGE_UPLOAD_SVC] Nom fichier SEO généré:', seoFilename);
+
+        // Étape 5 : Re-uploader l'image avec le nom SEO final (on garde processedImageData en mémoire)
+        console.log('📤 [IMAGE_UPLOAD_SVC] ===== RE-UPLOAD AVEC NOM SEO =====');
+        this.loggingService.info('IMAGE_UPLOAD_SVC', '📤 Re-upload image avec nom SEO', { seoFilename });
+        
+        const finalImageUrl = await this.supabaseService.uploadProcessedImageToStorage(postId, processedImageData, seoFilename);
+        
+        if (!finalImageUrl) {
+          console.warn('⚠️ [IMAGE_UPLOAD_SVC] Re-upload échoué, on utilise l\'URL temporaire');
+          this.loggingService.warn('IMAGE_UPLOAD_SVC', '⚠️ Re-upload échoué, utilisation URL temporaire');
+        }
+
+        const finalUrl = finalImageUrl || tempImageUrl;
+        
+        console.log('✅ [IMAGE_UPLOAD_SVC] URL finale:', { 
+          finalUrl,
+          hasSeoName: !!finalImageUrl
+        });
+
+        // Étape 6 : Mettre à jour l'URL dans la table post
         console.log('💾 [IMAGE_UPLOAD_SVC] Mise à jour DB...');
-        await this.supabaseService.updateImageUrlPostByIdForm(postId, imageUrl);
+        await this.supabaseService.updateImageUrlPostByIdForm(postId, finalUrl);
         
         console.log('🎉 [IMAGE_UPLOAD_SVC] ===== SUCCÈS COMPLET ===== ', {
           postId,
-          imageUrl,
+          imageUrl: finalUrl,
+          seoFilename,
+          hasSeoName: !!finalImageUrl,
           format: 'WebP',
           dimensions: '400×400',
-          taille: `${(processedImageData.length / 1024).toFixed(2)} Ko`
+          taille: `${(processedImageData.length / 1024).toFixed(2)} Ko`,
+          note: 'Fichier temporaire conservé pour nettoyage manuel'
         });
         
         this.loggingService.info('IMAGE_UPLOAD_SVC', '✅ Upload image principale OK', {
           postId,
-          imageUrl,
+          imageUrl: finalUrl,
+          seoFilename,
+          hasSeoName: !!finalImageUrl,
           format: 'WebP',
           dimensions: '400×400'
         });
 
-        return imageUrl;
+        return finalUrl;
       } catch (error) {
         console.error('💥 [IMAGE_UPLOAD_SVC] ERREUR DÉTECTÉE:', error);
         this.loggingService.error('IMAGE_UPLOAD_SVC', '❌ Erreur upload image principale', error);

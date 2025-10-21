@@ -15,6 +15,7 @@ import { InternalImageService } from '../../services/internal-image/internal-ima
 import { ImageUploadService } from '../../services/image-upload/image-upload.service';
 import { VideoService } from '../../services/video/video.service';
 import { VegetalService } from '../../services/vegetal/vegetal.service';
+import { ImageDescriptionService } from '../../services/image-description/image-description.service';
 import { environment } from '../../../../../environments/environment';
 
 
@@ -34,6 +35,7 @@ export class Infrastructure {
   private readonly imageUploadService = inject(ImageUploadService);
   private readonly videoService = inject(VideoService);
   private readonly vegetalService = inject(VegetalService);
+  private readonly imageDescriptionService = inject(ImageDescriptionService);
 
   /**
    * Détecte si l'application tourne sur localhost
@@ -584,39 +586,83 @@ export class Infrastructure {
               keyword: image.chapitre_key_word
             });
             
-            // Étape 1 : Upload de l'image externe vers Supabase Storage
-            const storageUrl = await this.supabaseService.uploadInternalImageToStorage(
+            // Étape 1 : Upload temporaire de l'image externe vers Supabase Storage
+            const timestamp = Date.now();
+            const tempFilename = `temp_${postId}_${image.chapitre_id}_${timestamp}.webp`;
+            
+            this.loggingService.info('INFRASTRUCTURE', `📤 Upload temporaire image ${index + 1}`, { tempFilename });
+            const tempStorageUrl = await this.supabaseService.uploadInternalImageToStorage(
               postId,
               image.chapitre_id,
-              image.url_Image  // URL externe (Pexels, etc.)
+              image.url_Image,  // URL externe (Pexels, etc.)
+              tempFilename       // Nom temporaire
             );
             
             // Étape 2 : Déterminer l'URL finale (Storage ou fallback)
             let finalUrl: string;
-            if (storageUrl) {
-              finalUrl = storageUrl;
-              this.loggingService.info('INFRASTRUCTURE', `✅ Image ${index + 1} uploadée dans Storage`, {
-                chapitreId: image.chapitre_id,
-                url: finalUrl
-              });
-            } else {
+            if (!tempStorageUrl) {
               // Fallback si l'upload échoue
               finalUrl = 'https://via.placeholder.com/800x400/4caf50/white?text=Image+Non+Disponible';
-              this.loggingService.warn('INFRASTRUCTURE', `⚠️ Fallback utilisé pour chapitre ${image.chapitre_id}`);
+              this.loggingService.warn('INFRASTRUCTURE', `⚠️ Upload échoué pour chapitre ${image.chapitre_id}, fallback utilisé`);
               
               // Émettre un warning dans le store
               const warningMessage = `Image du chapitre ${image.chapitre_id} non disponible - Placeholder utilisé`;
               this.signalWarning(warningMessage);
+              
+              // Sauvegarder en DB avec le fallback
+              await this.supabaseService.setNewUrlImagesChapitres(
+                finalUrl,
+                image.chapitre_id,
+                postId,
+                image.chapitre_key_word,
+                image.explanation_word
+              );
+            } else {
+              // Étape 3 : Générer description SEO avec l'URL publique Supabase
+              this.loggingService.info('INFRASTRUCTURE', `🔍 Génération description SEO pour image ${index + 1}`, { tempStorageUrl });
+              const seoFilename = await this.imageDescriptionService.generateInternalImageFilename(
+                postId,
+                image.chapitre_id,
+                tempStorageUrl  // URL publique Supabase (accessible par OpenAI)
+              );
+              this.loggingService.info('INFRASTRUCTURE', `✅ Nom fichier SEO: ${seoFilename}`);
+
+              // Étape 4 : Re-upload de l'image depuis l'URL temporaire avec le nom SEO
+              // Note : On ne peut pas récupérer processedImageData ici, donc on télécharge et re-upload
+              this.loggingService.info('INFRASTRUCTURE', `📤 Re-upload image ${index + 1} avec nom SEO`, { seoFilename });
+              
+              try {
+                // Télécharger l'image depuis l'URL temporaire Supabase
+                const tempImageData = await this.supabaseService.downloadExternalImage(tempStorageUrl);
+                
+                // Re-uploader avec le nom SEO
+                const seoImageUrl = await this.supabaseService.uploadImageToStorage(
+                  `${postId}/${seoFilename}`,
+                  tempImageData,
+                  'image/webp'
+                );
+
+                finalUrl = seoImageUrl || tempStorageUrl;
+                
+                this.loggingService.info('INFRASTRUCTURE', `✅ Image ${index + 1} re-uploadée avec nom SEO`, {
+                  chapitreId: image.chapitre_id,
+                  url: finalUrl,
+                  hasSeoName: !!seoImageUrl
+                });
+              } catch (error) {
+                this.loggingService.warn('INFRASTRUCTURE', `⚠️ Re-upload échoué pour image ${index + 1}, on garde l'URL temporaire`, error);
+                finalUrl = tempStorageUrl;
+              }
+
+              // Étape 5 : Insertion en DB avec l'URL finale (nom SEO si succès, sinon temporaire)
+              await this.supabaseService.setNewUrlImagesChapitres(
+                finalUrl,
+                image.chapitre_id,
+                postId,
+                image.chapitre_key_word,
+                image.explanation_word
+              );
             }
-            
-            // Étape 3 : Insertion en DB avec l'URL finale (Storage ou fallback)
-            await this.supabaseService.setNewUrlImagesChapitres(
-              finalUrl,           // URL depuis Storage ou placeholder
-              image.chapitre_id,
-              postId,
-              image.chapitre_key_word,
-              image.explanation_word
-            );
             
             this.loggingService.info('INFRASTRUCTURE', `✅ Image ${index + 1} sauvegardée en DB`, {
               chapitreId: image.chapitre_id,

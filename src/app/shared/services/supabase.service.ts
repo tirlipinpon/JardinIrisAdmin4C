@@ -96,16 +96,19 @@ export class SupabaseService {
    * @param imageData Image traitée en Uint8Array (WebP)
    * @returns URL publique de l'image ou null si échec
    */
-  async uploadProcessedImageToStorage(postId: number, imageData: Uint8Array): Promise<string | null> {
+  async uploadProcessedImageToStorage(postId: number, imageData: Uint8Array, customFilename?: string): Promise<string | null> {
     console.log('📤 [SUPABASE] ===== UPLOAD IMAGE PRINCIPALE TRAITÉE =====', {
       postId,
+      customFilename,
       taille: `${(imageData.length / 1024).toFixed(2)} Ko`,
       bytes: imageData.length
     });
 
     try {
       // Nom de fichier avec dossier postId et extension .webp
-      const fileName = `${postId}/${postId}.webp`;
+      const fileName = customFilename 
+        ? `${postId}/${customFilename}` 
+        : `${postId}/${postId}.webp`;
       console.log('📁 [SUPABASE] Nom fichier:', fileName);
       console.log('📁 [SUPABASE] Bucket: jardin-iris-images-post');
 
@@ -125,6 +128,7 @@ export class SupabaseService {
       console.log('✅ [SUPABASE] ===== IMAGE PRINCIPALE UPLOADÉE =====', {
         url: storageUrl,
         postId,
+        customFilename,
         format: 'WebP',
         dimensions: '400×400'
       });
@@ -342,6 +346,65 @@ export class SupabaseService {
   }
 
   /**
+   * Renomme un fichier dans Supabase Storage
+   * @param oldPath Chemin actuel du fichier (ex: "123/temp_123_1234567890.webp")
+   * @param newPath Nouveau chemin du fichier (ex: "123/123_jardin-fleurs-roses.webp")
+   * @returns true si succès, false sinon
+   */
+  async renameFileInStorage(oldPath: string, newPath: string): Promise<boolean> {
+    console.log('🔄 [STORAGE] ===== RENOMMAGE FICHIER =====', {
+      oldPath,
+      newPath,
+      bucket: 'jardin-iris-images-post'
+    });
+
+    try {
+      // Attendre un peu pour s'assurer que l'upload précédent est finalisé
+      console.log('⏳ [STORAGE] Attente 300ms pour finalisation upload...');
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Vérifier que le fichier source existe avant de tenter le renommage
+      console.log('🔍 [STORAGE] Vérification existence fichier source...');
+      const { data: listData, error: listError } = await this.client.storage
+        .from('jardin-iris-images-post')
+        .list(oldPath.split('/')[0], {
+          search: oldPath.split('/')[1]
+        });
+
+      if (listError || !listData || listData.length === 0) {
+        console.error('❌ [STORAGE] Fichier source introuvable:', {
+          oldPath,
+          listError,
+          filesFound: listData?.length || 0
+        });
+        return false;
+      }
+
+      console.log('✅ [STORAGE] Fichier source trouvé, renommage en cours...');
+
+      // Utiliser la méthode move de Supabase Storage
+      const { data, error } = await this.client.storage
+        .from('jardin-iris-images-post')
+        .move(oldPath, newPath);
+
+      if (error) {
+        console.error('❌ [STORAGE] Erreur renommage:', error);
+        return false;
+      }
+
+      console.log('✅ [STORAGE] Fichier renommé avec succès:', {
+        oldPath,
+        newPath,
+        data
+      });
+      return true;
+    } catch (error) {
+      console.error('💥 [STORAGE] Exception lors du renommage:', error);
+      return false;
+    }
+  }
+
+  /**
    * Upload une image de chapitre dans Supabase Storage
    * Télécharge l'image externe, l'upload dans Storage et retourne l'URL
    * Structure: {postId}/{postId}_chapitre_{chapitreId}_{timestamp}.png
@@ -354,7 +417,8 @@ export class SupabaseService {
   async uploadInternalImageToStorage(
     postId: number,
     chapitreId: number,
-    externalImageUrl: string
+    externalImageUrl: string,
+    customFilename?: string
   ): Promise<string | null> {
     console.log('🖼️ Début upload image interne:', {
       postId,
@@ -372,7 +436,9 @@ export class SupabaseService {
       
       // 3. Générer le nom de fichier avec chemin complet (dossier postId) - Extension .webp
       const timestamp = Date.now();
-      const fileName = `${postId}/${postId}_chapitre_${chapitreId}_${timestamp}.webp`;
+      const fileName = customFilename 
+        ? `${postId}/${customFilename}` 
+        : `${postId}/${postId}_chapitre_${chapitreId}_${timestamp}.webp`;
       
       console.log('📁 Chemin de fichier généré:', fileName);
       
