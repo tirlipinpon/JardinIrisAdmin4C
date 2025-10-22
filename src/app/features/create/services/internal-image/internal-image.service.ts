@@ -74,8 +74,30 @@ export class InternalImageService {
                     map(visionResult => {
                       try {
                         const selection: { imageUrl: string } = JSON.parse(extractJSONBlock(visionResult));
+                        
+                        // Vérifier si l'URL est vide (fallback)
+                        if (!selection.imageUrl) {
+                          this.loggingService.warn('INTERNAL_IMAGE_SVC', `Image selection fallback pour chapitre ${chapitreId}`);
+                          warningCallback?.(`Image non disponible pour chapitre ${chapitreId} - utilisation placeholder`);
+                          return {
+                            chapitre_id: chapitreId,
+                            chapitre_key_word: keyword,
+                            url_Image: this.generatePlaceholderUrl(keyword),
+                            explanation_word: explanation
+                          } as InternalImageData;
+                        }
+                        
                         const selected = images.find(img => img.src.medium === selection.imageUrl);
-                        if (!selected) return null;
+                        if (!selected) {
+                          this.loggingService.warn('INTERNAL_IMAGE_SVC', `Image sélectionnée non trouvée pour chapitre ${chapitreId}`);
+                          return {
+                            chapitre_id: chapitreId,
+                            chapitre_key_word: keyword,
+                            url_Image: this.generatePlaceholderUrl(keyword),
+                            explanation_word: explanation
+                          } as InternalImageData;
+                        }
+                        
                         return {
                           chapitre_id: chapitreId,
                           chapitre_key_word: keyword,
@@ -83,9 +105,25 @@ export class InternalImageService {
                           explanation_word: explanation
                         } as InternalImageData;
                       } catch (error) {
+                        this.loggingService.error('INTERNAL_IMAGE_SVC', `Erreur parsing sélection image chapitre ${chapitreId}`, error);
                         warningCallback?.(`Erreur parsing sélection image chapitre ${chapitreId}`);
-                        return null;
+                        return {
+                          chapitre_id: chapitreId,
+                          chapitre_key_word: keyword,
+                          url_Image: this.generatePlaceholderUrl(keyword),
+                          explanation_word: explanation
+                        } as InternalImageData;
                       }
+                    }),
+                    catchError(error => {
+                      this.loggingService.error('INTERNAL_IMAGE_SVC', `Erreur OpenAI Vision pour chapitre ${chapitreId}`, error);
+                      warningCallback?.(`Erreur analyse image chapitre ${chapitreId} - utilisation placeholder`);
+                      return of({
+                        chapitre_id: chapitreId,
+                        chapitre_key_word: keyword,
+                        url_Image: this.generatePlaceholderUrl(keyword),
+                        explanation_word: explanation
+                      } as InternalImageData);
                     })
                   );
                 })
@@ -109,6 +147,16 @@ export class InternalImageService {
         return of({ article, images: [] });
       })
     );
+  }
+
+  /**
+   * Génère une URL placeholder pour remplacer les images non disponibles
+   * @param keyword Mot-clé pour personnaliser le placeholder
+   * @returns URL du placeholder
+   */
+  private generatePlaceholderUrl(keyword: string): string {
+    const encodedKeyword = encodeURIComponent(keyword);
+    return `https://via.placeholder.com/800x400/4caf50/white?text=${encodedKeyword}`;
   }
 }
 

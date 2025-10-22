@@ -246,6 +246,49 @@ describe('OpenaiApiService', () => {
         expect(error).toBe(errorMessage);
       }
     });
+
+    it('should handle invalid_image_url error with retry', async () => {
+      const invalidImageError = {
+        error: {
+          message: 'Timeout while downloading image',
+          code: 'invalid_image_url'
+        }
+      };
+      
+      // Premier appel échoue avec invalid_image_url
+      let callCount = 0;
+      (service.openai.chat.completions.create as jasmine.Spy).and.callFake(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.reject(invalidImageError);
+        } else {
+          return Promise.resolve({
+            choices: [{ message: { content: '{"imageUrl": "https://example.com/fallback.jpg"}' } }]
+          });
+        }
+      });
+
+      // Mock fetch pour la validation des URLs
+      spyOn(window, 'fetch').and.returnValue(Promise.resolve({
+        ok: true,
+        headers: new Map([['content-type', 'image/jpeg']])
+      } as any));
+
+      const result = await service.fetchDataImage(mockPrompt, mockUrls);
+      
+      expect(result).toBe('{"imageUrl": "https://example.com/fallback.jpg"}');
+      expect(service.openai.chat.completions.create).toHaveBeenCalled();
+    });
+
+    it('should return empty imageUrl when no valid URLs found', async () => {
+      // Mock fetch pour simuler des URLs invalides
+      spyOn(window, 'fetch').and.returnValue(Promise.reject(new Error('URL inaccessible')));
+
+      const result = await service.fetchDataImage(mockPrompt, mockUrls);
+      
+      expect(result).toBe('{"imageUrl": ""}');
+      expect(service.openai.chat.completions.create).not.toHaveBeenCalled();
+    });
   });
 
   describe('imageGeneratorUrl()', () => {
