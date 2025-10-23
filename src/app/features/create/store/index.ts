@@ -831,11 +831,11 @@ export const SearchStore =  signalStore(
               )
             : of(true);
             
-          // 3️⃣ Sauvegarder les images internes (après le post)
+          // 3️⃣ Sauvegarder les images internes (après le post) avec optimisation SEO
           const imagesSave$ = internalImages.length > 0
-            ? infraPerf.saveInternalImages(postId, internalImages).pipe(
+            ? infra.saveInternalImages(postId, internalImages).pipe(
                 tap({
-                  next: () => loggingService.info('STORE', '✅ Images internes sauvegardées avec succès'),
+                  next: () => loggingService.info('STORE', '✅ Images internes sauvegardées avec succès (optimisées SEO)'),
                   error: (error) => addError(`Erreur sauvegarde images: ${error}`)
                 })
               )

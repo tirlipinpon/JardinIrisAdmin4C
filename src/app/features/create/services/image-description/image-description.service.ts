@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { LoggingService } from '../../../../shared/services/logging.service';
 import { OpenaiApiService } from '../openai-api/openai-api.service';
+import { formatToSeoSlug } from '../../../../shared/utils/text-formatting.utils';
 
 @Injectable({ providedIn: 'root' })
 export class ImageDescriptionService {
@@ -25,7 +26,7 @@ export class ImageDescriptionService {
       }
 
       // Formater la description en slug SEO
-      const seoSlug = this.formatToSeoSlug(description);
+      const seoSlug = formatToSeoSlug(description);
       
       this.loggingService.info('IMAGE_DESCRIPTION_SVC', '✅ Description SEO générée', { 
         description, 
@@ -39,23 +40,6 @@ export class ImageDescriptionService {
     }
   }
 
-  /**
-   * Formate une description en slug SEO
-   * @param description Description brute de l'IA
-   * @returns Slug SEO (minuscules, tirets, max 50 chars)
-   */
-  private formatToSeoSlug(description: string): string {
-    return description
-      .toLowerCase()
-      .normalize('NFD') // Normaliser les accents
-      .replace(/[\u0300-\u036f]/g, '') // Supprimer les accents
-      .replace(/[^a-z0-9\s-]/g, '') // Garder seulement lettres, chiffres, espaces, tirets
-      .trim()
-      .replace(/\s+/g, '-') // Remplacer espaces par tirets
-      .replace(/-+/g, '-') // Remplacer multiples tirets par un seul
-      .substring(0, 50) // Limiter à 50 caractères
-      .replace(/-$/, ''); // Supprimer tiret final si présent
-  }
 
   /**
    * Génère une description de fallback en cas d'erreur
@@ -68,25 +52,25 @@ export class ImageDescriptionService {
 
   /**
    * Génère un nom de fichier SEO pour l'image principale
-   * @param postId ID du post
+   * @param postId ID du post (non utilisé dans le nom de fichier)
    * @param imageUrl URL de l'image
-   * @returns Nom de fichier formaté: "{postId}_{description_seo}.webp"
+   * @returns Nom de fichier formaté: "{description_seo}.webp"
    */
   async generateMainImageFilename(postId: number, imageUrl: string): Promise<string> {
     const description = await this.generateSeoDescription(imageUrl);
-    return `${postId}_${description}.webp`;
+    return `${description}.webp`;
   }
 
   /**
    * Génère un nom de fichier SEO pour une image interne
-   * @param postId ID du post
-   * @param chapitreId ID du chapitre
+   * @param postId ID du post (non utilisé dans le nom de fichier)
+   * @param chapitreId ID du chapitre (non utilisé dans le nom de fichier)
    * @param imageUrl URL de l'image
-   * @returns Nom de fichier formaté: "{postId}_{chapitreId}_{description_seo}.webp"
+   * @returns Nom de fichier formaté: "{description_seo}.webp"
    */
   async generateInternalImageFilename(postId: number, chapitreId: number, imageUrl: string): Promise<string> {
     const description = await this.generateSeoDescription(imageUrl);
-    return `${postId}_${chapitreId}_${description}.webp`;
+    return `${description}.webp`;
   }
 }
 
