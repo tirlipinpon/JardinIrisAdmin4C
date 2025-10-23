@@ -111,7 +111,9 @@ describe('InternalImageService', () => {
       mockOpenaiApiService.fetchData.and.returnValue(Promise.resolve(null));
       
       service.generateInternalImages(mockArticle, postId).subscribe(result => {
-        expect(result.images.length).toBe(0);
+        expect(result.images.length).toBe(1); // Maintenant on retourne un placeholder
+        expect(result.images[0].chapitre_id).toBe(1);
+        expect(result.images[0].url_Image).toContain('placeholder');
         expect(mockLoggingService.warn).toHaveBeenCalledWith('INTERNAL_IMAGE_SVC', 'Aucun mot-clé pour 1');
         done();
       });
@@ -123,8 +125,10 @@ describe('InternalImageService', () => {
       
       const warningCallback = jasmine.createSpy('warningCallback');
       service.generateInternalImages(mockArticle, postId, warningCallback).subscribe(result => {
-        expect(result.images.length).toBe(0);
-        expect(warningCallback).toHaveBeenCalledWith('Erreur parsing mot-clé pour chapitre 1');
+        expect(result.images.length).toBe(1); // Maintenant on retourne un placeholder
+        expect(result.images[0].chapitre_id).toBe(1);
+        expect(result.images[0].url_Image).toContain('placeholder');
+        expect(warningCallback).toHaveBeenCalledWith('Erreur parsing mot-clé pour chapitre 1 - utilisation placeholder');
         done();
       });
     });
@@ -134,7 +138,9 @@ describe('InternalImageService', () => {
       mockOpenaiApiService.fetchData.and.returnValue(Promise.resolve(duplicateKeywordResult));
       
       service.generateInternalImages(mockArticle, postId).subscribe(result => {
-        expect(result.images.length).toBe(1); // Only first chapter should succeed
+        expect(result.images.length).toBe(1); // Maintenant on retourne un placeholder pour le dupliqué
+        expect(result.images[0].chapitre_id).toBe(1);
+        expect(result.images[0].url_Image).toContain('placeholder');
         expect(mockLoggingService.warn).toHaveBeenCalledWith('INTERNAL_IMAGE_SVC', 'Mot-clé invalide/dupliqué: nature');
         done();
       });
@@ -144,7 +150,9 @@ describe('InternalImageService', () => {
       mockPexelsApiService.searchImages.and.returnValue(of([]));
       
       service.generateInternalImages(mockArticle, postId).subscribe(result => {
-        expect(result.images.length).toBe(0);
+        expect(result.images.length).toBe(1); // Maintenant on retourne un placeholder
+        expect(result.images[0].chapitre_id).toBe(1);
+        expect(result.images[0].url_Image).toContain('placeholder');
         expect(mockLoggingService.warn).toHaveBeenCalledWith('INTERNAL_IMAGE_SVC', 'Aucune image Pexels: nature');
         done();
       });
@@ -154,7 +162,9 @@ describe('InternalImageService', () => {
       mockOpenaiApiService.fetchDataImage.and.returnValue(Promise.resolve(null));
       
       service.generateInternalImages(mockArticle, postId).subscribe(result => {
-        expect(result.images.length).toBe(0);
+        expect(result.images.length).toBe(1); // Maintenant on retourne un placeholder
+        expect(result.images[0].chapitre_id).toBe(1);
+        expect(result.images[0].url_Image).toContain('placeholder');
         done();
       });
     });

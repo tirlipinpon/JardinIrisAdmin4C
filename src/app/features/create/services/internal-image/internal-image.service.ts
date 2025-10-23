@@ -51,7 +51,13 @@ export class InternalImageService {
           switchMap(keywordResult => {
             if (!keywordResult) {
               this.loggingService.warn('INTERNAL_IMAGE_SVC', `Aucun mot-clé pour ${chapitreId}`);
-              return of(null);
+              warningCallback?.(`Aucun mot-clé généré pour chapitre ${chapitreId} - utilisation placeholder`);
+              return of({
+                chapitre_id: chapitreId,
+                chapitre_key_word: `chapitre-${chapitreId}`,
+                url_Image: this.generatePlaceholderUrl(`chapitre-${chapitreId}`),
+                explanation_word: `Contenu du chapitre ${chapitreId}`
+              } as InternalImageData);
             }
             try {
               const keywordData: { keyWord: string; explanation: string } = JSON.parse(extractJSONBlock(keywordResult));
@@ -59,14 +65,26 @@ export class InternalImageService {
               const explanation = keywordData.explanation;
               if (!keyword || usedKeywords.includes(keyword)) {
                 this.loggingService.warn('INTERNAL_IMAGE_SVC', `Mot-clé invalide/dupliqué: ${keyword}`);
-                return of(null);
+                warningCallback?.(`Mot-clé invalide/dupliqué pour chapitre ${chapitreId} - utilisation placeholder`);
+                return of({
+                  chapitre_id: chapitreId,
+                  chapitre_key_word: `chapitre-${chapitreId}`,
+                  url_Image: this.generatePlaceholderUrl(`chapitre-${chapitreId}`),
+                  explanation_word: `Contenu du chapitre ${chapitreId}`
+                } as InternalImageData);
               }
               usedKeywords.push(keyword);
               return this.pexelsApiService.searchImages(keyword, 5).pipe(
                 switchMap(images => {
                   if (!images.length) {
                     this.loggingService.warn('INTERNAL_IMAGE_SVC', `Aucune image Pexels: ${keyword}`);
-                    return of(null);
+                    warningCallback?.(`Aucune image trouvée pour chapitre ${chapitreId} - utilisation placeholder`);
+                    return of({
+                      chapitre_id: chapitreId,
+                      chapitre_key_word: keyword,
+                      url_Image: this.generatePlaceholderUrl(keyword),
+                      explanation_word: explanation
+                    } as InternalImageData);
                   }
                   const imageUrls = images.map(img => img.src.medium);
                   const visionPrompt = this.getPromptsService.getPromptGenericSelectBestImageForChapitresInArticleWithVision(paragraphContent, imageUrls);
@@ -129,8 +147,14 @@ export class InternalImageService {
                 })
               );
             } catch (error) {
-              warningCallback?.(`Erreur parsing mot-clé pour chapitre ${chapitreId}`);
-              return of(null);
+              this.loggingService.error('INTERNAL_IMAGE_SVC', `Erreur parsing mot-clé pour chapitre ${chapitreId}`, error);
+              warningCallback?.(`Erreur parsing mot-clé pour chapitre ${chapitreId} - utilisation placeholder`);
+              return of({
+                chapitre_id: chapitreId,
+                chapitre_key_word: `chapitre-${chapitreId}`,
+                url_Image: this.generatePlaceholderUrl(`chapitre-${chapitreId}`),
+                explanation_word: `Contenu du chapitre ${chapitreId}`
+              } as InternalImageData);
             }
           })
         );

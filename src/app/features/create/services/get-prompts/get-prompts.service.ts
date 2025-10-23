@@ -34,7 +34,7 @@ Rédige un article de blog en temps que jardinier paysagiste humain à Bruxelles
         - AUCUNE conclusion ou synthèse ne doit apparaître avant la réflexion/anecdote/conseil personnel.
 - Produis l’ensemble de l’article dans un unique objet JSON STRICTEMENT conforme au format suivant (AUCUNE entorse ne sera acceptée) :
 {
-  "titre": "[Titre court, questionnel, engageant, mot-clé inclus]",
+  "titre": "[Titre SEO optimisé : 50-60 caractères max, mot-clé principal en début, structure 'Comment/Guide/Techniques + Sujet +  Bénéfice', utilise des mots-clés SEO pertinents, évite les mots vides, engageant et actionnable]",
   "description_meteo": "[Prévisions IRM pour Bruxelles, 50 mots environ, chiffres et icônes]",
   "phrase_accroche": "[Phrase motivationnelle transactionnelle, ~45 mots]",
   "article": "[HTML minifié, chaque paragraphe structuré, 200 mots min, HTML enrichi de balises de mise en forme, tags identifiants inclus jusqu’à paragraphe-${environment.globalNbChapter}]",

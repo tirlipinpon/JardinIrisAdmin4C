@@ -2,6 +2,8 @@ import { inject, Injectable } from '@angular/core';
 import { createClient, SupabaseClient, PostgrestError } from '@supabase/supabase-js';
 import { environment } from '../../../../environment';
 import { ImageProcessingService } from './image-processing.service';
+import { Observable, from, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 
 
 @Injectable({ providedIn: 'root' })
@@ -471,6 +473,182 @@ export class SupabaseService {
       });
       return null;
     }
+  }
+
+  /**
+   * Récupère les images des chapitres pour un post
+   * @param postId ID du post
+   * @returns Observable avec les images des chapitres
+   */
+  getImagesChapitres(postId: number): Observable<any[]> {
+    return from(
+      this.client
+        .from('urlImagesChapitres')
+        .select('*')
+        .eq('post_id', postId)
+        .order('chapitre_id')
+    ).pipe(
+      map(response => {
+        if (response.error) {
+          console.error('Erreur lors de la récupération des images des chapitres:', response.error);
+          return [];
+        }
+        return response.data || [];
+      }),
+      catchError(error => {
+        console.error('Erreur lors de la récupération des images des chapitres:', error);
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * Met à jour le contenu d'un post
+   * @param postId ID du post
+   * @param content Nouveau contenu
+   * @returns Observable avec le résultat
+   */
+  updatePostContent(postId: number, content: string): Observable<any> {
+    return from(
+      this.client
+        .from('post')
+        .update({ article: content })
+        .eq('id', postId)
+    ).pipe(
+      map(response => {
+        if (response.error) {
+          console.error('Erreur lors de la mise à jour du contenu:', response.error);
+          throw response.error;
+        }
+        return response.data;
+      }),
+      catchError(error => {
+        console.error('Erreur lors de la mise à jour du contenu:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Récupère un post par son ID
+   * @param postId ID du post
+   * @returns Observable avec le post
+   */
+  getPostById(postId: number): Observable<any> {
+    return from(
+      this.client
+        .from('post')
+        .select('*')
+        .eq('id', postId)
+        .single()
+    ).pipe(
+      map(response => {
+        if (response.error) {
+          console.error('Erreur lors de la récupération du post:', response.error);
+          return null;
+        }
+        return response.data;
+      }),
+      catchError(error => {
+        console.error('Erreur lors de la récupération du post:', error);
+        return of(null);
+      })
+    );
+  }
+
+  /**
+   * Upload une image de chapitre depuis une URL externe
+   * @param imageUrl URL de l'image externe
+   * @param postId ID du post
+   * @param chapitreId ID du chapitre
+   * @param keyWord Mot-clé du chapitre
+   * @returns URL de l'image uploadée ou null si échec
+   */
+  async uploadImageChapitreFromUrl(
+    imageUrl: string, 
+    postId: number, 
+    chapitreId: number, 
+    keyWord: string
+  ): Promise<string | null> {
+    try {
+      console.log('📤 [UPLOAD_IMAGE_CHAPITRE] Début de l\'upload depuis URL externe', {
+        imageUrl,
+        postId,
+        chapitreId,
+        keyWord
+      });
+
+      // Télécharger l'image depuis l'URL externe
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error(`Erreur lors du téléchargement: ${response.status} ${response.statusText}`);
+      }
+
+      const imageData = await response.arrayBuffer();
+      const uint8Array = new Uint8Array(imageData);
+
+      // Traiter l'image
+      const processedImage = await this.imageProcessingService.processImageForChapter(uint8Array);
+
+      // Générer un nom de fichier SEO
+      const seoTitle = await this.generateSeoTitle(keyWord);
+      const filename = `${seoTitle}.webp`;
+
+      console.log('📝 [UPLOAD_IMAGE_CHAPITRE] Titre SEO généré par IA:', seoTitle);
+      console.log('📝 [UPLOAD_IMAGE_CHAPITRE] Nom de fichier SEO:', filename);
+
+      // Upload vers Supabase Storage
+      const filePath = `${postId}/${filename}`;
+      console.log('📁 [UPLOAD_IMAGE_CHAPITRE] Nom du fichier:', filename, 'Chemin:', filePath);
+
+      console.log('📤 [UPLOAD_IMAGE_CHAPITRE] Début de l\'upload vers Supabase Storage...');
+      const { data, error } = await this.client.storage
+        .from('jardin-iris-images-post')
+        .upload(filePath, processedImage, {
+          contentType: 'image/webp',
+          upsert: true
+        });
+
+      if (error) {
+        console.error('❌ [UPLOAD_IMAGE_CHAPITRE] Erreur upload:', error);
+        return null;
+      }
+
+      console.log('✅ [UPLOAD_IMAGE_CHAPITRE] Upload réussi vers Supabase Storage');
+
+      // Générer l'URL publique
+      const { data: publicUrlData } = this.client.storage
+        .from('jardin-iris-images-post')
+        .getPublicUrl(filePath);
+
+      const publicUrl = publicUrlData.publicUrl;
+      console.log('✅ [UPLOAD_IMAGE_CHAPITRE] Image de chapitre uploadée avec succès:', publicUrl);
+      console.log('📋 [UPLOAD_IMAGE_CHAPITRE] Résumé: proxy → traitement → IA SEO → upload →', publicUrl);
+
+      return publicUrl;
+
+    } catch (error) {
+      console.error('❌ [UPLOAD_IMAGE_CHAPITRE] Erreur lors de l\'upload:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Génère un titre SEO pour une image
+   * @param keyWord Mot-clé
+   * @returns Titre SEO
+   */
+  private async generateSeoTitle(keyWord: string): Promise<string> {
+    // Pour l'instant, on génère un titre basique
+    // Dans une vraie implémentation, on pourrait utiliser l'IA pour générer un titre SEO
+    const seoTitle = keyWord
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+    
+    return seoTitle;
   }
 
 } 
