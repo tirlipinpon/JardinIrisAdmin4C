@@ -335,7 +335,7 @@
 
           <div class="image-form">
             <div class="image-preview" *ngIf="image.url_Image">
-              <img ngSrc="{{ image.url_Image }}" [alt]="image.chapitre_key_word" width="200" height="150" class="preview-img">
+              <img ngSrc="{{ image.url_Image }}" [alt]="generateImageAlt(image.url_Image, image.chapitre_key_word)" width="200" height="150" class="preview-img">
             </div>
             
             <mat-form-field appearance="outline" class="full-width">

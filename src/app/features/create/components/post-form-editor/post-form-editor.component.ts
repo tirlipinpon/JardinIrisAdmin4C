@@ -13,6 +13,7 @@ import { SearchStore } from '../../store';
 import { CathegoriesBlog } from '../../types/cathegoriesBlog';
 import { LoggingService } from '../../../../shared/services/logging.service';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { generateAltFromImageUrl } from '../../utils/slug-formatter';
 
 @Component({
   selector: 'app-post-form-editor',
@@ -337,5 +338,15 @@ export class PostFormEditorComponent implements OnInit, OnDestroy {
 
   trackByInternalImage(index: number, item: any): string | number {
     return item?.id ?? index;
+  }
+
+  /**
+   * Génère un attribut alt optimisé pour une image interne
+   * @param imageUrl URL de l'image
+   * @param fallbackKeyword Mot-clé de fallback
+   * @returns Attribut alt formaté
+   */
+  generateImageAlt(imageUrl: string, fallbackKeyword: string): string {
+    return generateAltFromImageUrl(imageUrl, fallbackKeyword);
   }
 }
