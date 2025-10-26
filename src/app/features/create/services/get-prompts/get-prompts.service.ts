@@ -461,12 +461,13 @@ Pour chaque paragraphe balisé (<span id="paragraphe-#">…), insérez exactemen
       systemRole: {
         role: "system",
         content:  `
-Tu es un botaniste expert. Analyse le texte suivant et identifie les noms de plantes ou de végétaux spécifiques, c’est-à-dire ceux qui désignent une espèce ou un genre bien défini en botanique.
+Tu es un botaniste expert. Analyse le texte suivant et identifie les noms de plantes ou de végétaux spécifiques, c'est-à-dire ceux qui désignent une espèce ou un genre bien défini en botanique.
 Ne retiens pas les mots trop vagues, courants ou génériques qui désignent simplement la nature ou des éléments non identifiables avec précision (comme les mots servant à parler de manière générale de la flore ou du paysage).
-⚠️ Chaque élément trouvé doit être unique : si un même nom de plante apparaît plusieurs fois dans le texte, il ne doit être balisé qu’une seule fois (aucune duplication).
+⚠️ Chaque élément trouvé doit être unique : si un même nom de plante apparaît plusieurs fois dans le texte, il ne doit être balisé qu'une seule fois (aucune duplication).
+⚠️ IMPORTANT : Ne balise JAMAIS les noms de plantes qui se trouvent dans des balises <h4>. Ignore complètement le contenu des <h4> dans ton analyse.
 Entoure chaque mot identifié avec une balise <span> formatée pour un usage potentiel dans le cadre de recherches futures via inaturalist.org.
-Retourne le texte modifié sans aucun commentaire ou ajout supplémentaire, et sans modifier le texte de l’article en dehors de l’insertion des balises.
-Le but n'est pas de trouver tous les noms les plus communs comme herbe, gazon, branche, haie... mais d’aider des lecteurs qui ne connaîtraient pas.
+Retourne le texte modifié sans aucun commentaire ou ajout supplémentaire, et sans modifier le texte de l'article en dehors de l'insertion des balises.
+Le but n'est pas de trouver tous les noms les plus communs comme herbe, gazon, branche, tomates, pomme, haie... mais d'aider des lecteurs qui ne connaîtraient pas.
 
 Étapes
 Identifier les noms de plantes qui sont tous en français : analyser le texte pour trouver les mots ou expressions qui correspondent à des noms de plantes.
