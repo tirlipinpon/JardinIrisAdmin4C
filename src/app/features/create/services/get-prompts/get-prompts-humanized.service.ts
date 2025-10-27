@@ -86,7 +86,7 @@ Bannis absolument toute conclusion scolaire.
 
 - Produis l'ensemble de l'article dans un unique objet JSON STRICTEMENT conforme au format suivant (AUCUNE entorse ne sera acceptée) :
 {
-  "titre": "[Titre SEO optimisé : 70 caractères max, mot-clé intégré, structure 'Comment/Guide/Techniques + Sujet + Bénéfice', utilise des mots-clés SEO pertinents intégrés, évite les mots vides, engageant et actionnable]",
+  "titre": "[Titre SEO optimisé : 100 caractères max, mot-clé intégré, utilise des mots-clés SEO pertinents intégrés, évite les mots vides, engageant et actionnable]",
   "description_meteo": "[Prévisions IRM pour Bruxelles, 50 mots environ, chiffres et icônes]",
   "phrase_accroche": "[Phrase motivationnelle transactionnelle, ~45 mots]",
   "article": "[HTML minifié, chaque paragraphe structuré, 300 mots min, HTML enrichi de balises de mise en forme, tags identifiants inclus jusqu'à paragraphe-${environment.globalNbChapter}]",
