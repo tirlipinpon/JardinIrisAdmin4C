@@ -79,26 +79,14 @@ export class ServiceCallToActionService {
   }
 
   /**
-   * Génère le HTML du CTA avec un design moderne et attractif
+   * Génère le HTML du CTA avec un design moderne et attractif + CSS inline
    */
   private generateCTAHtml(url: string, ctaText: string, serviceKey?: string): string {
     // Générer le texte du lien basé sur le key du service
     const linkText = serviceKey ? this.generateLinkText(serviceKey) : 'Découvrir nos services';
     
-    return `
-<div class="service-cta">
-  <div class="service-cta-content">
-    <div class="service-cta-icon">🌱</div>
-    <div class="service-cta-text">
-      <h3>💡 Conseil d'expert</h3>
-      <p>${ctaText}</p>
-      <a href="${url}" target="_blank" rel="noopener noreferrer" class="service-cta-button">
-        <span>${linkText}</span>
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0L6.59 1.41L12.17 7H0v2h12.17l-5.58 5.59L8 16l8-8z"/></svg>
-      </a>
-    </div>
-  </div>
-</div>`;
+    // IMPORTANT: HTML minifié avec styles inline pour forcer l'affichage
+    return `<div style="margin:32px 0;border-radius:16px;background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 100%);border:2px solid #4caf50;box-shadow:0 4px 20px rgba(76,175,80,0.15);overflow:hidden;transition:transform 0.3s ease, box-shadow 0.3s ease;"><div style="display:flex;align-items:center;gap:24px;padding:24px;"><div style="font-size:48px;line-height:1;animation:pulse 2s ease-in-out infinite;flex-shrink:0;">🌱</div><div style="flex:1;"><h3 style="margin:0 0 12px 0;font-size:18px;font-weight:700;color:#2e7d32;font-family:'Segoe UI',sans-serif;">💡 Conseil d'expert</h3><p style="margin:0 0 16px 0;font-size:16px;line-height:1.6;color:#495057;font-family:'Segoe UI',sans-serif;">${ctaText}</p><a href="${url}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:linear-gradient(135deg,#4caf50 0%,#388e3c 100%);color:white;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(76,175,80,0.3);"><span>${linkText}</span><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="transition:transform 0.3s ease;"><path d="M8 0L6.59 1.41L12.17 7H0v2h12.17l-5.58 5.59L8 16l8-8z"/></svg></a></div></div></div>`;
   }
 
   /**

@@ -52,3 +52,43 @@ export const SERVICE_MAPPINGS: ServiceMapping[] = [
   }
 ];
 
+export interface ProjectMapping {
+  key: string;
+  url: string;
+  title: string;
+  description: string;
+}
+
+export const PROJECT_MAPPINGS: ProjectMapping[] = [
+  {
+    key: 'creation-jardin-etterbeek',
+    url: 'https://www.jardin-iris.be/jardinier-paysagiste-projet/creation-jardin-etterbeek.html',
+    title: 'Création d\'un jardin à Etterbeek nécessitant peu d\'entretien.',
+    description: 'Remise en état d\'un jardin abandonné à Etterbeek. Projet de jardinage urbain à Bruxelles. Transformation d\'un espace abandonné depuis quatre ans en valorisant les plantes existantes (palmier, rosier). Objectif : redonner charme et fonctionnalité au jardin avec un espace à faible entretien. Revitalisation du sol avec compost, intégration d\'un système d\'arrosage écologique.'
+  },
+  {
+    key: 'maison-horta',
+    url: 'https://www.jardin-iris.be/jardinier-paysagiste-projet/creation-jardin-avenue-louise.html',
+    title: 'Plantation d\'un jardin situé avenue Louise d\'une maison Horta à Bruxelles',
+    description: 'Création d\'une plantation pour une exposition artistique dans une propriété Horta Avenue Louise. Composition de graminées variées, anémones, hortensias, palmier et bambou. Sol amendé avec terreau et compost pour développement optimal des plantes.'
+  },
+  {
+    key: 'potager-urbain',
+    url: 'https://www.jardin-iris.be/jardinier-paysagiste-projet/jardinier-bruxelles-potager.html',
+    title: 'Votre potager urbain bio local de saison à Bruxelles',
+    description: 'Potager sur sol vivant (MSV) en serre froide. Couverture permanente : paille, drêche de brasserie, feuilles d\'arbres, BRF et plantes couvre-sol. Système d\'irrigation par pompe photovoltaïque. Eau stockée dans citernes cubiques. Techniques agricoles durables.'
+  },
+  {
+    key: 'amenagement-jardin',
+    url: 'https://www.jardin-iris.be/jardinier-paysagiste-projet/amenagement-jardin-etterbeek.html',
+    title: 'Aménagement complet d\'un jardin situé à Etterbeek.',
+    description: 'Aménagement par architecte paysagiste Jacques de Liedekerke dans un quartier résidentiel d\'Etterbeek. Terrain très arboré sans réelle zone de jardin. Taille précise des arbres et arbustes pour laisser entrer la lumière. Plantation d\'espèces fleuries et rosiers adaptés aux coins ensoleillés. Sol enrichi avec compost maison et pouzzolane fine.'
+  },
+  {
+    key: 'entretien-jardin-uccle',
+    url: 'https://www.jardin-iris.be/jardinier-paysagiste-projet/entretien-jardin-uccle.html',
+    title: 'Entretien des haies, gazon/pelouse, plantations évolutives d\'un jardin à Uccle',
+    description: 'Aménagement paysager à Uccle par architecte Anne-Marie Vercauteren en 2015. Structuration des abords d\'une pelouse étroite pensée comme fleuve végétal. Végétation mêlant arbustes taillés et massifs floraux visibles toute l\'année sauf hiver. Entretien raisonnable par jardinier local, décor vivant et évolutif.'
+  }
+];
+

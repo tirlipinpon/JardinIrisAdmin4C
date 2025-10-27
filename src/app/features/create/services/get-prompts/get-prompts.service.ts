@@ -17,6 +17,8 @@ export class GetPromptsService {
 
 Rédige un article de blog en temps que jardinier paysagiste humain à Bruxelles, en adoptant un style authentique, vivant, et non reconnaissable comme écrit par une IA. Mets systématiquement en forme l’intégralité du texte au format HTML, balisé pour faciliter la lecture et la compréhension : chaque paragraphe (au sein de chaque balise <span id="paragraphe-#">) doit présenter un contenu clairement segmenté et ENRICHI de balises HTML de mise en forme adaptées (balises <b>, <em>, <u>, <ul>, <ol>, <li>, <table>, etc., en plus du balisage principal prévu : <span>, <h4>, <article>…), de manière à améliorer la lisibilité et l’attrait VISUEL pour le lecteur, tout en respectant scrupuleusement la structure imposée ci-dessous. Tous les autres critères et instructions restent identiques.
 
+🚨 EXIGENCE STRICTE : L'article DOIT contenir EXACTEMENT ${environment.globalNbChapter} paragraphes (de paragraphe-1 à paragraphe-${environment.globalNbChapter}). AUCUNE exception. Tu DOIS générer TOUS les paragraphes.
+
 - Utilise un ton professionnel mais accessible, avec des phrases à la longueur variable et des imperfections naturelles pour un effet « conversation réelle ». Bannis absolument toute conclusion scolaire.
 - Adresse-toi directement au lecteur ("je", "on"); de conseils concrets tirés de ton expérience, et d'une anecdote personnelle issue du terrain.
 - Intègre des détails techniques pertinents, récents, et adaptés au contexte écologique de Bruxelles.
@@ -561,6 +563,67 @@ ${services.map(service =>
 ---
 
 Analyse cet article et détermine quel service correspond le mieux au contenu. Génère une phrase CTA professionnelle qui lie l'article au service choisi.
+      `
+    };
+  }
+
+  getPromptAnalyzeProjectForArticle() {
+    return {
+      systemRole: {
+        role: "system",
+        content: `
+Tu es un expert en marketing digital et en SEO. Ton rôle est d'analyser un article de blog sur le jardinage et le paysagisme, et de déterminer quel projet de réalisation correspond le mieux au contenu de l'article.
+
+Tu disposes d'une liste de projets réalisés avec leurs URLs, titres et descriptions. Tu dois :
+1. Analyser le contenu de l'article (sujets abordés, types de projets, activités mentionnées)
+2. Identifier le projet le plus pertinent parmi la liste fournie basé sur la similarité du contenu
+3. Générer une phrase commerciale professionnelle et incitative en 1 phrase qui lie l'article au projet
+4. Retourner uniquement l'URL du projet choisi, la phrase commerciale et le titre
+
+Critères de sélection :
+- La pertinence thématique : le projet doit correspondre aux sujets principaux de l'article
+- La similarité de contenu : utiliser les descriptions pour trouver le meilleur match
+- L'incitation à l'action : la phrase doit être professionnelle et inciter le lecteur à découvrir le projet
+
+Format de sortie (JSON uniquement) :
+{
+  "url": "URL_DU_PROJET_CHOISI",
+  "cta_text": "Phrase commerciale professionnelle de 1 phrase qui lie l'article au projet",
+  "title": "Titre du projet choisi"
+}
+
+Exemples de phrases CTA (style professionnel, 1 phrase) :
+- "Découvrez comment nous avons transformé un jardin abandonné en havre de paix."
+- "Inspirez-vous de ce projet d'aménagement paysager réalisé par notre équipe."
+- "Consultez notre réalisation de potager urbain écologique."
+
+IMPORTANT : Retourne UNIQUEMENT le JSON, sans commentaire ni explication supplémentaire.
+        `
+      }
+    };
+  }
+
+  getPromptUserAnalyzeProjectForArticle(article: string, projects: Array<{ url: string; title: string; description: string }>) {
+    return {
+      role: "user",
+      content: `
+Voici l'article à analyser :
+
+${article}
+
+---
+
+Voici la liste des projets disponibles avec leurs titres et descriptions :
+
+${projects.map(project => 
+  `- ${project.url}
+  Titre: ${project.title}
+  Description: ${project.description}`
+).join('\n\n')}
+
+---
+
+Analyse cet article et détermine quel projet correspond le mieux au contenu. Génère une phrase CTA professionnelle qui lie l'article au projet choisi.
       `
     };
   }

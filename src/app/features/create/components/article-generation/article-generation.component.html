@@ -9,12 +9,13 @@
     <div class="input-section">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Idée d'article</mat-label>
-        <input 
+        <textarea 
           matInput 
           [ngModel]="articleIdea()" 
           (ngModelChange)="onArticleIdeaChange($event)"
           placeholder="Ex: Comment planter des roses en pot sur un balcon"
-          type="text">
+          rows="3">
+        </textarea>
         <mat-icon matSuffix>edit</mat-icon>
       </mat-form-field>
       

@@ -103,6 +103,15 @@ export class InfrastructurePerformanceService {
     );
   }
 
+  // Wrapper pour addProjectCallToAction
+  addProjectCallToAction(article: string): Observable<string | PostgrestError> {
+    return this.performanceService.measure(
+      'addProjectCallToAction',
+      'Text Processing',
+      () => this.infrastructure.addProjectCallToAction(article)
+    );
+  }
+
   // Wrapper pour savePostComplete
   savePostComplete(post: Post): Observable<boolean | PostgrestError> {
     return this.performanceService.measure(

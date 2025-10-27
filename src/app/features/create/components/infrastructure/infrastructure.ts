@@ -17,6 +17,7 @@ import { VideoService } from '../../services/video/video.service';
 import { VegetalService } from '../../services/vegetal/vegetal.service';
 import { ImageDescriptionService } from '../../services/image-description/image-description.service';
 import { ServiceCallToActionService } from '../../services/service-call-to-action/service-call-to-action.service';
+import { ProjectCallToActionService } from '../../services/project-call-to-action/project-call-to-action.service';
 import { environment } from '../../../../../environments/environment';
 
 
@@ -38,6 +39,7 @@ export class Infrastructure {
   private readonly vegetalService = inject(VegetalService);
   private readonly imageDescriptionService = inject(ImageDescriptionService);
   private readonly serviceCallToActionService = inject(ServiceCallToActionService);
+  private readonly projectCallToActionService = inject(ProjectCallToActionService);
 
   /**
    * Détecte si l'application tourne sur localhost
@@ -745,6 +747,56 @@ export class Infrastructure {
       () => this.serviceCallToActionService.addServiceCallToAction(article),
       'addServiceCallToAction',
       `Ajout de CTA service dans un article de ${article.length} caractères`
+    );
+  }
+
+  /**
+   * Ajoute un call-to-action vers un projet pertinent dans l'article
+   * @param article - L'article à enrichir
+   * @returns Observable de l'article avec le CTA ajouté
+   */
+  addProjectCallToAction(article: string): Observable<string | PostgrestError> {
+    const shouldReturnError = false;
+    const shouldReturnMock = this.isLocalhost();
+    
+    if (shouldReturnError) {
+      const mockError: PostgrestError = {
+        message: 'Erreur de test: addProjectCallToAction',
+        details: 'Simulation d\'erreur DeepSeek',
+        hint: 'Vérifiez les APIs',
+        code: 'TEST_ERROR_010',
+        name: 'PostgrestError'
+      };
+      this.loggingService.info('INFRASTRUCTURE', '📨 Erreur simulée addProjectCallToAction', mockError);
+      return from(Promise.resolve(mockError));
+    }
+    
+    if (shouldReturnMock) {
+      // Simuler le comportement du vrai service : insérer le CTA avant la DERNIÈRE balise </article>
+      const ctaHtml = `
+<div class="project-cta">
+  <div class="project-cta-content">
+    <div class="project-cta-icon">✨</div>
+    <div class="project-cta-text">
+      <h3>🏗️ Projet inspirant</h3>
+      <p>Découvrez comment nous avons transformé un jardin en espace de détente.</p>
+      <a href="https://www.jardin-iris.be/jardinier-paysagiste-projet/creation-jardin-etterbeek.html" target="_blank" rel="noopener noreferrer" class="project-cta-button">
+        <span>Voir le projet de création de jardin</span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0L6.59 1.41L12.17 7H0v2h12.17l-5.58 5.59L8 16l8-8z"/></svg>
+      </a>
+    </div>
+  </div>
+</div>`;
+      // Insérer avant la DERNIÈRE balise </article>
+      const mockArticle = article.replace(/<\/article>([^<]*)$/, ctaHtml + '\n$1</article>');
+      this.loggingService.info('INFRASTRUCTURE', '📨 Mock addProjectCallToAction');
+      return from(Promise.resolve(mockArticle));
+    }
+
+    return this.wrapWithErrorHandling(
+      () => this.projectCallToActionService.addProjectCallToAction(article),
+      'addProjectCallToAction',
+      `Ajout de CTA projet dans un article de ${article.length} caractères`
     );
   }
   
