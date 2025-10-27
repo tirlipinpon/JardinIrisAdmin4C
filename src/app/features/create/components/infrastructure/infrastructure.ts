@@ -16,6 +16,7 @@ import { ImageUploadService } from '../../services/image-upload/image-upload.ser
 import { VideoService } from '../../services/video/video.service';
 import { VegetalService } from '../../services/vegetal/vegetal.service';
 import { ImageDescriptionService } from '../../services/image-description/image-description.service';
+import { ServiceCallToActionService } from '../../services/service-call-to-action/service-call-to-action.service';
 import { environment } from '../../../../../environments/environment';
 
 
@@ -36,6 +37,7 @@ export class Infrastructure {
   private readonly videoService = inject(VideoService);
   private readonly vegetalService = inject(VegetalService);
   private readonly imageDescriptionService = inject(ImageDescriptionService);
+  private readonly serviceCallToActionService = inject(ServiceCallToActionService);
 
   /**
    * Détecte si l'application tourne sur localhost
@@ -694,6 +696,55 @@ export class Infrastructure {
       ),
       'saveInternalImages',
       `Sauvegarde de ${images.length} images internes pour le post ${postId}`
+    );
+  }
+
+  /**
+   * Ajoute un call-to-action vers un service pertinent dans l'article
+   * @param article - L'article à enrichir
+   * @returns Observable de l'article avec le CTA ajouté
+   */
+  addServiceCallToAction(article: string): Observable<string | PostgrestError> {
+    const shouldReturnError = false;
+    const shouldReturnMock = this.isLocalhost();
+    
+    if (shouldReturnError) {
+      const mockError: PostgrestError = {
+        message: 'Erreur de test: addServiceCallToAction',
+        details: 'Simulation d\'erreur DeepSeek',
+        hint: 'Vérifiez les APIs',
+        code: 'TEST_ERROR_009',
+        name: 'PostgrestError'
+      };
+      this.loggingService.info('INFRASTRUCTURE', '📨 Erreur simulée addServiceCallToAction', mockError);
+      return from(Promise.resolve(mockError));
+    }
+    
+    if (shouldReturnMock) {
+      // Simuler le comportement du vrai service : insérer le CTA avant </article>
+      const ctaHtml = `
+<div class="service-cta">
+  <div class="service-cta-content">
+    <div class="service-cta-icon">🌱</div>
+    <div class="service-cta-text">
+      <h3>💡 Conseil d'expert</h3>
+      <p>Découvrez nos services professionnels d'entretien de jardin adaptés à vos besoins.</p>
+      <a href="https://www.jardin-iris.be/jardinier-paysagiste-service/entretien-de-jardin.html" target="_blank" rel="noopener noreferrer" class="service-cta-button">
+        <span>Découvrir notre service d'entretien de jardin</span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0L6.59 1.41L12.17 7H0v2h12.17l-5.58 5.59L8 16l8-8z"/></svg>
+      </a>
+    </div>
+  </div>
+</div>`;
+      const mockArticle = article.replace('</article>', ctaHtml + '\n</article>');
+      this.loggingService.info('INFRASTRUCTURE', '📨 Mock addServiceCallToAction');
+      return from(Promise.resolve(mockArticle));
+    }
+
+    return this.wrapWithErrorHandling(
+      () => this.serviceCallToActionService.addServiceCallToAction(article),
+      'addServiceCallToAction',
+      `Ajout de CTA service dans un article de ${article.length} caractères`
     );
   }
   

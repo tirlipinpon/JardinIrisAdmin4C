@@ -643,15 +643,51 @@ export const SearchStore =  signalStore(
               next: (upgradedArticle: string) => {
                 patchState(store, { 
                   article: upgradedArticle, 
-                  step: 4,
-                  isGenerating: false // Fin du processus de génération
+                  step: 4
+                  // isGenerating reste à true pour laisser place au step 4 (addServiceCallToAction)
                 });
-                loggingService.info('STORE', '🎉 Processus de génération terminé avec succès - étape 4 terminée');
+                loggingService.info('STORE', '✅ Step 3 terminé - végétales ajoutées, passage au step 4');
               },
               error: (error: unknown) => {
                 addError(extractErrorMessage(error));
                 patchState(store, { isGenerating: false }); // Arrêter la génération en cas d'erreur
                 loggingService.error('STORE', '❌ Erreur lors de l\'étape végétale', error);
+              }
+            })
+          );
+        })
+      )
+    ),
+
+    addServiceCallToAction: rxMethod<void>(
+      pipe(
+        concatMap(() => {
+          const article = store.article();
+          
+          const validationError = validateWithErrorHandling([
+            { value: article, errorMessage: 'L\'article doit être généré avant d\'ajouter le call-to-action' }
+          ]);
+          
+          if (validationError) {
+            return [];
+          }
+          
+          return infraPerf.addServiceCallToAction(article!).pipe(
+            withLoading(store, 'addServiceCallToAction'),
+            map((response: string | PostgrestError) => throwOnPostgrestError(response)),
+            tap({
+              next: (upgradedArticle: string) => {
+                patchState(store, { 
+                  article: upgradedArticle, 
+                  step: 5,
+                  isGenerating: false // Fin du processus de génération
+                });
+                loggingService.info('STORE', '🎉 Processus de génération terminé avec succès - étape 5 terminée');
+              },
+              error: (error: unknown) => {
+                addError(extractErrorMessage(error));
+                patchState(store, { isGenerating: false }); // Arrêter la génération en cas d'erreur
+                loggingService.error('STORE', '❌ Erreur lors de l\'ajout du CTA', error);
               }
             })
           );

@@ -6,6 +6,51 @@
   min-height: 100vh;
 }
 
+/* Bouton de sauvegarde permanent */
+.save-button-container {
+  position: sticky;
+  top: 20px;
+  z-index: 1000;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e0e0e0;
+}
+
+.save-button {
+  font-size: 16px !important;
+  padding: 12px 32px !important;
+  font-weight: 600 !important;
+}
+
+.save-button mat-icon {
+  margin-right: 8px;
+  font-size: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.save-hint {
+  color: #28a745;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.save-hint::before {
+  content: '✓';
+  color: #28a745;
+  font-weight: bold;
+}
+
 /* Wrapper pour chaque section */
 .section-wrapper {
   margin-bottom: 24px;
@@ -114,6 +159,22 @@
 @media (max-width: 768px) {
   .create-container {
     padding: 12px;
+  }
+
+  .save-button-container {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    position: relative;
+    top: 0;
+  }
+
+  .save-button {
+    width: 100%;
+  }
+
+  .save-hint {
+    text-align: center;
   }
 
   .section-wrapper {

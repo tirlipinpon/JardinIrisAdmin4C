@@ -94,6 +94,15 @@ export class InfrastructurePerformanceService {
     );
   }
 
+  // Wrapper pour addServiceCallToAction
+  addServiceCallToAction(article: string): Observable<string | PostgrestError> {
+    return this.performanceService.measure(
+      'addServiceCallToAction',
+      'Text Processing',
+      () => this.infrastructure.addServiceCallToAction(article)
+    );
+  }
+
   // Wrapper pour savePostComplete
   savePostComplete(post: Post): Observable<boolean | PostgrestError> {
     return this.performanceService.measure(

@@ -84,8 +84,8 @@ export class CreateComponent {
       const isGenerating = this.store.isGenerating();
       const article = this.store.article();
       
-      // Si on est à l'étape 4, qu'on n'est plus en génération et qu'on a un article
-      if (step === 4 && !isGenerating && article && !this.showCompletionDialog) {
+      // Si on est à l'étape 5 (fin du processus), qu'on n'est plus en génération et qu'on a un article
+      if (step === 5 && !isGenerating && article && !this.showCompletionDialog) {
         this.showCompletionDialog = true;
         this.showProcessCompletionDialog();
       }

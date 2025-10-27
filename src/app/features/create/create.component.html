@@ -1,5 +1,19 @@
 <div class="create-container">
 
+  <!-- Bouton de sauvegarde permanent -->
+  <div class="save-button-container" *ngIf="store.article() && !store.isGenerating()">
+    <button mat-raised-button 
+            color="primary" 
+            [disabled]="!canSave()"
+            (click)="saveAllData()"
+            class="save-button">
+      <mat-icon>save</mat-icon>
+      Sauvegarder l'article
+    </button>
+    <span class="save-hint" *ngIf="store.step() >= 5">
+      Article terminé - Prêt à sauvegarder
+    </span>
+  </div>
 
   <!-- Section d'affichage des erreurs -->
   <div class="section-wrapper">
