@@ -23,13 +23,7 @@ Rédige un article de blog en temps que jardinier paysagiste humain à Bruxelles
 - Adresse-toi directement au lecteur ("je", "on"); de conseils concrets tirés de ton expérience, et d'une anecdote personnelle issue du terrain.
 - Intègre des détails techniques pertinents, récents, et adaptés au contexte écologique de Bruxelles.
 - Respecte les critères EEAT (Expertise, Expérience, Autorité, Fiabilité).
-- OPTIMISATION TITRE SEO : Crée un titre qui traduit PARFAITEMENT l'intention de recherche utilisateur sur Google. Utilise un langage naturel, interrogatif ou de comparaison, évite l'accumulation de mots-clés et les titres trop techniques/artistiques. Formats OBLIGATOIRES (utilise celui qui correspond le mieux à l'intention de recherche) : 
-  * "Comment [adjectif] [action concrète] : Guide pratique 2025"
-  * "Quand [action]  : Calendrier 2025"
-  * "Quel [adjectif] [objet/solution] choisir  : Comparatif 2025"
-  * "Meilleur [adjectif] [sujet]  : Top 5 (2025)"
-  * "[Sujet]  : Prix, techniques et conseils d'expert"
-  IMPORTANT : Utilise TOUJOURS l'année en cours. Optimisé pour les featured snippets, 50-70 caractères max, évite les caractères spéciaux et formules trop "blog lifestyle".
+- TITRE SEO : Crée un titre explicatif d'environ 20 mots qui traduit l'intention de recherche Google. Langage naturel, mixte interrogatif/informatif.
 - Insère de façon naturelle les mots-clés SEO suivants : "${afficherRandomSeoKeyWords()}" pour optimiser le texte sans perturber sa fluidité.
 - Structure chaque paragraphe selon le modèle suivant :
     1. En-tête <span id="paragraphe-#">
@@ -43,7 +37,7 @@ Rédige un article de blog en temps que jardinier paysagiste humain à Bruxelles
         - UNE SEULE anecdote personnelle dans l'article entier, placée dans le paragraphe le plus approprié.
 - Produis l’ensemble de l’article dans un unique objet JSON STRICTEMENT conforme au format suivant (AUCUNE entorse ne sera acceptée) :
 {
-  "titre": "[Titre SEO optimisé traduisant l'intention de recherche Google (Comment/Quand/Quel/Meilleur [sujet] ) : 50-70 caractères, avec l'année en cours obligatoirement, évite titre trop artistique/technique. Exemples : 'Comment planter des bulbes à Bruxelles : Guide pratique 2025' ou 'Quel robot tondeuse choisir : Comparatif 2025']",
+  "titre": "[Titre explicatif d'environ 20 mots traduisant l'intention de recherche Google]",
   "description_meteo": "[Prévisions IRM pour Bruxelles, 50 mots environ, chiffres et icônes]",
   "phrase_accroche": "[Phrase motivationnelle transactionnelle, ~45 mots]",
   "article": "[HTML minifié, chaque paragraphe structuré, 200 mots min, HTML enrichi de balises de mise en forme, tags identifiants inclus jusqu’à paragraphe-${environment.globalNbChapter}]",
@@ -80,12 +74,7 @@ Exemple complet de paragraphe enrichi :
 <span id="paragraphe-1"><h4>Comment donner du volume à un jardin urbain de Bruxelles ?</h4><ul>Défi : sublimer 15m² sans les surcharger</ul><article>Chez Léa à Etterbeek, j'ai transformé 15m² plats – <b> mission jungle urbaine !</b> Astuce : jouer sur <u>la hauteur des végétaux</u>, recycler des palettes pour le relief. <em>Carex pantherina</em> remporte tout côté robustesse. <ul><li>Bacs surélevés</li><li>Graminées locales</li><li>Arrosage malin</li></ul> Conseil pratique : surveille l’humidité, les gelées arrivent tôt. L’essentiel : s’amuser !</article></span>
 ( longueur réelle ≥ 200 vrais mots)
 
-Exemples de titres SEO traduisant l'intention de recherche (format obligatoire avec currentYear) :
-"titre": "Comment planter des bulbes sans se tromper : Guide pratique 2025"
-"titre": "Quand tailler les haies efficacement : Calendrier mensuel 2025"
-"titre": "Quel est le meilleur robot tondeuse à choisir  : Comparatif 2025"
-"titre": "Meilleur potager urbain à Bruxelles : Top 5 conseils (2025)"
-"titre": "Plantater un arbres : Prix, techniques et conseils d'expert"
+
 
 Exemple d'URL SEO :
 "new_href": "jardinier-bruxelles-relief-petits-espaces"
