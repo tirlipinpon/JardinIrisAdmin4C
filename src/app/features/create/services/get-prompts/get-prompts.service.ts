@@ -397,6 +397,7 @@ Intégrez un lien hypertexte spécifique dans un article HTML : pour chaque pa
 
 - **Précision** : Ne modifiez PAS le contenu HTML existant en dehors de l’ajout du lien ; assurez la fidélité au texte d’origine.
 - **Restrictions** : Un seul lien hypertexte par paragraphe, pas de doublon dans un même paragraphe ; le lien doit être inséré sur l’occurrence la plus pertinente (expression la plus spécifique au titre) du texte.
+- **Interdiction stricte** : Ne JAMAIS insérer de lien dans les balises '<h4>'. Les titres '<h4>' doivent rester intacts et sans aucun lien hypertexte.
 
 ## Raisonnement et Conclusion :  
 1. **Raisonnement** (doit précéder toute conclusion) :

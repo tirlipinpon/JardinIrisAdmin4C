@@ -89,6 +89,12 @@ export const PROJECT_MAPPINGS: ProjectMapping[] = [
     url: 'https://www.jardin-iris.be/jardinier-paysagiste-projet/entretien-jardin-uccle.html',
     title: 'Entretien des haies, gazon/pelouse, plantations évolutives d\'un jardin à Uccle',
     description: 'Aménagement paysager à Uccle par architecte Anne-Marie Vercauteren en 2015. Structuration des abords d\'une pelouse étroite pensée comme fleuve végétal. Végétation mêlant arbustes taillés et massifs floraux visibles toute l\'année sauf hiver. Entretien raisonnable par jardinier local, décor vivant et évolutif.'
+  },
+  {
+    key: 'jardin-anglais-woluwe-saint-pierre',
+    url: 'https://www.jardin-iris.be/jardinier-paysagiste-projet/jardin-anglais-woluwe-saint-pierre.html',
+    title: ' Jardin anglais à Woluwe-Saint-Pierre : élégance et harmonie naturelle, taille de haies et entretien d\'un jardin paysagé à Bruxelles',
+    description: 'Taille de haies et entretien d\'un jardin paysagé à Bruxelles Projet : Taille de haies d\'un jardin paysagé bruxellois. Haie d\'ifs composée de topiaires et de charmilles, structure principale d\'un jardin de style franco-belge. Les haies délimitent la roseraie et l\'espace piscine tout en offrant des perspectives soignées. Le jardin a été conçu avec chaque zone pour une fonction précise : décoration, méditation et relaxation. Le jardin, très fleuri, présente une belle collection de rosiers anglais et français invitant le visiteur à la découverte de chaque espace. Entretien : 1x hebdomadaire. Taille des haies : 2x/an. Apports d\'engrais en saison pour favoriser un meilleur développement des haies et des arbustes. Sol : argilo-limoneux, propice aux rhododendrons, hortensias, camélias et rosiers. Les parterres sont enrichis chaque janvier avec du compost maison pour préparer la reprise printanière. Pratiques durables : compost maison, broyage des branches pour BRF, réutilisation des feuilles et tontes — aucun déchet vert n\'est exporté. Résultat estimé : ~2000 € d\'économie sur l\'évacuation des déchets et ~300 € sur l\'achat d\'amendements grâce au recyclage interne. Végétation et floraison : jonquilles au printemps, géraniums vivaces, Iris sibirica, alchemilla, lavandes, ancolies et pivoines pour assurer une floraison échelonnée toute l\'année.'
   }
 ];
 
