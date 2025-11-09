@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "feature-create",
+  "projectType": "library",
+  "sourceRoot": "libs/features/create/src",
+  "prefix": "create",
+  "tags": [
+    "scope:feature-create",
+    "type:feature"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/features/create/src/**/*.ts",
+          "libs/features/create/src/**/*.html"
+        ]
+      }
+    }
+  }
+}
+
+

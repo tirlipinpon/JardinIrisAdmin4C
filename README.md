@@ -1,59 +1,62 @@
 # JardinIrisAdmin4C
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.1.0.
+Application Angular 20 orchestrée avec [Nx](https://nx.dev) pour piloter le développement, les tests et l’architecture multi‑bibliothèques.
 
-## Development server
+## Commandes usuelles
 
-To start a local development server, run:
+| Commande | Description |
+| --- | --- |
+| `npm run start` | Lance `nx serve JardinIrisAdmin4C` |
+| `npm run build` | Compile l’app en production (`nx build`) |
+| `npm run lint` | Vérifie le lint (`nx lint`) |
+| `npm run test-single` | Lance la suite de tests Karma en headless |
+| `npm run affected:build` | Build des projets impactés |
+| `npm run affected:test` | Tests ciblés sur les projets modifiés |
+| `npm run affected:lint` | Lint ciblé |
+| `npm run graph` | Visualise le graphe de dépendances Nx |
 
-```bash
-ng serve
+## Architecture Nx
+
+```
+apps/
+└── (app principale en mode standalone)
+
+libs/
+├── core/data-access   → Services métiers partagés (Supabase, logging, erreurs…)
+├── shared/ui          → Composants UI transverses (ex. VersionsComponent)
+├── shared/util        → Utilitaires, constantes et helpers
+└── features/create   → Feature "create" (composants, store, services IA…)
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Les alias TypeScript (`@jardin-iris/...`, `@env`) sont définis dans `tsconfig.base.json`.
 
-## Code scaffolding
+## Génération et scaffolding
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Utiliser les générateurs Nx :
 
 ```bash
-ng generate --help
+npx nx g @nx/angular:component my-widget --project=shared-ui
+npx nx g @nx/angular:library feature/new-feature --directory=features --standalone
 ```
 
-## Building
-
-To build the project run:
+## Développement
 
 ```bash
-ng build
+npm install
+npm run start
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Le serveur est disponible sur `http://localhost:4200/`.
 
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+## Tests & qualité
 
 ```bash
-ng test
+npm run lint
+npm run test-single
 ```
 
-## Running end-to-end tests
+Chaque bibliothèque dispose de son propre `project.json`; la configuration Nx permet d’exécuter uniquement ce qui est impacté (`affected:*`).
 
-For end-to-end (e2e) testing, run:
+## Documentation Nx
 
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Consulter [Nx.dev](https://nx.dev) pour les bonnes pratiques, la configuration des plugins Angular et l’intégration CI/CD.

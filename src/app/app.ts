@@ -1,7 +1,7 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { VersionService } from './shared/services/versions/versions.service';
-import { VersionsComponent } from "./shared/versions/versions.component";
+import { VersionService } from '@jardin-iris/core/data-access';
+import { VersionsComponent } from '@jardin-iris/shared/ui';
 
 @Component({
   selector: 'app-root',
@@ -10,7 +10,7 @@ import { VersionsComponent } from "./shared/versions/versions.component";
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App implements OnInit {
+export class AppComponent implements OnInit {
   private readonly versionService = inject(VersionService);
   protected readonly title = signal('JardinIrisAdmin4C');
   ngOnInit(): void {

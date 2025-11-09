@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { AuthService } from './auth.service';
-import { SupabaseService } from '../../shared/services/supabase.service';
+import { SupabaseService } from '@jardin-iris/core/data-access';
 
 describe('AuthService', () => {
   let service: AuthService;

@@ -1,0 +1,43 @@
+{
+  "root": true,
+  "ignorePatterns": [
+    "dist/**/*",
+    "coverage/**/*",
+    "tmp/**/*"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "*.ts",
+        "*.tsx",
+        "*.cts",
+        "*.mts"
+      ],
+      "extends": [
+        "plugin:@angular-eslint/recommended",
+        "plugin:@angular-eslint/template/process-inline-templates"
+      ],
+      "parserOptions": {
+        "project": [
+          "tsconfig.app.json",
+          "tsconfig.spec.json",
+          "libs/core/data-access/tsconfig.lib.json",
+          "libs/features/create/tsconfig.lib.json",
+          "libs/shared/ui/tsconfig.lib.json",
+          "libs/shared/util/tsconfig.lib.json"
+        ],
+        "sourceType": "module"
+      }
+    },
+    {
+      "files": [
+        "*.html"
+      ],
+      "extends": [
+        "plugin:@angular-eslint/template/recommended"
+      ],
+      "rules": {}
+    }
+  ]
+}
+

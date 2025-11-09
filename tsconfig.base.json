@@ -1,0 +1,44 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "types": [],
+    "useDefineForClassFields": false,
+    "paths": {
+      "@jardin-iris/core/data-access": [
+        "./libs/core/data-access/src/index.ts"
+      ],
+      "@jardin-iris/shared/ui": [
+        "./libs/shared/ui/src/index.ts"
+      ],
+      "@jardin-iris/shared/util": [
+        "./libs/shared/util/src/index.ts"
+      ],
+      "@jardin-iris/feature/create": [
+        "./libs/features/create/src/index.ts"
+      ],
+      "@env": [
+        "./environment.ts"
+      ]
+    }
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "typeCheckHostBindings": true,
+    "strictTemplates": true
+  }
+}

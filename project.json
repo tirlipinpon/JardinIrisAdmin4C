@@ -1,0 +1,115 @@
+{
+  "$schema": "./node_modules/nx/schemas/project-schema.json",
+  "name": "JardinIrisAdmin4C",
+  "projectType": "application",
+  "root": ".",
+  "sourceRoot": "src",
+  "prefix": "app",
+  "tags": [
+    "scope:app",
+    "type:frontend"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": [
+        "{workspaceRoot}/dist/JardinIrisAdmin4C"
+      ],
+      "options": {
+        "outputPath": "dist/JardinIrisAdmin4C",
+        "browser": "src/main.ts",
+        "server": false,
+        "polyfills": [
+          "zone.js"
+        ],
+        "tsConfig": "tsconfig.app.json",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "public"
+          }
+        ],
+        "styles": [
+          "src/styles.css"
+        ],
+        "fileReplacements": [
+          {
+            "replace": "src/environments/environment.ts",
+            "with": "src/environments/environment.prod.ts"
+          }
+        ]
+      },
+      "configurations": {
+        "production": {
+          "baseHref": "/admin2/",
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "1.2MB",
+              "maximumError": "1.5MB"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kB",
+              "maximumError": "8kB"
+            }
+          ],
+          "outputHashing": "all",
+          "optimization": true,
+          "sourceMap": true,
+          "namedChunks": false,
+          "extractLicenses": true
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "executor": "@angular/build:dev-server",
+      "configurations": {
+        "production": {
+          "buildTarget": "JardinIrisAdmin4C:build:production"
+        },
+        "development": {
+          "buildTarget": "JardinIrisAdmin4C:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "extract-i18n": {
+      "executor": "@angular/build:extract-i18n",
+      "options": {
+        "buildTarget": "JardinIrisAdmin4C:build"
+      }
+    },
+    "test": {
+      "executor": "@angular/build:karma",
+      "options": {
+        "tsConfig": "tsconfig.spec.json",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "public"
+          }
+        ],
+        "styles": [
+          "src/styles.css"
+        ]
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "src/**/*.ts",
+          "src/**/*.html"
+        ]
+      }
+    }
+  }
+}
+

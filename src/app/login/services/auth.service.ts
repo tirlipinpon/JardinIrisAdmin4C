@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { SupabaseService } from '../../shared/services/supabase.service';
+import { SupabaseService } from '@jardin-iris/core/data-access';
 
 
 @Injectable({ providedIn: 'root' })

@@ -1,0 +1,91 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "npmScope": "jardin-iris-admin4c",
+  "affected": {
+    "defaultBase": "main"
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
+  "namedInputs": {
+    "sharedGlobals": [
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/tsconfig.base.json",
+      "{workspaceRoot}/tsconfig.json"
+    ],
+    "default": [
+      "sharedGlobals",
+      "{projectRoot}/**/*"
+    ],
+    "production": [
+      "default",
+      "!{projectRoot}/**/*.spec.ts",
+      "!{projectRoot}/**/*.spec.tsx",
+      "!{projectRoot}/**/*.spec.js",
+      "!{projectRoot}/**/*.spec.jsx",
+      "!{projectRoot}/**/*.test.ts",
+      "!{projectRoot}/**/*.test.tsx",
+      "!{projectRoot}/**/*.test.js",
+      "!{projectRoot}/**/*.test.jsx"
+    ]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ]
+    },
+    "test": {
+      "inputs": [
+        "default",
+        "^sharedGlobals"
+      ]
+    },
+    "lint": {
+      "inputs": [
+        "default",
+        "^sharedGlobals"
+      ]
+    }
+  },
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "nx/tasks-runners/default",
+      "options": {
+        "cacheableOperations": [
+          "build",
+          "test",
+          "lint"
+        ]
+      }
+    }
+  },
+  "generators": {
+    "@nx/angular:application": {
+      "standalone": true,
+      "routing": true,
+      "style": "css"
+    },
+    "@nx/angular:library": {
+      "linter": "eslint",
+      "unitTestRunner": "karma",
+      "standalone": true,
+      "style": "css"
+    },
+    "@nx/angular:component": {
+      "style": "css"
+    }
+  },
+  "projects": {
+    "JardinIrisAdmin4C": "project.json",
+    "core-data-access": "libs/core/data-access/project.json",
+    "shared-ui": "libs/shared/ui/project.json",
+    "shared-util": "libs/shared/util/project.json",
+    "feature-create": "libs/features/create/project.json"
+  }
+}

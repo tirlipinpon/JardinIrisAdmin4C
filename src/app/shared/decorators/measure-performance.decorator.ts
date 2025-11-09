@@ -1,4 +1,4 @@
-import { PerformanceService } from '../services/performance.service';
+import { PerformanceService } from '@jardin-iris/core/data-access';
 
 /**
  * Décorateur pour mesurer automatiquement les performances d'une méthode

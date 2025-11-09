@@ -3,7 +3,7 @@ import { PreloadAllModules, provideRouter, withComponentInputBinding, withPreloa
 import { provideHttpClient, withFetch } from '@angular/common/http';
 
 import { routes } from './app.routes';
-import { GlobalErrorHandler } from './shared/services/global-error-handler.service';
+import { GlobalErrorHandler } from '@jardin-iris/core/data-access';
 
 export const appConfig: ApplicationConfig = {
   providers: [

@@ -111,7 +111,7 @@ export class LoginComponent {
         return;
       }
       
-      // Connexion réussie - redirection directe vers /create
+      alert('Connexion réussie !');
       this.router.navigate(['/create']);
     } catch (error) {
       alert('Erreur inattendue lors de la connexion');
