@@ -66,6 +66,55 @@
           <span *ngIf="!isLoading">🚀 Se connecter</span>
         </button>
 
+        <!-- Lien mot de passe oublié -->
+        <div class="forgot-password-link">
+          <button 
+            type="button" 
+            mat-button 
+            color="primary"
+            (click)="toggleResetPassword()"
+            class="forgot-password-button">
+            Mot de passe oublié ?
+          </button>
+        </div>
+
+        <!-- Formulaire de réinitialisation du mot de passe -->
+        <div *ngIf="showResetPassword" class="reset-password-section">
+          <mat-divider style="margin: 20px 0;"></mat-divider>
+          <h3 style="margin-bottom: 15px; color: #2c5530;">Réinitialiser le mot de passe</h3>
+          <p style="margin-bottom: 15px; color: #666; font-size: 14px;">
+            Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+          </p>
+          
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Adresse email</mat-label>
+            <input 
+              matInput 
+              type="email" 
+              [(ngModel)]="resetPasswordEmail"
+              placeholder="votre@email.com"
+              [disabled]="isResettingPassword">
+            <mat-icon matSuffix>email</mat-icon>
+          </mat-form-field>
+
+          <div class="reset-password-actions">
+            <button 
+              mat-raised-button 
+              color="primary"
+              (click)="onResetPassword()"
+              [disabled]="isResettingPassword || !resetPasswordEmail">
+              <mat-spinner *ngIf="isResettingPassword" diameter="20" class="reset-spinner"></mat-spinner>
+              <span *ngIf="!isResettingPassword">Envoyer l'email</span>
+            </button>
+            <button 
+              mat-button 
+              (click)="toggleResetPassword()"
+              [disabled]="isResettingPassword">
+              Annuler
+            </button>
+          </div>
+        </div>
+
       </form>
     </mat-card-content>
 

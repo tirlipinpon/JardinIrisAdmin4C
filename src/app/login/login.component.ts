@@ -1,7 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from './services/auth.service';
 
 @Component({
@@ -10,74 +18,48 @@ import { AuthService } from './services/auth.service';
   imports: [
     CommonModule, 
     FormsModule, 
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule,
+    MatDividerModule
   ],
-  template: `
-    <div style="padding: 20px; max-width: 400px; margin: 0 auto;">
-      <h1 style="color: #2e7d32; text-align: center;">🌱 Jardin Iris Admin</h1>
-      <p style="text-align: center; color: #666;">Votre espace de création d'articles</p>
-      
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" style="margin-top: 30px;">
-        <div style="margin-bottom: 20px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Email :</label>
-          <input 
-            type="email" 
-            formControlName="email" 
-            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
-            placeholder="votre@email.com">
-          <div style="color: red; font-size: 12px; margin-top: 5px;" 
-               *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
-            {{ getErrorMessage('email') }}
-          </div>
-        </div>
-
-        <div style="margin-bottom: 20px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Mot de passe :</label>
-          <input 
-            type="password" 
-            formControlName="password" 
-            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
-            placeholder="Votre mot de passe">
-          <div style="color: red; font-size: 12px; margin-top: 5px;" 
-               *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-            {{ getErrorMessage('password') }}
-          </div>
-        </div>
-
-        <button 
-          type="submit" 
-          [disabled]="isLoading"
-          style="width: 100%; padding: 12px; background: #2e7d32; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer;">
-          <span *ngIf="!isLoading">🚀 Se connecter</span>
-          <span *ngIf="isLoading">⏳ Connexion...</span>
-        </button>
-      </form>
-      
-      <p style="text-align: center; margin-top: 20px; color: #666;">
-        🌿 Cultivez vos idées, récoltez du contenu de qualité
-      </p>
-    </div>
-  `
+  templateUrl: './login.component.html',
+  styleUrl: './login.component.css'
 })
 export class LoginComponent {
   loginForm: FormGroup;
   showPassword = false;
   isLoading = false;
+  showResetPassword = false;
+  resetPasswordEmail = '';
+  isResettingPassword = false;
   
-  constructor(
-    private router: Router, 
-    private auth: AuthService,
-    private fb: FormBuilder
-  ) {
+  private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
+  private readonly fb = inject(FormBuilder);
+  private readonly snackBar = inject(MatSnackBar);
+  
+  constructor() {
     this.loginForm = this.fb.group({
       email: ['tony-ster@hotmail.com', [Validators.required, Validators.email]],
       password: ['motdepasse123', [Validators.required, Validators.minLength(6)]]
     });
   }
- 
 
-  togglePasswordVisibility() {
+  togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
+  }
+
+  toggleResetPassword(): void {
+    this.showResetPassword = !this.showResetPassword;
+    if (this.showResetPassword) {
+      this.resetPasswordEmail = this.loginForm.get('email')?.value || '';
+    }
   }
 
   getErrorMessage(field: string): string {
@@ -94,7 +76,7 @@ export class LoginComponent {
     return '';
   }
 
-  async onSubmit() {
+  async onSubmit(): Promise<void> {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
       return;
@@ -107,16 +89,70 @@ export class LoginComponent {
       const { data, error } = await this.auth.signIn(email, password);
       
       if (error) {
-        alert(`Erreur de connexion: ${error.message}`);
+        this.snackBar.open(`Erreur de connexion: ${error.message}`, 'Fermer', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
         return;
       }
       
       // Connexion réussie - redirection directe vers /create
       this.router.navigate(['/create']);
     } catch (error) {
-      alert('Erreur inattendue lors de la connexion');
+      this.snackBar.open('Erreur inattendue lors de la connexion', 'Fermer', {
+        duration: 5000,
+        panelClass: ['error-snackbar']
+      });
     } finally {
       this.isLoading = false;
     }
+  }
+
+  async onResetPassword(): Promise<void> {
+    if (!this.resetPasswordEmail || !this.isValidEmail(this.resetPasswordEmail)) {
+      this.snackBar.open('Veuillez entrer une adresse email valide', 'Fermer', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+
+    this.isResettingPassword = true;
+    
+    try {
+      const { error } = await this.auth.resetPassword(this.resetPasswordEmail);
+      
+      if (error) {
+        this.snackBar.open(`Erreur: ${error.message}`, 'Fermer', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+        return;
+      }
+      
+      this.snackBar.open(
+        'Email de réinitialisation envoyé ! Vérifiez votre boîte de réception.',
+        'Fermer',
+        {
+          duration: 5000,
+          panelClass: ['success-snackbar']
+        }
+      );
+      
+      this.showResetPassword = false;
+      this.resetPasswordEmail = '';
+    } catch (error) {
+      this.snackBar.open('Erreur lors de l\'envoi de l\'email de réinitialisation', 'Fermer', {
+        duration: 5000,
+        panelClass: ['error-snackbar']
+      });
+    } finally {
+      this.isResettingPassword = false;
+    }
+  }
+
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   }
 } 

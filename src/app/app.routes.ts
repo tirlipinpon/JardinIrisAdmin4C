@@ -5,6 +5,7 @@ import { LoginComponent } from './login/login.component';
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
+  { path: 'reset-password', loadComponent: () => import('./login/reset-password/reset-password.component').then(m => m.ResetPasswordComponent) },
   { path: 'dashboard', redirectTo: '', pathMatch: 'full' },
   { 
     path: '', 
