@@ -1,20 +1,17 @@
-import { Injectable } from '@angular/core';
-import OpenAI from "openai";
+import { inject, Injectable } from '@angular/core';
+import OpenAI from 'openai';
 import { environment } from '../../../../../../environment';
+import { DeepseekProxyService } from '../deepseek-proxy/deepseek-proxy.service';
 
 
 @Injectable({
   providedIn: 'root'
 })
 export class OpenaiApiService {
+  private readonly deepseekProxyService = inject(DeepseekProxyService);
   openai = new OpenAI({
     dangerouslyAllowBrowser: true,
     apiKey: environment.openAiApiKey
-  });
-  deepseek = new OpenAI({
-    baseURL: 'https://api.deepseek.com',
-    dangerouslyAllowBrowser: true,
-    apiKey: environment.deepseekApi
   });
   gemini = new OpenAI({
     baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
@@ -22,14 +19,30 @@ export class OpenaiApiService {
     apiKey: environment.geminiApi
   });
   async fetchData(prompt: any, deepseek?: boolean, debugName?: string) {
-    const client = deepseek ? this.deepseek : this.openai;
-    const completion = await client.chat.completions.create(
+    if (deepseek) {
+      const completion = await this.deepseekProxyService.createCompletion({
+        messages: [
+          prompt.systemRole,
+          prompt.userRole
+        ],
+        requestId: debugName
+      });
+      const firstChoiceContent = completion.choices?.[0]?.message?.content;
+
+      if (firstChoiceContent === undefined) {
+        throw new Error('DeepSeek proxy returned no content.');
+      }
+
+      return firstChoiceContent ?? null;
+    }
+
+    const completion = await this.openai.chat.completions.create(
       {
         messages: [
           prompt.systemRole,
           prompt.userRole
         ],
-        model: deepseek ? "deepseek-chat" : "gpt-5-mini-2025-08-07",
+        model: 'gpt-5-mini-2025-08-07',
       },
       {
         headers: { "X-Request-ID": debugName }

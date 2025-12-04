@@ -1,19 +1,24 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { OpenaiApiService } from './openai-api.service';
+import { DeepseekProxyService } from '../deepseek-proxy/deepseek-proxy.service';
 
 describe('OpenaiApiService', () => {
   let service: OpenaiApiService;
+  let deepseekProxyService: jasmine.SpyObj<DeepseekProxyService>;
 
   beforeEach(() => {
+    const deepseekSpy = jasmine.createSpyObj('DeepseekProxyService', ['createCompletion']);
     TestBed.configureTestingModule({
       providers: [
         OpenaiApiService,
-        provideZonelessChangeDetection()
+        provideZonelessChangeDetection(),
+        { provide: DeepseekProxyService, useValue: deepseekSpy }
       ]
     });
 
     service = TestBed.inject(OpenaiApiService);
+    deepseekProxyService = TestBed.inject(DeepseekProxyService) as jasmine.SpyObj<DeepseekProxyService>;
   });
 
   it('should be created', () => {
@@ -35,14 +40,13 @@ describe('OpenaiApiService', () => {
           }
         }]
       } as any);
-
-      spyOn(service.deepseek.chat.completions, 'create').and.returnValue({
+      deepseekProxyService.createCompletion.and.returnValue(Promise.resolve({
         choices: [{
           message: {
             content: 'Test deepseek response content'
           }
         }]
-      } as any);
+      } as any));
     });
 
     it('should fetch data using OpenAI client by default', async () => {
@@ -60,25 +64,20 @@ describe('OpenaiApiService', () => {
           headers: { 'X-Request-ID': 'test-debug' }
         }
       );
-      expect(service.deepseek.chat.completions.create).not.toHaveBeenCalled();
+      expect(deepseekProxyService.createCompletion).not.toHaveBeenCalled();
       expect(result).toBe('Test response content');
     });
 
     it('should fetch data using Deepseek client when deepseek is true', async () => {
       const result = await service.fetchData(mockPrompt, true, 'test-debug-deepseek');
 
-      expect(service.deepseek.chat.completions.create).toHaveBeenCalledWith(
-        {
-          messages: [
-            mockPrompt.systemRole as any,
-            mockPrompt.userRole as any
-          ],
-          model: 'deepseek-chat',
-        },
-        {
-          headers: { 'X-Request-ID': 'test-debug-deepseek' }
-        }
-      );
+      expect(deepseekProxyService.createCompletion).toHaveBeenCalledWith({
+        messages: [
+          mockPrompt.systemRole as any,
+          mockPrompt.userRole as any
+        ],
+        requestId: 'test-debug-deepseek'
+      });
       expect(service.openai.chat.completions.create).not.toHaveBeenCalled();
       expect(result).toBe('Test deepseek response content');
     });
