@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from './services/auth.service';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -31,7 +32,7 @@ import { AuthService } from './services/auth.service';
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   showPassword = false;
   isLoading = false;
@@ -49,6 +50,12 @@ export class LoginComponent {
       email: ['tony-ster@hotmail.com', [Validators.required, Validators.email]],
       password: ['motdepasse123', [Validators.required, Validators.minLength(6)]]
     });
+  }
+
+  ngOnInit(): void {
+    if (environment.bypassAuth) {
+      this.router.navigate(['/create']);
+    }
   }
 
   togglePasswordVisibility(): void {
@@ -77,6 +84,11 @@ export class LoginComponent {
   }
 
   async onSubmit(): Promise<void> {
+    if (environment.bypassAuth) {
+      this.router.navigate(['/create']);
+      return;
+    }
+
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
       return;

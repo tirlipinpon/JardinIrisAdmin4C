@@ -1,10 +1,16 @@
 import { Routes } from '@angular/router';
+import { environment } from '../environments/environment';
 import { canActivate } from './login/services/auth.guard';
 import { LoginComponent } from './login/login.component';
 
+const defaultRoute = environment.bypassAuth ? 'create' : 'login';
+const loginRoute: Routes = environment.bypassAuth 
+  ? [{ path: 'login', redirectTo: 'create', pathMatch: 'full' }] 
+  : [{ path: 'login', component: LoginComponent }];
+
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
-  { path: 'login', component: LoginComponent },
+  { path: '', redirectTo: defaultRoute, pathMatch: 'full' },
+  ...loginRoute,
   { path: 'reset-password', loadComponent: () => import('./login/reset-password/reset-password.component').then(m => m.ResetPasswordComponent) },
   { path: 'dashboard', redirectTo: '', pathMatch: 'full' },
   { 
@@ -18,5 +24,5 @@ export const routes: Routes = [
       { path: 'edit/:id', loadComponent: () => import('./features/edit/edit.component').then(m => m.EditComponent) },
     ]
   },
-  { path: '**', redirectTo: 'login' }
+  { path: '**', redirectTo: defaultRoute }
 ];
