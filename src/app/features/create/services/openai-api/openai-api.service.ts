@@ -25,7 +25,8 @@ export class OpenaiApiService {
           prompt.systemRole,
           prompt.userRole
         ],
-        requestId: debugName
+        requestId: debugName,
+        maxTokens: 6000
       });
       const firstChoiceContent = completion.choices?.[0]?.message?.content;
 

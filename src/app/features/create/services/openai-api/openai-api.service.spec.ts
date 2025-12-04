@@ -76,7 +76,8 @@ describe('OpenaiApiService', () => {
           mockPrompt.systemRole as any,
           mockPrompt.userRole as any
         ],
-        requestId: 'test-debug-deepseek'
+        requestId: 'test-debug-deepseek',
+        maxTokens: 4500
       });
       expect(service.openai.chat.completions.create).not.toHaveBeenCalled();
       expect(result).toBe('Test deepseek response content');

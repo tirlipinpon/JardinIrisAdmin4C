@@ -166,6 +166,51 @@ describe('cleanJsonObject utilities', () => {
       const result = parseJsonSafe(jsonString);
       expect(result).toEqual({ user: { name: 'John', age: 30 }, active: true });
     });
+
+    it('should repair JSON containing raw newlines inside strings', () => {
+      const jsonWithNewlines = `{
+        "titre": "Fleurs de décembre : idées cadeaux",
+        "description": "Offrez un cadeau vivant et symbolique pour un anniversaire de décembre
+à Bruxelles avec les fleurs phares de Noël.",
+        "temperature": 7
+      }`;
+
+      const result = parseJsonSafe(jsonWithNewlines);
+      expect(result).toEqual({
+        titre: 'Fleurs de décembre : idées cadeaux',
+        description: 'Offrez un cadeau vivant et symbolique pour un anniversaire de décembre\nà Bruxelles avec les fleurs phares de Noël.',
+        temperature: 7
+      });
+    });
+
+    it('should repair JSON with trailing commas', () => {
+      const jsonWithTrailingComma = `{
+        "titre": "Fleurs de décembre",
+        "temperature": 5,
+      }`;
+
+      const result = parseJsonSafe(jsonWithTrailingComma);
+      expect(result).toEqual({
+        titre: 'Fleurs de décembre',
+        temperature: 5
+      });
+    });
+
+    it('should repair JSON truncated within a string', () => {
+      const truncatedJson = `{
+        "titre": "Fleurs de décembre",
+        "description": "Offrez un cadeau vivant et symbolique pour un anniversaire de décembre
+à Bruxelles avec les fleurs emblématiques de l'hiver. Je vous guide pour choisir
+et entretenir ces joyaux saisonniers`
+        ;
+
+      const result = parseJsonSafe(truncatedJson);
+
+      expect(result).toEqual({
+        titre: 'Fleurs de décembre',
+        description: `Offrez un cadeau vivant et symbolique pour un anniversaire de décembre\nà Bruxelles avec les fleurs emblématiques de l'hiver. Je vous guide pour choisir\net entretenir ces joyaux saisonniers`
+      });
+    });
   });
 
   describe('extractSecondSpanContent()', () => {
